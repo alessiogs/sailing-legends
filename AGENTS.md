@@ -45,7 +45,8 @@ src/
              PlayerChoice.ts (the player's Role, helm | crew, plus Control mode, playerCareer | fullBoat;
              Full Boat Control only for the Helm; presets HELM, CREW, FULL_BOAT = the three menu buttons)
   ai/        RacingAI.ts (the Helm: tactics, tacking state machine, avoidance, penalties, start timing),
-             CrewAI.ts (the Crew: jib/spi trim, weight, side switch, spinnaker). Both read sailor profiles
+             CrewAI.ts (the Crew: jib/spi trim, weight, side switch, spinnaker; `crewOnWrongSide` is the one
+             wrong-side check, shared by the Crew AI, the browser autopilot and the HUD). Both read sailor profiles
   sailors/   Sailors.ts (sailor profiles, the Rival roster, the opponents' Crews, the extra Helm, the autopilot
              Helm, the Crew Chemistry formula; sailors are matched by `id`, never by name)
   world/     Ocean.ts (Gerstner waves in GLSL), Waves.ts (same waves on CPU), BoatView.ts (Optimist),
@@ -65,6 +66,7 @@ tests/       Vitest tests (npm test): smoke.test.ts (every AI-only race finishes
              race-names.test.ts (leg and boat names of every session setup read as before)
              sailors.test.ts (rosters, Partner swap, Crew Chemistry values as the menu shows them)
              player-choice.test.ts (Crew with Full Boat Control is a type error; the Partner set up per choice)
+             crew-side.test.ts (the shared Crew wrong-side check)
 scripts/     polar.ts (npm run polar), golden-update.ts (npm run golden:update)
 ```
 **Rule:** `sailing/`, `race/`, `ai/`, `sailors/` must not import Babylon. They run in Node (tests) and in the browser.
