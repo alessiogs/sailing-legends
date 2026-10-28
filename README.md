@@ -1,6 +1,6 @@
 # Sailing Legends — Prototipo 0.4 (Optimist e 420)
 
-**Gioca:** https://alessiogs.github.io/sailing-legends/ · Concept: [docs/CONCEPT.md](docs/CONCEPT.md) · Roadmap: [docs/ROADMAP.md](docs/ROADMAP.md) · Guida per sviluppatori: [CLAUDE.md](CLAUDE.md)
+**Gioca:** https://alessiogs.github.io/sailing-legends/ · Concept: [docs/CONCEPT.md](docs/CONCEPT.md) · Roadmap: [docs/ROADMAP.md](docs/ROADMAP.md) · Guida per sviluppatori: [AGENTS.md](AGENTS.md)
 
 Prototipo browser-first in Babylon.js + TypeScript + Vite. Una regata completa in Optimist contro tre
 rivali IA (Luca, Giulia, Marco) con fisica velica semplificata ma "vera": vento apparente, angolo
