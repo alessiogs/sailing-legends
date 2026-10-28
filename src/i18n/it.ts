@@ -118,6 +118,30 @@ export const italian = {
   "toast.spi.partnerDecides": ({ name }: { name: string }) => `Lo spi lo decide ${name} (in "Barca completa" lo chiami tu)`,
   "toast.spi.crewDecides": `Lo spi lo decide il prodiere (in "Barca completa" lo chiami tu)`,
 
+  // Race events (ui/raceEventText.ts words each event the race emits).
+  "event.warning": ({ seconds }: { seconds: number }) => `${seconds} secondi alla partenza`,
+  "event.gun": "PARTENZA!",
+  "event.ocs": "OCS! Partenza anticipata: torna sotto la linea",
+  "event.ocsCleared": "Rientrato: ora puoi ripartire",
+  "event.start": ({ next }: { next: string }) => `Partito · ${next}`,
+  "event.rounded": ({ rounded, next }: { rounded: string; next: string }) => `${rounded} girata · ora: ${next}`,
+  "event.finish": ({ place }: { place: number }) => `ARRIVO! ${place}° posto`,
+  "event.finishDsq": "ARRIVO, ma penalità non scontata: squalificato (DSQ)",
+  "event.penalty": ({ turns, reason }: { turns: number; reason: string }) =>
+    `Penalità: ${plural(turns, { one: "un giro", other: `${turns} giri` })} (${reason})`,
+  "event.penalty.rule": ({ rule }: { rule: string }) => `regola ${rule}`,
+  "event.penalty.markTouched": "boa toccata, regola 31",
+  "event.penaltyDone": "Penalità scontata",
+  "event.contact.atFault": ({ other, rule, reason }: { other: string; rule: string; reason: string }) =>
+    `Contatto con ${other}: regola ${rule}, ${reason}`,
+  "event.contact.touchedBy": ({ other, rule }: { other: string; rule: string }) =>
+    `${other} ti ha toccato (regola ${rule}): penalità a ${other}`,
+  // Why the boat at fault had to keep clear (Rules.ts VerdictReason).
+  "event.reason.tacking": "stava virando",
+  "event.reason.portStarboard": "mure a sinistra contro mure a dritta",
+  "event.reason.clearAstern": "libera dietro",
+  "event.reason.windward": "sopravvento in ingaggio",
+
   // Coaching: manoeuvre feedback and hints.
   "coach.tack": "Virata!",
   "coach.gybe": "Strambata!",
