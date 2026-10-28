@@ -2,7 +2,7 @@ import { clamp, DEG, rng } from "../core/math";
 import { distanceTo, legTarget } from "../race/Course";
 import type { Race, Racer } from "../race/Race";
 import { isTwoPerson } from "../sailing/BoatClass";
-import type { Controls } from "../sailing/BoatPhysics";
+import type { BoatState, Controls, Telemetry } from "../sailing/BoatPhysics";
 import { crewChemistry, type SailorProfile } from "../sailors/Sailors";
 
 /**
@@ -23,6 +23,17 @@ export function wantSpinnaker(race: Race, r: Racer): boolean {
   const toMark = distanceTo(legTarget(leg), s.x, s.z);
   if (toMark < 26) return false;
   return Math.abs(t.twa) > 105 * DEG;
+}
+
+/**
+ * Is the Crew on the wrong side after a tack or gybe, with the bow through the wind, so they should move across?
+ * Wrong side = a backed jib, the Crew's weight to leeward, or a hoisted spinnaker on the windward side.
+ * The one check shared by the Crew AI, the browser autopilot and the HUD Partner call.
+ */
+export function crewOnWrongSide(sim: { state: BoatState; telemetry: Telemetry }): boolean {
+  const s = sim.state, t = sim.telemetry;
+  const wrong = (t.jib?.backed ?? false) || !(t.crew?.onWindward ?? true) || (s.spiHoist > 0.3 && (t.spi?.wrongSide ?? false));
+  return wrong && Math.abs(t.awa) > 22 * DEG;
 }
 
 export class CrewAI {
@@ -50,12 +61,11 @@ export class CrewAI {
   }
 
   update(dt: number, c: Controls) {
-    const r = this.racer, cls = r.sim.cls, s = r.sim.state, t = r.sim.telemetry;
+    const r = this.racer, cls = r.sim.cls, t = r.sim.telemetry;
     if (!isTwoPerson(cls)) return;
 
     // Move across after a tack or gybe, once the bow is through the wind and after a reaction delay.
-    const wrong = (t.jib?.backed ?? false) || !(t.crew?.onWindward ?? true) || (s.spiHoist > 0.3 && (t.spi?.wrongSide ?? false));
-    if (wrong && Math.abs(t.awa) > 22 * DEG) this.wrongFor += dt; else this.wrongFor = 0;
+    if (crewOnWrongSide(r.sim)) this.wrongFor += dt; else this.wrongFor = 0;
     if (this.wrongFor > this.reaction) { c.switchSide = true; this.wrongFor = 0; }
 
     // Spinnaker: decide (or follow the call), then act after a short delay.
