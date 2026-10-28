@@ -47,13 +47,14 @@ src/
   i18n/      index.ts (`t(key, params)`: typed lookup), it.ts (Italian catalog, the reference: it defines the
              keys), plural.ts (plural forms from Intl.PluralRules). All player-facing text lives in a catalog
   ui/        Hud.ts (role-driven panel, compass, minimap, standings, tags), pageText.ts (fills index.html's
-             data-i18n text from the catalog at startup)
+             data-i18n text from the catalog at startup), raceEventText.ts (words race events from their data)
   main.ts    scene, camera, menus, game loop, player controls per role
 tests/       Vitest tests (npm test): smoke.test.ts (every AI-only race finishes, every penalty served),
              golden.test.ts + golden/ (races.ts sails and records the golden races, races.json is the snapshot),
              rules.test.ts (rule 10/11/12/13 verdicts and penalty turns, two boats placed by hand)
              i18n.test.ts (lookup, parameters, plural rules; catalogs with missing or extra keys fail the type-check)
              page-text.test.ts (index.html filled from the catalog reads as page-text/original.json)
+             event-text.test.ts (every race event kind, worded through the Italian catalog, reads as before)
 scripts/     polar.ts (npm run polar), golden-update.ts (npm run golden:update)
 ```
 **Rule:** `sailing/`, `race/`, `ai/` must not import Babylon. They run in Node (tests) and in the browser.
@@ -109,6 +110,8 @@ Start quality is still the weakest part (often 5–25 s late).
 Judged only on hull contact (capsule shapes). One penalty per incident (no stacking while one is owed).
 Rule 31 counts only the marks of the leg being sailed (finish buoys sit on the first beat!) and the start
 marks before starting. Unserved penalty at the finish ⇒ DSQ.
+Race events (`RaceEvent`) and verdicts (`Verdict`) are data: kind, racer, other, rule, turns, who was at fault,
+reason. No text: `ui/raceEventText.ts` words them, and the UI reads facts (e.g. fault) from the data.
 
 ## Building without npm (sandboxed sessions)
 Some agent sandboxes can't reach the npm registry. Workaround used so far: sparse-clone Babylon.js

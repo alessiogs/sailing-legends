@@ -7,8 +7,8 @@
  * standings; and every race event as kind, boat, other boat and time, plus the turns owed for a penalty.
  * Event wording is never recorded, so moving text into translation catalogs cannot change the record.
  *
- * Event kinds come from `RaceEvent.kind`, which is already data. When events become structured (ADR 0001),
- * keep these kind strings, the racer/other ids and the turns as they are so the snapshot stays comparable.
+ * Events are data (ADR 0001): the record keeps their kind strings, racer/other ids and turns exactly as they were
+ * first recorded, so the snapshot stays comparable whatever else the events carry.
  */
 import { DEG } from "../../src/core/math";
 import { RacingAI } from "../../src/ai/RacingAI";
@@ -125,9 +125,9 @@ export function sailGoldenRace(g: GoldenRace): GoldenRecord {
     step++;
     for (const e of race.drainEvents()) {
       const ev: GoldenRecord["events"][number] = { t: r6(race.clock), kind: e.kind, racer: e.racer.id };
-      if (e.other) ev.other = e.other.id;
-      // Penalty turns owed (1 for a mark, 2 for a rule breach), read from the racer since the event carries only text.
-      if (e.kind === "penalty") ev.turns = Math.round(e.racer.penalty!.needed / (2 * Math.PI));
+      if (e.kind === "contact") ev.other = e.other.id;
+      // Penalty turns owed: 1 for touching a mark, 2 for a rule breach.
+      if (e.kind === "penalty") ev.turns = e.turns;
       rec.events.push(ev);
     }
     if (step % SAMPLE_STEPS === 0) sample(step);

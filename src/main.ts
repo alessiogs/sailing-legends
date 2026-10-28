@@ -14,6 +14,7 @@ import { CLASSES, type BoatClass } from "./sailing/BoatClass";
 import { t } from "./i18n";
 import { Hud, type Panel } from "./ui/Hud";
 import { fillPageText } from "./ui/pageText";
+import { eventText } from "./ui/raceEventText";
 import { Boat420View } from "./world/Boat420View";
 import { BoatView, type BoatLook } from "./world/BoatView";
 import { CourseView } from "./world/CourseView";
@@ -304,7 +305,8 @@ function processEvents() {
   for (const e of session.race.drainEvents()) {
     if (e.kind === "gun") sound.horn(1.2);
     if (e.kind === "ocs" && e.racer.isPlayer) sound.horn(0.5);
-    if (e.kind === "contact" && (e.racer.isPlayer || e.other?.isPlayer) && e.text.startsWith("Contatto")) sound.bump();
+    // One bump per contact involving the player: on the at-fault boat's event (each boat gets one).
+    if (e.kind === "contact" && (e.racer.isPlayer || e.other.isPlayer) && e.atFault === e.racer) sound.bump();
     if (!e.racer.isPlayer) continue;
     if (e.kind === "rounded") sound.chime();
     if (e.kind === "penalty") sound.buzzer();
@@ -312,7 +314,7 @@ function processEvents() {
     const kind = e.kind === "ocs" || e.kind === "penalty" ? "bad"
       : e.kind === "gun" || e.kind === "finish" ? "big"
       : e.kind === "rounded" || e.kind === "ocs-cleared" || e.kind === "penalty-done" ? "good" : "";
-    hud.toast(e.text, kind);
+    hud.toast(eventText(e), kind);
     if (e.kind === "finish") setTimeout(() => { if (mode === "racing") showResults(); }, 2500);
   }
   if (session.race.phase === "done" && mode === "racing" && session.player!.finishTime === null) showResults();
