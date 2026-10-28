@@ -15,7 +15,8 @@ The player-facing README is in Italian; **in-game UI text is Italian**, code and
 
 `.github/workflows/deploy.yml`: every push to `main` or `develop` runs `npm test` + `npm run build` on that
 commit, then rebuilds **both** branches (main at the root, develop under `/dev/`) and deploys them together,
-since a Pages deploy replaces the whole site. PRs are built and tested only. Keep Vite's `base: "./"` so the
+since a Pages deploy replaces the whole site. PRs are only tested and type-checked
+(`tsc -b`, no production bundle) and never deploy. Keep Vite's `base: "./"` so the
 same build works at the root and under `/dev/`.
 
 ## Commands
