@@ -47,7 +47,12 @@ src/
              RaceSession.ts (one race: wind, boats, AIs, contacts; fixed 60 Hz; no rendering)
              PlayerChoice.ts (the player's Role, helm | crew, plus Control mode, playerCareer | fullBoat;
              Full Boat Control only for the Helm; presets HELM, CREW, FULL_BOAT = the three menu buttons)
-  ai/        RacingAI.ts (the Helm: tactics, tacking state machine, avoidance, penalties),
+  ai/        RacingAI.ts (the Helm: composes the parts below; mark rounding, trim error, penalty turns, rudder),
+             BeatTactics.ts (steering toward a point, beating upwind: the persistent tack `onStbd`, hysteresis,
+             the tack timer shared with the start and the tack state machine; implements `CourseSteering`),
+             TackStateMachine.ts (`sail | tack | recover`: committed tacks, gybe round when too slow, the rule-13
+             wait near other boats, recovery from irons), Avoidance.ts (`giveWay`: keep clear of right-of-way
+             boats under rules 10/11/12; `boatWithin`),
              StartPlanning.ts (the Helm's start: line point, holding spot, start bias, timing the run to the line,
              OCS return; borrows the rest of the Helm's steering through `CourseSteering`),
              angles.ts (`CLOSE_HAULED`, shared by the AI parts),
@@ -97,6 +102,7 @@ tests/       Vitest tests (npm test): smoke.test.ts (every AI-only race finishes
              race-feedback.test.ts (which sounds, messages and hints the race gives, and when)
              boat-class.test.ts (class ids: a misspelt id is a type error; every class keyed by its own id)
              start-planning.test.ts (the AI's holding spot, line point, RNG draws and start decisions)
+             racing-ai-parts.test.ts (the AI's avoidance, beat tactics and tack state machine on their own)
 scripts/     polar.ts (npm run polar), golden-update.ts (npm run golden:update)
 ```
 **Rule:** `sailing/`, `race/`, `ai/`, `sailors/` must not import Babylon. They run in Node (tests) and in the browser.
@@ -144,7 +150,7 @@ Optimist ≈ 2.3 kn upwind / 3.9 reach / 3.5 run; 420 ≈ 4 kn upwind / 6.5 reac
 After changing physics run `npm run polar` and `npm test`, and check tacks still complete
 (a tack from close-hauled must get through the wind and recover).
 
-## AI notes (RacingAI.ts, StartPlanning.ts)
+## AI notes (RacingAI.ts and the parts it composes)
 Pitfalls already fixed — keep them fixed:
 - Turning through the wind is a committed **tack** (state machine `sail | tack | recover`); without
   commitment the AI dithers into irons. Too slow to tack → it bears away round (gybe).
