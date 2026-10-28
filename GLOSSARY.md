@@ -3,6 +3,38 @@
 A dinghy-racing career game. English is the reference language for code and docs; each term shows its
 Italian in-game label (_it_) as a reference for translators.
 
+## Sailors
+
+**Helm**:
+The sailor who steers and trims the mainsail.
+_it_: Timoniere
+_Avoid_: Skipper, driver
+
+**Crew**:
+The sailor in a two-person boat who trims the jib and spinnaker and moves their weight to hold the boat flat.
+_it_: Prodiere
+_Avoid_: Crew for the two sailors together (see Pair)
+
+**Pair**:
+The two sailors of one two-person boat, a Helm and a Crew.
+_it_: Equipaggio
+_Avoid_: Crew, team, duo
+
+**Partner**:
+The player's AI teammate in a Pair, whichever role they sail.
+_it_: Compagno
+_Avoid_: Teammate, buddy
+
+**Crew Chemistry**:
+A 0–100 rating of how well a Pair works together.
+_it_: Intesa
+_Avoid_: Compatibility, synergy
+
+**Rival**:
+A recurring AI sailor with a name, a personality and a shared history with the player.
+_it_: Rivale
+_Avoid_: Bot, opponent (for the recurring characters)
+
 ## Race
 
 **Race**:
