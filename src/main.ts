@@ -11,6 +11,7 @@ import type { Racer } from "./race/Race";
 import type { Controls } from "./sailing/BoatPhysics";
 import { RaceSession, type PlayerRole } from "./race/RaceSession";
 import { CLASSES, type BoatClass } from "./sailing/BoatClass";
+import { t } from "./i18n";
 import { Hud, type Panel } from "./ui/Hud";
 import { Boat420View } from "./world/Boat420View";
 import { BoatView, type BoatLook } from "./world/BoatView";
@@ -129,7 +130,7 @@ function newRace() {
   camera.beta = 1.18;
   camera.radius = chaseRadius();
   hud.show(true);
-  hud.toast("Procedura di partenza: 45 secondi", "big");
+  hud.toast(t("toast.startSequence"), "big");
 }
 
 function setMode(m: Mode) {
@@ -159,12 +160,10 @@ function syncControls() {
   mark("tspeed-opt", String(st.tillerSpeed));
   mark("sspeed-opt", String(st.sheetSpeed));
   const tiller = st.steering === "tiller";
-  $("steer-help").textContent = tiller
-    ? "→ sposta la barra a destra e la barca gira a sinistra, come nella realtà."
-    : "→ fa girare la barca a destra (la barra va dal lato opposto da sola).";
-  $("key-left-label").textContent = tiller ? "Barra a sinistra (la barca gira a destra)" : "Gira a sinistra";
-  $("key-right-label").textContent = tiller ? "Barra a destra (la barca gira a sinistra)" : "Gira a destra";
-  $("steer-summary").textContent = tiller ? "Timone: muovi la barra" : "Timone: direzione della barca";
+  $("steer-help").textContent = tiller ? t("controls.steerHelp.tiller") : t("controls.steerHelp.boat");
+  $("key-left-label").textContent = tiller ? t("controls.keyLeft.tiller") : t("controls.keyLeft.boat");
+  $("key-right-label").textContent = tiller ? t("controls.keyRight.tiller") : t("controls.keyRight.boat");
+  $("steer-summary").textContent = tiller ? t("controls.steerSummary.tiller") : t("controls.steerSummary.boat");
 }
 const bindSeg = (id: string, apply: (v: string) => void) => {
   for (const b of Array.from(document.querySelectorAll<HTMLButtonElement>(`#${id} button`))) {
@@ -189,24 +188,24 @@ $("resume-btn").addEventListener("click", () => setMode("racing"));
 $("pause-menu").addEventListener("click", () => setMode("menu"));
 syncControls();
 // ---------- Boat, role and partner choice ----------
-const ROLE_HELP: Record<PlayerRole, string> = {
-  skipper: "Timone e randa. Il tuo prodiere regola fiocco e spi, esce al trapezio e decide quando issare lo spi.",
-  crew: "Il partner timona. Tu: W/S fiocco (o spi), A/D peso dentro/fuori fino al trapezio, E cambio lato dopo virate e strambate, Spazio issa/ammaina lo spi. Ascolta le sue chiamate.",
-  full: "Timone e randa, e chiami tu le manovre: Spazio = issa/ammaina lo spi. Il prodiere esegue (più in fretta se l'intesa è alta).",
-};
+const ROLE_HELP = {
+  skipper: "menu.roleHelp.helm",
+  crew: "menu.roleHelp.crew",
+  full: "menu.roleHelp.fullBoat",
+} as const satisfies Record<PlayerRole, string>;
 function syncBoatMenu() {
   const two = !!boatClass.crew;
   for (const o of Array.from(document.querySelectorAll<HTMLButtonElement>("#class-opt button"))) o.classList.toggle("on", o.dataset.v === boatClass.id);
   for (const o of Array.from(document.querySelectorAll<HTMLButtonElement>("#role-opt button"))) o.classList.toggle("on", o.dataset.v === role);
   $("crew-block").classList.toggle("hidden", !two);
-  $("lede-class").textContent = two ? "Regata 420, in due con fiocco, spinnaker e trapezio" : "Regata Optimist";
-  $("version-chip").textContent = `PROTOTIPO 0.4 · ${boatClass.name.toUpperCase()}`;
-  $("role-help").textContent = ROLE_HELP[role];
+  $("lede-class").textContent = two ? t("menu.lede.twoPerson") : t("menu.lede.single");
+  $("version-chip").textContent = t("menu.versionChip", { boatClass: boatClass.name.toUpperCase() });
+  $("role-help").textContent = t(ROLE_HELP[role]);
   $("partner-opt").innerHTML = RIVALS.map(r => {
     const c = chemistry(r);
     return `<button data-v="${r.name}" class="partner${r.name === partner.name ? " on" : ""}">
       <b>${r.name}</b><span class="meter"><i style="width:${c}%"></i></span>
-      <small>Intesa ${c}/100 · tecnica ${Math.round(r.technique * 100)} · affidabilità ${Math.round(r.discipline * 100)}</small></button>`;
+      <small>${t("menu.partnerStats", { chemistry: c, technique: Math.round(r.technique * 100), discipline: Math.round(r.discipline * 100) })}</small></button>`;
   }).join("");
   for (const b of Array.from(document.querySelectorAll<HTMLButtonElement>("#partner-opt button"))) {
     b.addEventListener("click", () => { partner = RIVALS.find(r => r.name === b.dataset.v) ?? partner; syncBoatMenu(); });
@@ -229,8 +228,8 @@ for (const b of Array.from(document.querySelectorAll<HTMLButtonElement>("#wind-o
 
 function showResults() {
   const rows = session.race.standings().map((r, i) => {
-    const t = r.dsq ? "DSQ" : r.finishTime !== null ? `${Math.floor(r.finishTime / 60)}:${String(Math.floor(r.finishTime % 60)).padStart(2, "0")}` : "—";
-    return `<tr class="${r.isPlayer ? "me" : ""}"><td>${r.dsq ? "–" : `${i + 1}°`}</td><td>${r.name}</td><td>${t}</td></tr>`;
+    const time = r.dsq ? t("results.dsq") : r.finishTime !== null ? `${Math.floor(r.finishTime / 60)}:${String(Math.floor(r.finishTime % 60)).padStart(2, "0")}` : "—";
+    return `<tr class="${r.isPlayer ? "me" : ""}"><td>${r.dsq ? "–" : t("results.place", { place: i + 1 })}</td><td>${r.name}</td><td>${time}</td></tr>`;
   }).join("");
   $("results-table").innerHTML = rows;
   setMode("results");
@@ -242,7 +241,7 @@ function handleActions() {
       sound.init();
       sound.setMuted(!sound.muted);
       savePrefs();
-      hud.toast(sound.muted ? "Audio disattivato" : "Audio attivo");
+      hud.toast(sound.muted ? t("toast.audioOff") : t("toast.audioOn"));
       continue;
     }
     if (a === "controls") { if (mode === "controls") closeControls(); else openControls(); continue; }
@@ -261,16 +260,16 @@ function handleActions() {
       autoTrim = !autoTrim;
       assistEl.checked = autoTrim;
       if (!autoTrim) input.sheet = input.station === "crew" ? activeCrewSheet() : session.player!.sim.state.sheet;
-      hud.toast(autoTrim ? "Regolazione vela automatica: ON" : "Regolazione vela: manuale");
+      hud.toast(autoTrim ? t("toast.autoTrimOn") : t("toast.autoTrimOff"));
     }
     if (a === "spi" && mode === "racing") callSpinnaker();
     if (a === "switch" && mode === "racing" && input.station === "crew") {
       session.playerControls.switchSide = true;
-      hud.toast("Cambio lato");
+      hud.toast(t("toast.switchSide"));
     }
     if (a === "camera") {
       camMode = camMode === "chase" ? "free" : camMode === "free" ? "top" : "chase";
-      hud.toast(camMode === "chase" ? "Camera: inseguimento" : camMode === "free" ? "Camera: libera (trascina col mouse)" : "Camera: tattica");
+      hud.toast(t(`toast.camera.${camMode}`));
       if (camMode === "chase") { camera.beta = 1.18; camera.radius = chaseRadius(); }
       if (camMode === "top") { camera.beta = 0.12; camera.radius = boatClass.crew ? 70 : 48; }
     }
@@ -322,20 +321,18 @@ function playerCoaching() {
   if (s.boomSide !== lastBoomSide) {
     const gybe = Math.abs(tel.awa) > 90 * DEG;
     // When the partner helms, the call comes from them (the crew must react).
-    if (session.partnerHelm) hud.toast(`${session.partner!.name}: «${gybe ? "Strambo!" : "Viro!"}» — cambia lato (E)`, "bad");
-    else hud.toast(gybe ? "Strambata!" : "Virata!");
+    if (session.partnerHelm) hud.toast(t(gybe ? "coach.partnerGybe" : "coach.partnerTack", { name: session.partner!.name }), "bad");
+    else hud.toast(gybe ? t("coach.gybe") : t("coach.tack"));
     lastBoomSide = s.boomSide;
   }
   if (session.partnerHelm) {
-    const t = session.partnerHelm.tacking;
-    if (t && !wasTacking) { hud.toast(`${session.partner!.name}: «Pronti a virare… Vira!»`); sound.beep(); }
-    wasTacking = t;
+    const tacking = session.partnerHelm.tacking;
+    if (tacking && !wasTacking) { hud.toast(t("coach.partnerReadyAbout", { name: session.partner!.name })); sound.beep(); }
+    wasTacking = tacking;
   }
   if (!ironsHintShown && tel.trimState === "irons" && Math.abs(tel.speed) < 0.3 && session.race.clock > -40) {
     ironsHintShown = true;
-    hud.toast(input.steering === "tiller"
-      ? "Sei fermo prua al vento: lasca (S) e spingi la barra per poggiare"
-      : "Sei fermo prua al vento: lasca (S) e poggia con il timone", "bad");
+    hud.toast(input.steering === "tiller" ? t("coach.irons.tiller") : t("coach.irons.boat"), "bad");
   }
 }
 
@@ -356,12 +353,12 @@ function callSpinnaker() {
   const pc = session.playerControls;
   if (role === "crew") {
     pc.spi = !pc.spi;
-    hud.toast(pc.spi ? "Issa lo spi!" : "Ammaina lo spi!");
+    hud.toast(pc.spi ? t("toast.spi.hoist") : t("toast.spi.drop"));
   } else if (role === "full" && session.partnerCrew) {
     session.partnerCrew.spiCommand = !session.partnerCrew.spiCommand;
-    hud.toast(`Tu: «${session.partnerCrew.spiCommand ? "Issa!" : "Ammaina!"}»`);
+    hud.toast(session.partnerCrew.spiCommand ? t("toast.spi.callHoist") : t("toast.spi.callDrop"));
   } else {
-    hud.toast(`Lo spi lo decide ${session.partner?.name ?? "il prodiere"} (in "Barca completa" lo chiami tu)`);
+    hud.toast(session.partner ? t("toast.spi.partnerDecides", { name: session.partner.name }) : t("toast.spi.crewDecides"));
   }
 }
 
@@ -395,17 +392,17 @@ function applyPlayerControls(dt: number, p: Racer) {
 
 /** Test helper: perfect crew work for the autopilot. */
 function autoCrew(pc: Controls, p: Racer) {
-  const t = p.sim.telemetry;
-  pc.jibSheet = t.jib?.optimal; pc.spiSheet = t.spi?.optimal; pc.crewOut = t.crew?.ideal;
+  const tel = p.sim.telemetry;
+  pc.jibSheet = tel.jib?.optimal; pc.spiSheet = tel.spi?.optimal; pc.crewOut = tel.crew?.ideal;
   pc.spi = wantSpinnaker(session.race, p);
-  if (t.jib?.backed || !t.crew?.onWindward) pc.switchSide = Math.abs(t.awa) > 22 * DEG;
+  if (tel.jib?.backed || !tel.crew?.onWindward) pc.switchSide = Math.abs(tel.awa) > 22 * DEG;
 }
 
 function buildPanel(p: Racer): Panel {
   const s = p.sim.state, tel = p.sim.telemetry;
   const two = !!boatClass.crew;
-  const partnerName = session.partner?.name ?? "";
-  const chem = two && session.partner ? { name: partnerName, value: chemistry(session.partner) } : null;
+  const name = session.partner?.name ?? "";
+  const chem = two && session.partner ? { name, value: chemistry(session.partner) } : null;
   if (input.station === "crew") {
     const spiUp = s.spiHoist > 0.5;
     const sailTel = spiUp ? tel.spi! : tel.jib!;
@@ -414,26 +411,27 @@ function buildPanel(p: Racer): Panel {
     let call: string | null = null;
     const wrongSide = tel.jib!.backed || !tel.crew!.onWindward || (s.spiHoist > 0.3 && tel.spi!.wrongSide);
     const ideal = tel.crew!.ideal;
-    if (wrongSide && Math.abs(tel.awa) > 22 * DEG) call = `${partnerName}: «Cambia lato!» → premi E`;
+    if (wrongSide && Math.abs(tel.awa) > 22 * DEG) call = t("call.switchSide", { name });
     else if (session.race.phase !== "prestart" && wantSpinnaker(session.race, p) !== !!session.playerControls.spi)
-      call = `${partnerName}: «${session.playerControls.spi ? "Ammaina!" : "Issa lo spi!"}» → Spazio`;
-    else if (tel.crew!.balance > 60) call = `${partnerName}: «Fuori! Siamo sbandati» → D / →`;
-    else if (s.crewOut - ideal > 0.25 && tel.crew!.balance < -20) call = `${partnerName}: «Dentro! Ci rovesciamo sopravvento» → A / ←`;
-    const where = s.crewOut > 0.75 ? "al trapezio" : s.crewOut > 0.3 ? "in cinghia" : "seduto dentro";
+      call = session.playerControls.spi ? t("call.spiDrop", { name }) : t("call.spiHoist", { name });
+    else if (tel.crew!.balance > 60) call = t("call.hikeOut", { name });
+    else if (s.crewOut - ideal > 0.25 && tel.crew!.balance < -20) call = t("call.comeIn", { name });
+    const where = t(s.crewOut > 0.75 ? "hud.weight.trapeze" : s.crewOut > 0.3 ? "hud.weight.hiking" : "hud.weight.seated");
+    const spi = t(s.spiHoist > 0.9 ? "hud.spi.up" : s.spiHoist > 0.05 ? "hud.spi.moving" : "hud.spi.down");
     return {
-      gauge: { label: `IL TUO PESO · ${where.toUpperCase()}`, value: s.crewOut, centered: false, ideal, ends: ["◀ DENTRO (A)", "FUORI / TRAPEZIO (D) ▶"] },
-      sail: { label: spiUp ? "SPINNAKER" : "FIOCCO", sheet, optimal: sailTel.optimal, state: sailTel.trimState, auto: autoTrim,
-        text: tel.jib!.backed && !spiUp ? "Fiocco a collo! Cambia lato (E)" : spiUp && tel.spi!.collapsed ? "Lo spi è crollato: troppo all'orza" : undefined },
-      call, crewLine: `${partnerName} al timone e alla randa · spi: ${s.spiHoist > 0.9 ? "su" : s.spiHoist > 0.05 ? "in manovra" : "giù"}`, chem,
+      gauge: { label: t("hud.gauge.weight", { position: where }), value: s.crewOut, centered: false, ideal, ends: [t("hud.gauge.in"), t("hud.gauge.out")] },
+      sail: { label: spiUp ? t("hud.sail.spinnaker") : t("hud.sail.jib"), sheet, optimal: sailTel.optimal, state: sailTel.trimState, auto: autoTrim,
+        text: tel.jib!.backed && !spiUp ? t("trim.jibBacked") : spiUp && tel.spi!.collapsed ? t("trim.spiCollapsed") : undefined },
+      call, crewLine: t("hud.crewLine.partnerHelms", { name, spi }), chem,
     };
   }
-  const tillerGauge = { label: "BARRA DEL TIMONE", value: input.tiller, centered: true, ends: ["◀ SINISTRA", "DESTRA ▶"] as [string, string] };
-  const sail = { label: two ? "RANDA" : "REGOLAZIONE VELA", sheet: s.sheet, optimal: tel.optimalSheet, state: tel.trimState, auto: autoTrim };
+  const tillerGauge = { label: t("hud.gauge.tiller"), value: input.tiller, centered: true, ends: [t("hud.gauge.left"), t("hud.gauge.right")] as [string, string] };
+  const sail = { label: two ? t("hud.sail.main") : t("hud.sail.single"), sheet: s.sheet, optimal: tel.optimalSheet, state: tel.trimState, auto: autoTrim };
   let crewLine: string | null = null;
   if (two) {
-    const where = s.crewOut > 0.75 ? "al trapezio" : s.crewOut > 0.3 ? "in cinghia" : "dentro";
-    const spi = s.spiHoist > 0.9 ? "spi su" : s.spiHoist > 0.05 ? "spi in manovra" : "spi giù";
-    crewLine = `${partnerName}: ${where} · ${spi}${role === "full" ? " · Spazio = issa/ammaina" : ""}`;
+    const weight = t(s.crewOut > 0.75 ? "hud.weight.trapeze" : s.crewOut > 0.3 ? "hud.weight.hiking" : "hud.weight.in");
+    const spi = t(s.spiHoist > 0.9 ? "hud.spi.up" : s.spiHoist > 0.05 ? "hud.spi.moving" : "hud.spi.down");
+    crewLine = t(role === "full" ? "hud.crewLine.partnerCrewsOnCall" : "hud.crewLine.partnerCrews", { name, weight, spi });
   }
   return { gauge: tillerGauge, sail, call: null, crewLine, chem };
 }

@@ -44,11 +44,14 @@ src/
              CrewAI.ts (crew: jib/spi trim, weight, side switch, spinnaker; Crew Chemistry)
   world/     Ocean.ts (Gerstner waves in GLSL), Waves.ts (same waves on CPU), BoatView.ts (Optimist),
              Boat420View.ts, SailMesh.ts, CourseView.ts
+  i18n/      index.ts (`t(key, params)`: typed lookup), it.ts (Italian catalog, the reference: it defines the
+             keys), plural.ts (plural forms from Intl.PluralRules). All player-facing text lives in a catalog
   ui/        Hud.ts (role-driven panel, compass, minimap, standings, tags)
   main.ts    scene, camera, menus, game loop, player controls per role
 tests/       Vitest tests (npm test): smoke.test.ts (every AI-only race finishes, every penalty served),
              golden.test.ts + golden/ (races.ts sails and records the golden races, races.json is the snapshot),
              rules.test.ts (rule 10/11/12/13 verdicts and penalty turns, two boats placed by hand)
+             i18n.test.ts (lookup, parameters, plural rules; catalogs with missing or extra keys fail the type-check)
 scripts/     polar.ts (npm run polar), golden-update.ts (npm run golden:update)
 ```
 **Rule:** `sailing/`, `race/`, `ai/` must not import Babylon. They run in Node (tests) and in the browser.
@@ -65,6 +68,9 @@ scripts/     polar.ts (npm run polar), golden-update.ts (npm run golden:update)
   Default steering = tiller (→ moves the tiller right, the boat turns left); "boat" mode is the option.
 - Sheets 0 = sheeted in, 1 = eased. Crew weight `crewOut` 0 = in, 0.5 = hiking, 1 = trapeze.
 - Port rounding = bearing from mark to boat **decreasing** (counter-clockwise from above).
+- Player-facing text: never a string literal in code. Add a key to `src/i18n/it.ts` (and every other catalog),
+  named `area.name` in camelCase (`toast.audioOn`, `hud.leg.sailing`), and show it with `t(key, params)`.
+  Messages with parameters are functions of a typed object; counts use `plurals(locale)`, never `n === 1`.
 
 ## Golden races
 `tests/golden.test.ts` sails six AI-only races (Optimist and 420 at 7/11/16 kn) and three 420 races with a

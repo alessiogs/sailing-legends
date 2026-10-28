@@ -3,6 +3,7 @@ import { distanceTo, legTarget, type Course } from "../race/Course";
 import type { Race, Racer } from "../race/Race";
 import type { Telemetry, TrimState } from "../sailing/BoatPhysics";
 import { WindField } from "../sailing/Wind";
+import { t } from "../i18n";
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 
@@ -26,13 +27,6 @@ export type Panel = {
   chem: { name: string; value: number } | null;
 };
 
-const TRIM_TEXT: Record<Telemetry["trimState"], string> = {
-  good: "Vela regolata ✓",
-  running: "Poppa: vela tutta lascata ✓",
-  luffing: "La vela sventa — cazza (W)",
-  stalled: "Troppo cazzata — lasca (S)",
-  irons: "Prua al vento! Poggia per ripartire",
-};
 
 export class Hud {
   private el = {
@@ -68,23 +62,23 @@ export class Hud {
     const legs = c.legs;
 
     // Race card.
-    const phaseTxt = race.phase === "prestart" ? "PRE-PARTENZA" : me.finishTime !== null ? "ARRIVATO" : me.ocs && !me.clearedBack ? "OCS — RIENTRA" : "IN REGATA";
-    this.el.phase.textContent = phaseTxt;
+    this.el.phase.textContent = t(race.phase === "prestart" ? "hud.phase.prestart" : me.finishTime !== null ? "hud.phase.finished"
+      : me.ocs && !me.clearedBack ? "hud.phase.ocs" : "hud.phase.racing");
     this.el.clock.textContent = fmtClock(me.finishTime ?? race.clock);
     this.el.clock.style.color = race.phase === "prestart" && race.clock > -10 ? "var(--warn)" : "";
     const standings = race.standings();
     const pos = standings.indexOf(me) + 1;
-    this.el.position.textContent = race.phase === "prestart" ? "–" : `${pos}°/${standings.length}`;
+    this.el.position.textContent = race.phase === "prestart" ? "–" : t("hud.position", { position: pos, boats: standings.length });
 
     let target = legTarget(legs[Math.max(0, Math.min(me.leg, legs.length - 1))]);
     if (me.leg === -1) {
-      this.el.leg.textContent = me.ocs && !me.clearedBack ? "Partenza anticipata: torna sotto la linea" : race.phase === "prestart" ? "Partenza: resta sotto la linea" : "Attraversa la linea di partenza";
+      this.el.leg.textContent = t(me.ocs && !me.clearedBack ? "hud.leg.ocs" : race.phase === "prestart" ? "hud.leg.prestart" : "hud.leg.cross");
       target = { x: (c.start.a.x + c.start.b.x) / 2, z: (c.start.a.z + c.start.b.z) / 2 };
     } else if (me.finishTime !== null) {
-      this.el.leg.textContent = "Regata conclusa";
+      this.el.leg.textContent = t("hud.leg.done");
     } else {
       const leg = legs[me.leg];
-      this.el.leg.textContent = `Lato ${me.leg + 1}/${legs.length} · ${leg.upwind ? "Bolina" : "Poppa"} → ${leg.name}${leg.kind === "mark" ? " · a sinistra" : ""}`;
+      this.el.leg.textContent = t("hud.leg.sailing", { leg: me.leg + 1, legs: legs.length, upwind: leg.upwind, target: leg.name, toPort: leg.kind === "mark" });
     }
     const dist = distanceTo(target, s.x, s.z);
     const brg = bearingTo(s.x, s.z, target.x, target.z);
@@ -96,11 +90,11 @@ export class Hud {
     this.el.speed.textContent = (tel.speed * KNOTS).toFixed(1);
     this.el.vmg.textContent = vmg.toFixed(1);
     const twaDeg = tel.twa / DEG;
-    this.el.twa.textContent = `${Math.abs(twaDeg).toFixed(0)}° ${twaDeg >= 0 ? "dx" : "sx"}`;
+    this.el.twa.textContent = t("hud.twa", { angle: Math.abs(twaDeg).toFixed(0), starboard: twaDeg >= 0 });
     this.el.tws.textContent = `${(tel.tws * KNOTS).toFixed(1)} kn`;
     this.el.tws.style.color = tel.puff > 0.25 ? "var(--warn)" : "";
     this.el.heel.textContent = `${Math.abs(tel.heelDeg).toFixed(0)}°`;
-    this.el.leeway.textContent = `scarroccio ${Math.abs(tel.leewayDeg).toFixed(0)}°`;
+    this.el.leeway.textContent = t("hud.leeway", { angle: Math.abs(tel.leewayDeg).toFixed(0) });
 
     // Wind shift vs. the mean, and whether it helps on the current tack.
     const shift = angleDiff(wind.meanDir, wind.sample(s.x, s.z).fromDir) / DEG;
@@ -108,7 +102,7 @@ export class Hud {
     if (Math.abs(shift) >= 3 && upwindLeg && me.finishTime === null) {
       const onStbd = tel.twa > 0; // wind over the starboard side
       const lift = (shift > 0) === onStbd;
-      this.el.shift.textContent = `Rotazione ${shift > 0 ? "+" : ""}${shift.toFixed(0)}° · ${lift ? "a favore su queste mure" : "contro: valuta la virata"}`;
+      this.el.shift.textContent = t(lift ? "hud.shift.lift" : "hud.shift.header", { shift: `${shift > 0 ? "+" : ""}${shift.toFixed(0)}` });
       this.el.shift.className = `shift ${lift ? "lift" : "header"}`;
     } else {
       this.el.shift.textContent = "";
@@ -122,7 +116,7 @@ export class Hud {
     this.el.trimOpt.style.left = `${lo * 100}%`;
     this.el.trimOpt.style.width = `${(hi - lo) * 100}%`;
     this.el.trimCur.style.left = `${sail.sheet * 100}%`;
-    this.el.trimState.textContent = sail.text ?? TRIM_TEXT[sail.state];
+    this.el.trimState.textContent = sail.text ?? t(`trim.${sail.state}`);
     this.el.trimState.className = `trim-state ${sail.state}`;
     this.el.autotrim.classList.toggle("hidden", !sail.auto);
     // Top gauge: the tiller (centred, left = port) or the crew's weight (0 in .. 1 trapeze).
@@ -146,14 +140,14 @@ export class Hud {
     this.el.crewLine.classList.toggle("hidden", !panel.crewLine);
     if (panel.crewLine) this.el.crewLine.textContent = panel.crewLine;
     this.el.chem.classList.toggle("hidden", !panel.chem);
-    if (panel.chem) this.el.chem.innerHTML = `Equipaggio con ${panel.chem.name} · Intesa <b>${panel.chem.value}/100</b>`;
+    if (panel.chem) this.el.chem.innerHTML = `${t("hud.chem.pair", { name: panel.chem.name })} <b>${t("hud.chem.value", { value: panel.chem.value })}</b>`;
 
     // Penalty turns still owed.
     if (me.penalty) {
       const turns = Math.round(me.penalty.needed / (2 * Math.PI));
       const done = Math.min(1, Math.abs(me.penalty.turned) / me.penalty.needed);
       this.el.penalty.classList.remove("hidden");
-      this.el.penaltyText.textContent = `Penalità: ${turns === 1 ? "1 giro" : `${turns} giri`} da fare (${Math.round(done * turns * 360)}° / ${turns * 360}°) · gira sempre nello stesso verso`;
+      this.el.penaltyText.textContent = t("hud.penalty", { turns, done: Math.round(done * turns * 360), total: turns * 360 });
       this.el.penaltyBar.style.width = `${done * 100}%`;
     } else this.el.penalty.classList.add("hidden");
 
@@ -170,10 +164,10 @@ export class Hud {
   private renderStandings(race: Race, standings: Racer[], me: Racer) {
     const legs = race.course.legs.length;
     this.el.standings.innerHTML = standings.map((r, i) => {
-      const status = r.dsq ? "DSQ" : r.finishTime !== null ? fmtClock(r.finishTime)
-        : r.penalty ? "penalità"
-        : r.leg < 0 ? (r.ocs && !r.clearedBack ? "OCS" : race.phase === "prestart" ? "pre" : "partenza")
-        : `lato ${r.leg + 1}/${legs}`;
+      const status = r.dsq ? t("standings.dsq") : r.finishTime !== null ? fmtClock(r.finishTime)
+        : r.penalty ? t("standings.penalty")
+        : r.leg < 0 ? t(r.ocs && !r.clearedBack ? "standings.ocs" : race.phase === "prestart" ? "standings.prestart" : "standings.start")
+        : t("standings.leg", { leg: r.leg + 1, legs });
       return `<li class="${r === me ? "me" : ""}"><span class="n">${i + 1}</span><span><i class="dot" style="background:${BOAT_COLORS[r.id] ?? "#ccc"}"></i>${r.name}</span><span class="s">${status}</span></li>`;
     }).join("");
   }
@@ -305,7 +299,7 @@ export class Hud {
     g.beginPath(); g.moveTo(0, 20); g.lineTo(8, 6); g.lineTo(-8, 6); g.closePath(); g.fill();
     g.restore();
     g.fillStyle = "#cfe2ea"; g.font = "600 18px Inter, system-ui, sans-serif"; g.textAlign = "left";
-    g.fillText("VENTO", W - 84, 74);
+    g.fillText(t("hud.minimap.wind"), W - 84, 74);
   }
 
   /** Floating name tags; `project` returns screen coords or null when off-screen. */
@@ -326,7 +320,7 @@ export class Hud {
       el.style.left = `${p.x}px`;
       el.style.top = `${p.y}px`;
       const pos = standings.indexOf(r) + 1;
-      el.textContent = race.phase === "prestart" ? r.name : `${pos}° ${r.name}${r.ocs && !r.clearedBack ? " · OCS" : ""}`;
+      el.textContent = race.phase === "prestart" ? r.name : t("hud.tag", { position: pos, name: r.name, ocs: r.ocs && !r.clearedBack });
     }
   }
 
