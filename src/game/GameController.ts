@@ -1,5 +1,4 @@
 import { Matrix, Vector3, type Engine, type Scene } from "@babylonjs/core";
-import { crewOnWrongSide, wantSpinnaker } from "../ai/CrewAI";
 import type { Input } from "../core/Input";
 import type { Sound } from "../core/Sound";
 import { DEG } from "../core/math";
@@ -9,11 +8,10 @@ import { HELM, type PlayerChoice } from "../race/PlayerChoice";
 import type { Racer } from "../race/Race";
 import { RaceSession } from "../race/RaceSession";
 import { CLASSES, isTwoPerson, type BoatClass } from "../sailing/BoatClass";
-import { crewWeight, spinnakerState } from "../sailing/BoatStates";
-import { crewChemistry, RIVALS, type SailorProfile } from "../sailors/Sailors";
+import { RIVALS, type SailorProfile } from "../sailors/Sailors";
 import { boatColors } from "../ui/boatColors";
-import { crewWeightText, spinnakerText } from "../ui/boatStateText";
-import type { Hud, Panel } from "../ui/Hud";
+import type { Hud } from "../ui/Hud";
+import { buildPanel } from "../ui/hudPanel";
 import { eventText } from "../ui/raceEventText";
 import { Boat420View } from "../world/Boat420View";
 import { boatLook, BoatView } from "../world/BoatView";
@@ -251,7 +249,7 @@ export class GameController {
     this.courseView!.update(this.time, this.waves, p.leg < 0, !!leg && leg.kind === "finish");
     this.cameraRig.follow(dt, p.sim.state, isTwoPerson(this.boatClass));
     this.ocean!.update(this.time, camera, session.wind);
-    hud.update(dt, session.race, p, session.wind, this.buildPanel(p));
+    hud.update(dt, session.race, p, session.wind, this.panel(session));
     const tel = p.sim.telemetry;
     const luff = tel.trimState === "luffing" || tel.trimState === "irons" ? Math.max(0.3, 1 - tel.aoa / (6 * DEG)) : 0;
     this.sound.update(dt, tel.aws, tel.speed, mode === "racing" ? luff : 0, mode === "racing");
@@ -324,41 +322,11 @@ export class GameController {
   }
 
   // ---------- HUD panel ----------
-  private buildPanel(p: Racer): Panel {
-    const { session, input } = this;
-    const s = p.sim.state, tel = p.sim.telemetry;
-    const two = isTwoPerson(this.boatClass);
-    const name = session.partner?.name ?? "";
-    const chem = two && session.partner ? { name, value: crewChemistry(session.partner) } : null;
-    if (input.role === "crew") {
-      const spiUp = s.spiHoist > 0.5;
-      const sailTel = spiUp ? tel.spi! : tel.jib!;
-      const sheet = spiUp ? s.spiSheet : s.jibSheet;
-      // Calls from the Partner (the Helm), most urgent first.
-      let call: string | null = null;
-      const ideal = tel.crew!.ideal;
-      if (crewOnWrongSide(p.sim)) call = t("call.switchSide", { name });
-      else if (session.race.phase !== "prestart" && wantSpinnaker(session.race, p) !== !!session.playerControls.spi)
-        call = session.playerControls.spi ? t("call.spiDrop", { name }) : t("call.spiHoist", { name });
-      else if (tel.crew!.balance > 60) call = t("call.hikeOut", { name });
-      else if (s.crewOut - ideal > 0.25 && tel.crew!.balance < -20) call = t("call.comeIn", { name });
-      const where = crewWeightText(crewWeight(s.crewOut), "own");
-      const spi = spinnakerText(spinnakerState(s.spiHoist));
-      return {
-        gauge: { label: t("hud.gauge.weight", { position: where }), value: s.crewOut, centered: false, ideal, ends: [t("hud.gauge.in"), t("hud.gauge.out")] },
-        sail: { label: spiUp ? t("hud.sail.spinnaker") : t("hud.sail.jib"), sheet, optimal: sailTel.optimal, state: sailTel.trimState, autoTrim: this.assists.autoTrim,
-          text: tel.jib!.backed && !spiUp ? t("trim.jibBacked") : spiUp && tel.spi!.collapsed ? t("trim.spiCollapsed") : undefined },
-        call, partnerLine: t("hud.partnerLine.helm", { name, spi }), chem,
-      };
-    }
-    const tillerGauge = { label: t("hud.gauge.tiller"), value: input.tiller, centered: true, ends: [t("hud.gauge.left"), t("hud.gauge.right")] as [string, string] };
-    const sail = { label: two ? t("hud.sail.main") : t("hud.sail.single"), sheet: s.sheet, optimal: tel.optimalSheet, state: tel.trimState, autoTrim: this.assists.autoTrim };
-    let partnerLine: string | null = null;
-    if (two) {
-      const weight = crewWeightText(crewWeight(s.crewOut), "partner");
-      const spi = spinnakerText(spinnakerState(s.spiHoist));
-      partnerLine = t(this.choice.control === "fullBoat" ? "hud.partnerLine.crewOnCall" : "hud.partnerLine.crew", { name, weight, spi });
-    }
-    return { gauge: tillerGauge, sail, call: null, partnerLine, chem };
+  /** The HUD's bottom panel for the player's boat, from the race and the choices held here. */
+  private panel(session: RaceSession) {
+    return buildPanel({
+      session, role: this.input.role, control: this.choice.control, twoPerson: isTwoPerson(this.boatClass),
+      tiller: this.input.tiller, autoTrim: this.assists.autoTrim,
+    });
   }
 }
