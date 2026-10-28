@@ -7,8 +7,11 @@
  * Plural forms come from the language's plural rules (`plural.ts`), never from `n === 1` checks.
  *
  * Key convention: `area.name` in camelCase, with more dotted segments for variants of one message
- * (`hud.phase.prestart`, `trim.luffing`). Areas: `menu`, `controls`, `toast`, `coach`, `call`, `hud`, `trim`,
- * `standings`, `results`.
+ * (`hud.phase.prestart`, `trim.luffing`). Areas: `menu`, `pause`, `controls`, `key`, `toast`, `coach`, `call`, `hud`,
+ * `trim`, `standings`, `results`.
+ *
+ * Static text in `index.html` names its key in a `data-i18n` (text) or `data-i18n-aria-label` attribute and is filled
+ * at startup by `ui/pageText.ts`.
  */
 import { italian } from "./it";
 
@@ -27,4 +30,13 @@ const active: Catalog = italian;
 export function t<K extends MessageKey>(key: K, ...params: MessageParams<K>): string {
   const message: string | ((params: never) => string) = active[key];
   return typeof message === "string" ? message : (message as (p: unknown) => string)(params[0]);
+}
+
+/**
+ * A message without parameters, by a key only known at runtime (the page's `data-i18n` attributes);
+ * `undefined` when there is no such key or the message takes parameters.
+ */
+export function lookup(key: string): string | undefined {
+  const message: unknown = (active as Readonly<Record<string, unknown>>)[key];
+  return typeof message === "string" ? message : undefined;
 }
