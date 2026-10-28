@@ -1,10 +1,12 @@
 import {
-  Color3, Mesh, MeshBuilder, TransformNode, Vector3, VertexData, type Scene,
+  Color3, Mesh, MeshBuilder, TransformNode, Vector3, type Scene,
 } from "@babylonjs/core";
 import { clamp } from "../core/math";
 import type { BoatState, Telemetry } from "../sailing/BoatPhysics";
 import { boatMaterial, type BoatLook } from "./boatMaterials";
 import { BoatViewBase, sailLook, type BoatMotion } from "./BoatViewBase";
+import { SailMesh } from "./SailMesh";
+import { OPTIMIST_CUT } from "./sailShape";
 import { placeSailor, sailorFigure, type FigureSize } from "./SailorFigure";
 
 // Sail corners in the rig frame (mast at origin, boom along -Z, sail plane = YZ).
@@ -27,10 +29,7 @@ export class BoatView extends BoatViewBase {
   protected readonly rig: TransformNode;
   protected readonly rudder: TransformNode;
   protected readonly burgee: TransformNode;
-  private sail: Mesh;
-  private sailPos: Float32Array;
-  private sailIdx: number[];
-  private sailNormals: Float32Array;
+  private sail: SailMesh;
   private sailor: TransformNode;
 
   constructor(scene: Scene, name: string, look: BoatLook) {
@@ -134,28 +133,8 @@ export class BoatView extends BoatViewBase {
     sprit.material = darkMat;
     sprit.parent = this.rig;
 
-    // Sail: a grid we re-shape every frame (camber, twist, luffing flutter).
-    this.sail = new Mesh(`${name}-sail`, scene);
-    this.sailPos = new Float32Array((NU + 1) * (NV + 1) * 3);
-    this.sailNormals = new Float32Array(this.sailPos.length);
-    this.sailIdx = [];
-    for (let v = 0; v < NV; v++) {
-      for (let u = 0; u < NU; u++) {
-        const a = v * (NU + 1) + u, b = a + 1, c = a + NU + 1, d = c + 1;
-        this.sailIdx.push(a, c, b, b, c, d);
-      }
-    }
-    const uvs: number[] = [];
-    for (let v = 0; v <= NV; v++) for (let u = 0; u <= NU; u++) uvs.push(u / NU, v / NV);
-    this.shapeSail(0.5, 0, 1);
-    const vd = new VertexData();
-    vd.positions = this.sailPos;
-    vd.indices = this.sailIdx;
-    vd.normals = this.sailNormals;
-    vd.uvs = uvs;
-    vd.applyToMesh(this.sail, true);
-    this.sail.material = sailMat;
-    this.sail.parent = this.rig;
+    // Sail: a grid re-shaped every frame (camber, twist, luffing flutter), with the sprit sail's fixed offsets.
+    this.sail = new SailMesh(scene, `${name}-sail`, sailMat, this.rig, TACK, CLEW, THROAT, PEAK, NU, NV, OPTIMIST_CUT);
 
     this.burgee = this.addBurgee(scene, name, 2.46, 0.78, 0.28, stripeMat);
 
@@ -165,37 +144,10 @@ export class BoatView extends BoatViewBase {
     for (const m of this.root.getChildMeshes()) m.isPickable = false;
   }
 
-  /**
-   * Re-shape the sail grid. camber 0..1 = how full the sail is drawing, side = +1/-1 bulge direction,
-   * luff 0..1 = how much it is flapping.
-   */
-  private shapeSail(camber: number, luff: number, side: number) {
-    let i = 0;
-    const t = this.flutter;
-    for (let v = 0; v <= NV; v++) {
-      const fv = v / NV;
-      for (let u = 0; u <= NU; u++) {
-        const fu = u / NU;
-        const bx = TACK.x + (CLEW.x - TACK.x) * fu, by = TACK.y + (CLEW.y - TACK.y) * fu, bz = TACK.z + (CLEW.z - TACK.z) * fu;
-        const tx = THROAT.x + (PEAK.x - THROAT.x) * fu, ty = THROAT.y + (PEAK.y - THROAT.y) * fu, tz = THROAT.z + (PEAK.z - THROAT.z) * fu;
-        const belly = 4 * fu * (1 - fu);
-        const edge = Math.min(1, fv * 6) * Math.min(1, (1 - fv) * 6) * 0.6 + 0.4;
-        let x = side * (0.2 * camber * belly * edge + 0.28 * fu * fv * camber); // camber + twist to leeward
-        // Luffing: ripples travel aft from the mast.
-        x += luff * Math.sin(t * 22 - fu * 9 + fv * 4) * 0.07 * (0.35 + belly) * edge;
-        this.sailPos[i++] = bx + (tx - bx) * fv + x;
-        this.sailPos[i++] = by + (ty - by) * fv;
-        this.sailPos[i++] = bz + (tz - bz) * fv;
-      }
-    }
-    VertexData.ComputeNormals(this.sailPos, this.sailIdx, this.sailNormals);
-  }
-
   protected drawSails(_dt: number, s: BoatState, tel: Telemetry) {
     const { camber, luff } = sailLook(tel);
-    this.shapeSail(camber, luff, Math.sign(this.boomVisual) || s.boomSide);
-    this.sail.updateVerticesData("position", this.sailPos);
-    this.sail.updateVerticesData("normal", this.sailNormals);
+    this.sail.shape(camber, luff, Math.sign(this.boomVisual) || s.boomSide, this.flutter);
+    this.sail.commit();
   }
 
   protected placeSailors(s: BoatState, tel: Telemetry) {
