@@ -48,14 +48,14 @@
             <div class="tiller-bar"><i id="tiller-pos"></i><b id="gauge-center"></b><u id="gauge-ideal"></u></div>
             <div class="trim-ends"><span id="gauge-left" data-i18n="hud.gauge.left"></span><span id="gauge-right" data-i18n="hud.gauge.right"></span></div>
           </div>
-          <div class="trim-head"><small id="sail-label" data-i18n="hud.sail.single"></small><span id="autotrim" class="chip" data-i18n="hud.autoTrimChip"></span></div>
+          <div class="trim-head"><small id="sail-label" data-i18n="hud.sail.single"></small><span id="auto-trim-chip" class="chip" data-i18n="hud.autoTrimChip"></span></div>
           <div class="trim-bar">
             <div id="trim-opt" class="trim-opt"></div>
             <div id="trim-cur" class="trim-cur"></div>
           </div>
           <div class="trim-ends"><span data-i18n="hud.sheet.in"></span><span data-i18n="hud.sheet.out"></span></div>
           <div id="trim-state" class="trim-state">—</div>
-          <div id="crew-line" class="crew-line hidden"></div>
+          <div id="partner-line" class="partner-line hidden"></div>
         </div>
 
         <canvas id="minimap" width="400" height="460" class="panel" data-i18n-aria-label="hud.minimap.label"></canvas>
@@ -98,9 +98,9 @@
               <button id="open-controls" class="ghost" data-i18n="menu.openControls"> <span>K</span></button>
               <div id="steer-summary" class="steer-help"></div>
             </div>
-            <label class="opt check"><input type="checkbox" id="assist" /> <span data-i18n="menu.autoTrim"></span></label>
+            <label class="opt check"><input type="checkbox" id="auto-trim-opt" /> <span data-i18n="menu.autoTrim"></span></label>
           </div>
-          <div id="crew-block" class="crew-block hidden">
+          <div id="pair-block" class="pair-block hidden">
             <div class="opt">
               <small data-i18n="menu.label.role"></small>
               <div class="seg" id="role-opt">

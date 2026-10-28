@@ -1,6 +1,7 @@
 import { angleDiff, bearingTo, DEG, KNOTS } from "../core/math";
 import { distanceTo, legTarget, type Course } from "../race/Course";
 import type { Race, Racer } from "../race/Race";
+import { isTwoPerson } from "../sailing/BoatClass";
 import type { Telemetry, TrimState } from "../sailing/BoatPhysics";
 import { WindField } from "../sailing/Wind";
 import { t } from "../i18n";
@@ -16,15 +17,15 @@ const fmtClock = (t: number) => {
   return `${neg ? "-" : ""}${Math.floor(a / 60)}:${String(a % 60).padStart(2, "0")}`;
 };
 
-/** What the bottom panel shows; depends on the player's role on board. */
+/** What the bottom panel shows; depends on the player's Role on board. */
 export type Panel = {
   gauge: { label: string; value: number; centered: boolean; ideal?: number; ends: [string, string] };
-  sail: { label: string; sheet: number; optimal: number; state: TrimState; auto: boolean; text?: string };
-  /** A call from the partner the player should act on (crew role), or null. */
+  sail: { label: string; sheet: number; optimal: number; state: TrimState; autoTrim: boolean; text?: string };
+  /** A call from the Partner the player should act on (as Crew), or null. */
   call: string | null;
-  /** One-line status of the other person on board, or null. */
-  crewLine: string | null;
-  /** Crew Chemistry with the partner, or null for single-handers. */
+  /** One-line status of the Partner on board, or null. */
+  partnerLine: string | null;
+  /** Crew Chemistry with the Partner, or null for single-handers. */
   chem: { name: string; value: number } | null;
 };
 
@@ -34,9 +35,9 @@ export class Hud {
     hud: $("hud"), phase: $("phase"), clock: $("clock"), position: $("position"), leg: $("leg"), target: $("target"),
     standings: $("standings"), speed: $("speed"), vmg: $("vmg"), twa: $("twa"), tws: $("tws"), heel: $("heel"),
     leeway: $("leeway"), shift: $("shift"), trimOpt: $("trim-opt"), trimCur: $("trim-cur"), trimState: $("trim-state"),
-    autotrim: $("autotrim"), toast: $("toast"), tags: $("tags"), tillerPos: $("tiller-pos"),
+    autoTrim: $("auto-trim-chip"), toast: $("toast"), tags: $("tags"), tillerPos: $("tiller-pos"),
     gaugeLabel: $("gauge-label"), gaugeCenter: $("gauge-center"), gaugeIdeal: $("gauge-ideal"), gaugeLeft: $("gauge-left"),
-    gaugeRight: $("gauge-right"), sailLabel: $("sail-label"), call: $("call"), crewLine: $("crew-line"), chem: $("chem"),
+    gaugeRight: $("gauge-right"), sailLabel: $("sail-label"), call: $("call"), partnerLine: $("partner-line"), chem: $("chem"),
     penalty: $("penalty"), penaltyText: $("penalty-text"), penaltyBar: $("penalty-bar"),
   };
   private compass = $<HTMLCanvasElement>("compass").getContext("2d")!;
@@ -119,8 +120,8 @@ export class Hud {
     this.el.trimCur.style.left = `${sail.sheet * 100}%`;
     this.el.trimState.textContent = sail.text ?? t(`trim.${sail.state}`);
     this.el.trimState.className = `trim-state ${sail.state}`;
-    this.el.autotrim.classList.toggle("hidden", !sail.auto);
-    // Top gauge: the tiller (centred, left = port) or the crew's weight (0 in .. 1 trapeze).
+    this.el.autoTrim.classList.toggle("hidden", !sail.autoTrim);
+    // Top gauge: the tiller (centred, left = port) or the Crew's weight (0 in .. 1 trapeze).
     const g = panel.gauge;
     this.el.gaugeLabel.textContent = g.label;
     this.el.gaugeLeft.textContent = g.ends[0];
@@ -138,8 +139,8 @@ export class Hud {
     if (g.ideal !== undefined) this.el.gaugeIdeal.style.left = `${Math.max(0, Math.min(1, g.ideal)) * 100}%`;
     this.el.call.classList.toggle("hidden", !panel.call);
     if (panel.call) this.el.call.textContent = panel.call;
-    this.el.crewLine.classList.toggle("hidden", !panel.crewLine);
-    if (panel.crewLine) this.el.crewLine.textContent = panel.crewLine;
+    this.el.partnerLine.classList.toggle("hidden", !panel.partnerLine);
+    if (panel.partnerLine) this.el.partnerLine.textContent = panel.partnerLine;
     this.el.chem.classList.toggle("hidden", !panel.chem);
     if (panel.chem) this.el.chem.innerHTML = `${t("hud.chem.pair", { name: panel.chem.name })} <b>${t("hud.chem.value", { value: panel.chem.value })}</b>`;
 
@@ -315,7 +316,7 @@ export class Hud {
         this.el.tags.appendChild(el);
         this.tagEls.set(r.id, el);
       }
-      const p = project(r.sim.state.x, r.sim.cls.crew ? 7.2 : 3.6, r.sim.state.z);
+      const p = project(r.sim.state.x, isTwoPerson(r.sim.cls) ? 7.2 : 3.6, r.sim.state.z);
       if (!p) { el.style.display = "none"; continue; }
       el.style.display = "";
       el.style.left = `${p.x}px`;

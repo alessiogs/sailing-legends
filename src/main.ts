@@ -12,7 +12,7 @@ import type { Racer } from "./race/Race";
 import type { Controls } from "./sailing/BoatPhysics";
 import { RaceSession } from "./race/RaceSession";
 import { CREW, FULL_BOAT, HELM, type PlayerChoice } from "./race/PlayerChoice";
-import { CLASSES, type BoatClass } from "./sailing/BoatClass";
+import { CLASSES, isTwoPerson, type BoatClass } from "./sailing/BoatClass";
 import { t, type MessageKey } from "./i18n";
 import { Hud, type Panel } from "./ui/Hud";
 import { fillPageText } from "./ui/pageText";
@@ -63,6 +63,12 @@ const LOOKS: Record<string, BoatLook> = {
   ai2: { hull: new Color3(0.86, 0.22, 0.18), sail: new Color3(0.98, 0.93, 0.92), jacket: new Color3(0.8, 0.12, 0.12), stripe: new Color3(0.95, 0.95, 0.95) },
 };
 
+/** Help the game gives by doing a secondary task for the player; each can be switched off. */
+type Assists = {
+  /** Auto-trim: the player's sail trim is set automatically. */
+  autoTrim: boolean;
+};
+
 type Mode = "menu" | "racing" | "paused" | "results" | "controls";
 let controlsReturn: Mode = "menu";
 let mode: Mode = "menu";
@@ -73,7 +79,8 @@ let ocean: Ocean | null = null;
 let waves: Wave[] = [];
 let time = 0;
 let windKn = 11;
-let autoTrim = false;
+/** The Assists the player has switched on. */
+const assists: Assists = { autoTrim: false };
 let boatClass: BoatClass = CLASSES.optimist;
 let choice: PlayerChoice = HELM;
 let partner: SailorProfile = RIVALS[1];
@@ -107,7 +114,7 @@ sound.muted = !!prefs.muted;
 
 const $ = (id: string) => document.getElementById(id)!;
 const menuEl = $("menu"), pauseEl = $("pause"), resultsEl = $("results"), controlsEl = $("controls");
-const assistEl = $("assist") as HTMLInputElement;
+const autoTrimEl = $("auto-trim-opt") as HTMLInputElement;
 
 function newRace() {
   for (const b of boats.values()) b.dispose();
@@ -116,7 +123,7 @@ function newRace() {
   hud.clearTags();
   const seed = Math.floor(Math.random() * 1e6);
   session = new RaceSession({ seed, windKn, boatClass: boatClass, choice, partner });
-  input.station = boatClass.crew && choice.role === "crew" ? "crew" : "helm";
+  input.role = isTwoPerson(boatClass) ? choice.role : "helm";
   crewSheets = { jib: 0.5, spi: 0.5 };
   wasTacking = false;
   waves = makeWaves(session.wind.meanDir, windKn);
@@ -125,7 +132,7 @@ function newRace() {
   courseView = new CourseView(scene, session.race.course);
   for (const r of session.race.racers) {
     const look = LOOKS[r.id] ?? LOOKS.ai0;
-    boats.set(r.id, r.sim.cls.crew ? new Boat420View(scene, r.id, look) : new BoatView(scene, r.id, look));
+    boats.set(r.id, isTwoPerson(r.sim.cls) ? new Boat420View(scene, r.id, look) : new BoatView(scene, r.id, look));
   }
   input.reset();
   lastBoomSide = 0;
@@ -151,7 +158,7 @@ function setMode(m: Mode) {
 
 function startFromMenu() {
   sound.init();
-  autoTrim = assistEl.checked;
+  assists.autoTrim = autoTrimEl.checked;
   newRace();
   setMode("racing");
 }
@@ -195,7 +202,7 @@ $("controls-reset").addEventListener("click", () => { input.settings = { ...DEFA
 $("resume-btn").addEventListener("click", () => setMode("racing"));
 $("pause-menu").addEventListener("click", () => setMode("menu"));
 syncControls();
-// ---------- Boat, role and partner choice ----------
+// ---------- Boat, Role and Partner choice ----------
 /** The three Role buttons (`data-v`), each a Role and Control mode, with its help text. */
 const ROLE_OPTIONS = {
   helm: { choice: HELM, help: "menu.roleHelp.helm" },
@@ -205,10 +212,10 @@ const ROLE_OPTIONS = {
 type RoleOption = keyof typeof ROLE_OPTIONS;
 const roleOption = (c: PlayerChoice): RoleOption => c.role === "crew" ? "crew" : c.control === "fullBoat" ? "fullBoat" : "helm";
 function syncBoatMenu() {
-  const two = !!boatClass.crew;
+  const two = isTwoPerson(boatClass);
   for (const o of Array.from(document.querySelectorAll<HTMLButtonElement>("#class-opt button"))) o.classList.toggle("on", o.dataset.v === boatClass.id);
   for (const o of Array.from(document.querySelectorAll<HTMLButtonElement>("#role-opt button"))) o.classList.toggle("on", o.dataset.v === roleOption(choice));
-  $("crew-block").classList.toggle("hidden", !two);
+  $("pair-block").classList.toggle("hidden", !two);
   $("lede-class").textContent = two ? t("menu.lede.twoPerson") : t("menu.lede.single");
   $("version-chip").textContent = t("menu.versionChip", { boatClass: boatClass.name.toUpperCase() });
   $("role-help").textContent = t(ROLE_OPTIONS[roleOption(choice)].help);
@@ -267,14 +274,14 @@ function handleActions() {
     if (a === "pause") setMode(mode === "paused" ? "racing" : mode === "racing" ? "paused" : mode);
     if (a === "restart") { newRace(); setMode("racing"); }
     if (a === "menu" || a === "help") { setMode("menu"); }
-    if (a === "autotrim" && mode === "racing") {
-      autoTrim = !autoTrim;
-      assistEl.checked = autoTrim;
-      if (!autoTrim) input.sheet = input.station === "crew" ? activeCrewSheet() : session.player!.sim.state.sheet;
-      hud.toast(autoTrim ? t("toast.autoTrimOn") : t("toast.autoTrimOff"));
+    if (a === "autoTrim" && mode === "racing") {
+      assists.autoTrim = !assists.autoTrim;
+      autoTrimEl.checked = assists.autoTrim;
+      if (!assists.autoTrim) input.sheet = input.role === "crew" ? activeCrewSheet() : session.player!.sim.state.sheet;
+      hud.toast(assists.autoTrim ? t("toast.autoTrimOn") : t("toast.autoTrimOff"));
     }
     if (a === "spi" && mode === "racing") callSpinnaker();
-    if (a === "switch" && mode === "racing" && input.station === "crew") {
+    if (a === "switch" && mode === "racing" && input.role === "crew") {
       session.playerControls.switchSide = true;
       hud.toast(t("toast.switchSide"));
     }
@@ -282,7 +289,7 @@ function handleActions() {
       camMode = camMode === "chase" ? "free" : camMode === "free" ? "top" : "chase";
       hud.toast(t(`toast.camera.${camMode}`));
       if (camMode === "chase") { camera.beta = 1.18; camera.radius = chaseRadius(); }
-      if (camMode === "top") { camera.beta = 0.12; camera.radius = boatClass.crew ? 70 : 48; }
+      if (camMode === "top") { camera.beta = 0.12; camera.radius = isTwoPerson(boatClass) ? 70 : 48; }
     }
   }
 }
@@ -293,7 +300,7 @@ function updateCamera(dt: number) {
   const k = far ? 1 : Math.min(1, dt * 3);
   camera.target.x += (s.x - camera.target.x) * k;
   camera.target.z += (s.z - camera.target.z) * k;
-  camera.target.y = boatClass.crew ? 1.6 : 0.9;
+  camera.target.y = isTwoPerson(boatClass) ? 1.6 : 0.9;
   if (camMode === "chase") {
     const behind = Math.atan2(-Math.cos(s.heading), -Math.sin(s.heading));
     camera.alpha = far ? behind : lerpAngle(camera.alpha, behind, Math.min(1, dt * 1.6));
@@ -332,7 +339,7 @@ function playerCoaching() {
   if (lastBoomSide === 0) lastBoomSide = s.boomSide;
   if (s.boomSide !== lastBoomSide) {
     const gybe = Math.abs(tel.awa) > 90 * DEG;
-    // When the partner helms, the call comes from them (the crew must react).
+    // When the Partner is the Helm, the call comes from them (the player, as Crew, must react).
     if (session.partnerHelm) hud.toast(t(gybe ? "coach.partnerGybe" : "coach.partnerTack", { name: session.partner!.name }), "bad");
     else hud.toast(gybe ? t("coach.gybe") : t("coach.tack"));
     lastBoomSide = s.boomSide;
@@ -353,13 +360,13 @@ let crewSheets = { jib: 0.5, spi: 0.5 };
 let activeSail: "jib" | "spi" = "jib";
 let wasTacking = false;
 
-function chaseRadius() { return boatClass.crew ? 17 : 12; }
+function chaseRadius() { return isTwoPerson(boatClass) ? 17 : 12; }
 
 function activeCrewSheet() {
   return activeSail === "spi" ? crewSheets.spi : crewSheets.jib;
 }
 
-/** Space: hoist/drop the spinnaker (crew), or call for it (full boat). */
+/** Space: hoist/drop the spinnaker (Crew), or call for it (Full Boat Control). */
 function callSpinnaker() {
   if (!boatClass.spinnaker) return;
   const pc = session.playerControls;
@@ -381,14 +388,14 @@ function applyPlayerControls(dt: number, p: Racer) {
     if (!autopilot || autopilot.racer !== p) autopilot = new RacingAI(p, AUTOPILOT_HELM, session.race, 99, 3);
     const c = autopilot.update(dt, session.wind);
     if (!session.partnerHelm) { pc.rudder = c.rudder; pc.sheet = c.sheet; }
-    if (input.station === "crew") autoCrew(pc, p);
+    if (input.role === "crew") autopilotCrew(pc, p);
     return;
   }
-  if (input.station === "crew") {
-    // The partner helms (RaceSession fills rudder and mainsheet). We trim and move.
+  if (input.role === "crew") {
+    // The Partner is the Helm (RaceSession fills rudder and mainsheet). We trim and move.
     const nowSail: "jib" | "spi" = p.sim.state.spiHoist > 0.5 ? "spi" : "jib";
     if (nowSail !== activeSail) { activeSail = nowSail; input.sheet = activeCrewSheet(); }
-    if (autoTrim) input.sheet = activeSail === "spi" ? tel.spi!.optimal : tel.jib!.optimal;
+    if (assists.autoTrim) input.sheet = activeSail === "spi" ? tel.spi!.optimal : tel.jib!.optimal;
     crewSheets[activeSail] = input.sheet;
     pc.jibSheet = crewSheets.jib;
     pc.spiSheet = crewSheets.spi;
@@ -396,14 +403,14 @@ function applyPlayerControls(dt: number, p: Racer) {
     return;
   }
   pc.rudder = input.rudder;
-  if (autoTrim) {
+  if (assists.autoTrim) {
     input.sheet = tel.optimalSheet;
   }
   pc.sheet = input.sheet;
 }
 
-/** Test helper: perfect crew work for the autopilot. */
-function autoCrew(pc: Controls, p: Racer) {
+/** Test helper: perfect Crew work for the autopilot. */
+function autopilotCrew(pc: Controls, p: Racer) {
   const tel = p.sim.telemetry;
   pc.jibSheet = tel.jib?.optimal; pc.spiSheet = tel.spi?.optimal; pc.crewOut = tel.crew?.ideal;
   pc.spi = wantSpinnaker(session.race, p);
@@ -412,14 +419,14 @@ function autoCrew(pc: Controls, p: Racer) {
 
 function buildPanel(p: Racer): Panel {
   const s = p.sim.state, tel = p.sim.telemetry;
-  const two = !!boatClass.crew;
+  const two = isTwoPerson(boatClass);
   const name = session.partner?.name ?? "";
   const chem = two && session.partner ? { name, value: crewChemistry(session.partner) } : null;
-  if (input.station === "crew") {
+  if (input.role === "crew") {
     const spiUp = s.spiHoist > 0.5;
     const sailTel = spiUp ? tel.spi! : tel.jib!;
     const sheet = spiUp ? s.spiSheet : s.jibSheet;
-    // Calls from the helm, most urgent first.
+    // Calls from the Partner (the Helm), most urgent first.
     let call: string | null = null;
     const wrongSide = tel.jib!.backed || !tel.crew!.onWindward || (s.spiHoist > 0.3 && tel.spi!.wrongSide);
     const ideal = tel.crew!.ideal;
@@ -432,20 +439,20 @@ function buildPanel(p: Racer): Panel {
     const spi = t(s.spiHoist > 0.9 ? "hud.spi.up" : s.spiHoist > 0.05 ? "hud.spi.moving" : "hud.spi.down");
     return {
       gauge: { label: t("hud.gauge.weight", { position: where }), value: s.crewOut, centered: false, ideal, ends: [t("hud.gauge.in"), t("hud.gauge.out")] },
-      sail: { label: spiUp ? t("hud.sail.spinnaker") : t("hud.sail.jib"), sheet, optimal: sailTel.optimal, state: sailTel.trimState, auto: autoTrim,
+      sail: { label: spiUp ? t("hud.sail.spinnaker") : t("hud.sail.jib"), sheet, optimal: sailTel.optimal, state: sailTel.trimState, autoTrim: assists.autoTrim,
         text: tel.jib!.backed && !spiUp ? t("trim.jibBacked") : spiUp && tel.spi!.collapsed ? t("trim.spiCollapsed") : undefined },
-      call, crewLine: t("hud.crewLine.partnerHelms", { name, spi }), chem,
+      call, partnerLine: t("hud.partnerLine.helm", { name, spi }), chem,
     };
   }
   const tillerGauge = { label: t("hud.gauge.tiller"), value: input.tiller, centered: true, ends: [t("hud.gauge.left"), t("hud.gauge.right")] as [string, string] };
-  const sail = { label: two ? t("hud.sail.main") : t("hud.sail.single"), sheet: s.sheet, optimal: tel.optimalSheet, state: tel.trimState, auto: autoTrim };
-  let crewLine: string | null = null;
+  const sail = { label: two ? t("hud.sail.main") : t("hud.sail.single"), sheet: s.sheet, optimal: tel.optimalSheet, state: tel.trimState, autoTrim: assists.autoTrim };
+  let partnerLine: string | null = null;
   if (two) {
     const weight = t(s.crewOut > 0.75 ? "hud.weight.trapeze" : s.crewOut > 0.3 ? "hud.weight.hiking" : "hud.weight.in");
     const spi = t(s.spiHoist > 0.9 ? "hud.spi.up" : s.spiHoist > 0.05 ? "hud.spi.moving" : "hud.spi.down");
-    crewLine = t(choice.control === "fullBoat" ? "hud.crewLine.partnerCrewsOnCall" : "hud.crewLine.partnerCrews", { name, weight, spi });
+    partnerLine = t(choice.control === "fullBoat" ? "hud.partnerLine.crewOnCall" : "hud.partnerLine.crew", { name, weight, spi });
   }
-  return { gauge: tillerGauge, sail, call: null, crewLine, chem };
+  return { gauge: tillerGauge, sail, call: null, partnerLine, chem };
 }
 
 // ---------- Main loop ----------

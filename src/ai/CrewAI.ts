@@ -1,20 +1,21 @@
 import { clamp, DEG, rng } from "../core/math";
 import { distanceTo, legTarget } from "../race/Course";
 import type { Race, Racer } from "../race/Race";
+import { isTwoPerson } from "../sailing/BoatClass";
 import type { Controls } from "../sailing/BoatPhysics";
 import { crewChemistry, type SailorProfile } from "../sailors/Sailors";
 
 /**
- * The crew of a two-person boat: trims the jib (or spinnaker), moves their weight in and out
+ * The Crew of a two-person boat: trims the jib (or spinnaker), moves their weight in and out
  * (up to the trapeze), moves everything across after a tack or gybe, and hoists/drops the
  * spinnaker. How quickly and precisely they do it depends on their skill and on Crew Chemistry.
  *
- * `spiMode`: "auto" = the crew decides when to hoist/drop (career, crew in charge);
- * "command" = they wait for the helm's call (full boat control).
+ * `spiMode`: "auto" = the Crew decides when to hoist/drop (Player Career, and every AI boat);
+ * "command" = they wait for the Helm's call (Full Boat Control).
  */
 export type SpiMode = "auto" | "command";
 
-/** What the boat should be doing with the spinnaker right now (used by AI crews and to prompt players). */
+/** What the boat should be doing with the spinnaker right now (used by AI Crews and to prompt players). */
 export function wantSpinnaker(race: Race, r: Racer): boolean {
   const leg = r.leg >= 0 && r.leg < race.course.legs.length ? race.course.legs[r.leg] : null;
   if (!leg || leg.upwind || r.finishTime !== null || r.penalty) return false;
@@ -26,7 +27,7 @@ export function wantSpinnaker(race: Race, r: Racer): boolean {
 
 export class CrewAI {
   spiMode: SpiMode = "auto";
-  /** The helm's call when spiMode = "command". */
+  /** The Helm's call when spiMode = "command". */
   spiCommand = false;
   private rand: () => number;
   private reaction: number;
@@ -43,14 +44,14 @@ export class CrewAI {
   constructor(public racer: Racer, public profile: SailorProfile, private race: Race, seed: number) {
     this.rand = rng(seed);
     this.chem = crewChemistry(profile);
-    // Better chemistry: faster reactions to the helm and steadier trimming.
+    // Better chemistry: faster reactions to the Helm and steadier trimming.
     this.reaction = 1.9 - this.chem * 0.015 + (1 - profile.technique) * 0.3;
     this.precision = clamp(0.35 * profile.technique + 0.65 * (this.chem / 100), 0, 1);
   }
 
   update(dt: number, c: Controls) {
     const r = this.racer, cls = r.sim.cls, s = r.sim.state, t = r.sim.telemetry;
-    if (!cls.crew) return;
+    if (!isTwoPerson(cls)) return;
 
     // Move across after a tack or gybe, once the bow is through the wind and after a reaction delay.
     const wrong = (t.jib?.backed ?? false) || !(t.crew?.onWindward ?? true) || (s.spiHoist > 0.3 && (t.spi?.wrongSide ?? false));
@@ -71,7 +72,7 @@ export class CrewAI {
       this.trimTimer = 1.2 + this.rand() * 2;
       this.trimBias = (this.rand() - 0.5) * 0.3 * (1 - this.precision);
     }
-    // When the helm dumps the main to slow down (pre-start), the jib is let go too.
+    // When the Helm dumps the main to slow down (pre-start), the jib is let go too.
     if (t.jib) c.jibSheet = c.sheet > 0.92 ? 1 : clamp(t.jib.optimal + this.trimBias, 0, 1);
     if (t.spi) c.spiSheet = clamp(t.spi.optimal + this.trimBias, 0, 1);
 

@@ -1,7 +1,7 @@
 import { DEG, dirX, dirZ, segmentsCross } from "../core/math";
 import { CrewAI } from "../ai/CrewAI";
 import { RacingAI } from "../ai/RacingAI";
-import { OPTIMIST, type BoatClass } from "../sailing/BoatClass";
+import { isTwoPerson, OPTIMIST, type BoatClass } from "../sailing/BoatClass";
 import { BoatSim, createBoat, type Controls } from "../sailing/BoatPhysics";
 import { WindField } from "../sailing/Wind";
 import { makeWindwardLeeward } from "./Course";
@@ -37,7 +37,7 @@ export class RaceSession {
   player: Racer | null = null;
   ais: RacingAI[] = [];
   crews: CrewAI[] = [];
-  /** The player's partner: helms when the player is crew, crews when the player helms. */
+  /** The player's Partner: the Helm when the player is the Crew, the Crew when the player is the Helm. */
   partnerHelm: RacingAI | null = null;
   partnerCrew: CrewAI | null = null;
   choice: PlayerChoice = HELM;
@@ -49,7 +49,7 @@ export class RaceSession {
     const seed = opts.seed ?? 11;
     const cls = opts.boatClass ?? OPTIMIST;
     this.wind = new WindField({ seed, meanDirDeg: 0, meanSpeedKn: opts.windKn ?? 11 });
-    const two = !!cls.crew;
+    const two = isTwoPerson(cls);
     const course = two
       ? makeWindwardLeeward(this.wind.meanDir, { beat: 125, lineHalf: 34, run: 50 })
       : makeWindwardLeeward(this.wind.meanDir);
@@ -72,7 +72,7 @@ export class RaceSession {
           this.partnerCrew = new CrewAI(this.player, this.partner, this.race, seed * 19);
           this.partnerCrew.spiMode = this.choice.control === "fullBoat" ? "command" : "auto";
         }
-        // The partner is on our boat, so race against the others plus a new helm.
+        // The Partner is on our boat, so race against the other Rivals plus the extra Helm.
         rivals = opponentHelms(rivals, this.partner);
       } else {
         this.player = this.race.add("player", { helm: PLAYER, crew: null }, sim, true);
