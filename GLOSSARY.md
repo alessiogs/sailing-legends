@@ -35,6 +35,34 @@ A recurring AI sailor with a name, a personality and a shared history with the p
 _it_: Rivale
 _Avoid_: Bot, opponent (for the recurring characters)
 
+## Playing
+
+**Role**:
+Which sailor the player is in a two-person boat: Helm or Crew.
+_it_: Il tuo ruolo
+_Avoid_: Position, station (for the player's choice)
+
+**Control mode**:
+How much of the boat the player decides: Player Career or Full Boat Control.
+_Avoid_: Role (Full Boat Control is not a role)
+
+**Player Career**:
+The control mode where the player handles only their own role and the Partner handles the rest.
+_it_: (the default; shown by choosing Timoniere or Prodiere)
+
+**Full Boat Control**:
+The control mode where the player, as Helm, also calls every manoeuvre and the Crew carries it out.
+_it_: Barca completa
+
+**Assist**:
+A help the game gives by doing a secondary task for the player; assists can be switched off as the player improves.
+_it_: Assist
+
+**Auto-trim**:
+The Assist that sets the player's sail trim automatically.
+_it_: Regolazione vela automatica
+_Avoid_: Auto-sail, auto-sheet
+
 ## Race
 
 **Race**:
