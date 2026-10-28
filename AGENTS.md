@@ -67,8 +67,9 @@ src/
   world/     Ocean.ts (Gerstner waves in GLSL), Waves.ts (same waves on CPU), BoatViewBase.ts (what both boat
              visuals share: wave riding, heel, boom swing, rudder, burgee; each class gives its `BoatMotion` and
              draws its own sails and sailors), BoatView.ts (Optimist), Boat420View.ts, SailorFigure.ts (the sailor
-             figure and its placement on the gunwale), boatMaterials.ts (`boatLook` from the colour table, `boatMaterial`: the one material
-             cache of both boat views, per scene via sceneCache.ts), SailMesh.ts, CourseView.ts
+             figure and its placement on the gunwale), boatMaterials.ts (`boatLook` from the colour table,
+             `boatMaterial`: the one material cache of both boat views, per scene via sceneCache.ts), SailMesh.ts,
+             CourseView.ts
   i18n/      index.ts (`t(key, params)`: typed lookup), it.ts (Italian catalog, the reference: it defines the
              keys), plural.ts (plural forms from Intl.PluralRules). All player-facing text lives in a catalog
   ui/        Hud.ts (draws the panel, compass, minimap, standings, tags), hudPanel.ts (`buildPanel`: the
