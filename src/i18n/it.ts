@@ -206,9 +206,9 @@ export const italian = {
   "hud.sail.single": "REGOLAZIONE VELA",
   "hud.sail.jib": "FIOCCO",
   "hud.sail.spinnaker": "SPINNAKER",
-  "hud.crewLine.partnerHelms": ({ name, spi }: { name: string; spi: string }) => `${name} al timone e alla randa · spi: ${spi}`,
-  "hud.crewLine.partnerCrews": ({ name, weight, spi }: { name: string; weight: string; spi: string }) => `${name}: ${weight} · spi ${spi}`,
-  "hud.crewLine.partnerCrewsOnCall": ({ name, weight, spi }: { name: string; weight: string; spi: string }) =>
+  "hud.partnerLine.helm": ({ name, spi }: { name: string; spi: string }) => `${name} al timone e alla randa · spi: ${spi}`,
+  "hud.partnerLine.crew": ({ name, weight, spi }: { name: string; weight: string; spi: string }) => `${name}: ${weight} · spi ${spi}`,
+  "hud.partnerLine.crewOnCall": ({ name, weight, spi }: { name: string; weight: string; spi: string }) =>
     `${name}: ${weight} · spi ${spi} · Spazio = issa/ammaina`,
   // Crew weight and spinnaker state, as shown in the lines above and the weight gauge.
   "hud.weight.trapeze": "al trapezio",

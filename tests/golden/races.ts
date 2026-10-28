@@ -18,11 +18,11 @@ import { CREW, FULL_BOAT, HELM, type PlayerChoice } from "../../src/race/PlayerC
 import { FIXED_DT, RaceSession } from "../../src/race/RaceSession";
 import { I420, OPTIMIST, type BoatClass } from "../../src/sailing/BoatClass";
 
-/** How the player boat is sailed: its Role and Control mode, named as when the snapshot was first recorded. */
-type PlayerSetup = "skipper" | "crew" | "full";
+/** How the player boat is sailed: its Role and Control mode. */
+type PlayerSetup = "helm" | "crew" | "full";
 
 /** Each recorded player setup as the session's Role and Control mode. */
-const PLAYER_CHOICE: Record<PlayerSetup, PlayerChoice> = { skipper: HELM, crew: CREW, full: FULL_BOAT };
+const PLAYER_CHOICE: Record<PlayerSetup, PlayerChoice> = { helm: HELM, crew: CREW, full: FULL_BOAT };
 
 export type GoldenRace = { name: string; cls: BoatClass; seed: number; windKn: number; player: PlayerSetup | null };
 
@@ -32,7 +32,7 @@ export const GOLDEN_RACES: GoldenRace[] = [
       name: `${cls.name} seed ${seed} ${windKn} kn, AI only`, cls, seed, windKn, player: null,
     })),
   ),
-  { name: "420 seed 11 11 kn, player Helm", cls: I420, seed: 11, windKn: 11, player: "skipper" },
+  { name: "420 seed 11 11 kn, player Helm", cls: I420, seed: 11, windKn: 11, player: "helm" },
   { name: "420 seed 3 7 kn, player Crew", cls: I420, seed: 3, windKn: 7, player: "crew" },
   { name: "420 seed 5 16 kn, player Full Boat Control", cls: I420, seed: 5, windKn: 16, player: "full" },
 ];
@@ -62,7 +62,7 @@ const r6 = (v: number) => {
  * The test-only player: a Racing AI Helm (same profile, seed and slot as the browser autopilot) and a fixed,
  * perfect Crew routine. It is written here, not shared with the browser code, so the guard never depends on
  * the code it guards. What it drives depends on the Role:
- *  - Helm ("skipper"): rudder and mainsheet; the session's Partner Crew does the rest.
+ *  - Helm: rudder and mainsheet; the session's Partner Crew does the rest.
  *  - Crew: jib, spinnaker, weight and side switches; the session's Partner Helm steers.
  *  - Full Boat Control ("full"): rudder and mainsheet, plus the spinnaker calls to the Partner Crew.
  */

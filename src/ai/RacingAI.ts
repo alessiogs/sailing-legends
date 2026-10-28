@@ -68,7 +68,7 @@ export class RacingAI {
     this.holding = true;
   }
 
-  /** True while the helm is committed to a tack (used for the "Vira!" call). */
+  /** True while the Helm is committed to a tack (used for the "Vira!" call). */
   get tacking() { return this.mode === "tack"; }
 
   update(dt: number, wind: WindField): Controls {

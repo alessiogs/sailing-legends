@@ -31,6 +31,13 @@ describe("translation", () => {
   it("falls back to the other form when a category has no text", () => {
     expect(plurals("pl")(2, { one: "one", other: "other" })).toBe("other");
   });
+
+  it("words the Partner's line in the HUD panel as before", () => {
+    expect(t("hud.partnerLine.helm", { name: "Giulia", spi: "giù" })).toBe("Giulia al timone e alla randa · spi: giù");
+    expect(t("hud.partnerLine.crew", { name: "Giulia", weight: "al trapezio", spi: "su" })).toBe("Giulia: al trapezio · spi su");
+    expect(t("hud.partnerLine.crewOnCall", { name: "Giulia", weight: "dentro", spi: "giù" }))
+      .toBe("Giulia: dentro · spi giù · Spazio = issa/ammaina");
+  });
 });
 
 // Type-level checks: a catalog missing a key, or with a key the others lack, does not type-check.

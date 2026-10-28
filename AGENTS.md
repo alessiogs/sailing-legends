@@ -37,14 +37,15 @@ so that code can't use browser APIs).
 ```
 src/
   core/      math.ts (angles, RNG, segment tests), Input.ts (keyboard/gamepad, tiller vs boat-direction
-             steering, crew station), Sound.ts (WebAudio synthesis, no assets)
-  sailing/   BoatClass.ts (class data: Optimist, I420), BoatPhysics.ts (the model), Wind.ts (shifts + puffs)
+             steering, what the keys move per Role), Sound.ts (WebAudio synthesis, no assets)
+  sailing/   BoatClass.ts (class data: Optimist, I420; `isTwoPerson` = sailed by a Pair, which has `crewRighting`),
+             BoatPhysics.ts (the model), Wind.ts (shifts + puffs)
   race/      Course.ts, Race.ts (start/OCS, rounding, finish, penalties), Rules.ts (RRS 10/11/12/13/31),
              RaceSession.ts (one race: wind, boats, AIs, contacts; fixed 60 Hz; no rendering)
              PlayerChoice.ts (the player's Role, helm | crew, plus Control mode, playerCareer | fullBoat;
              Full Boat Control only for the Helm; presets HELM, CREW, FULL_BOAT = the three menu buttons)
-  ai/        RacingAI.ts (helm: tactics, tacking state machine, avoidance, penalties, start timing),
-             CrewAI.ts (crew: jib/spi trim, weight, side switch, spinnaker). Both read sailor profiles
+  ai/        RacingAI.ts (the Helm: tactics, tacking state machine, avoidance, penalties, start timing),
+             CrewAI.ts (the Crew: jib/spi trim, weight, side switch, spinnaker). Both read sailor profiles
   sailors/   Sailors.ts (sailor profiles, the Rival roster, the opponents' Crews, the extra Helm, the autopilot
              Helm, the Crew Chemistry formula; sailors are matched by `id`, never by name)
   world/     Ocean.ts (Gerstner waves in GLSL), Waves.ts (same waves on CPU), BoatView.ts (Optimist),
@@ -54,7 +55,7 @@ src/
   ui/        Hud.ts (role-driven panel, compass, minimap, standings, tags), pageText.ts (fills index.html's
              data-i18n text from the catalog at startup), raceEventText.ts (words race events from their data),
              raceNames.ts (names legs by `LegId` and boats by the sailors on board)
-  main.ts    scene, camera, menus, game loop, player controls per role
+  main.ts    scene, camera, menus, game loop, player controls per Role, Assists (Auto-trim)
 tests/       Vitest tests (npm test): smoke.test.ts (every AI-only race finishes, every penalty served),
              golden.test.ts + golden/ (races.ts sails and records the golden races, races.json is the snapshot),
              rules.test.ts (rule 10/11/12/13 verdicts and penalty turns, two boats placed by hand)
@@ -69,6 +70,10 @@ scripts/     polar.ts (npm run polar), golden-update.ts (npm run golden:update)
 **Rule:** `sailing/`, `race/`, `ai/`, `sailors/` must not import Babylon. They run in Node (tests) and in the browser.
 
 ## Conventions (get these right)
+- Vocabulary: names in code, comments and docs follow `GLOSSARY.md`. The steering sailor is the **Helm** (never
+  skipper); **Crew** is only the sailor who trims the jib/spinnaker and moves their weight; the two sailors of a
+  boat are the **Pair**; the player's AI teammate is the **Partner**; the player's choice is a **Role**
+  (`Input.role`, `PlayerChoice.role`) plus a **Control mode**; **Auto-trim** is one of the **Assists**.
 - World: Babylon left-handed, seen from above **+Z = north, +X = east**. A *bearing/heading* is 0 at +Z and
   grows clockwise toward +X (`bearingTo`, `dirX = sin`, `dirZ = cos`). `Mesh.rotation.y = heading`.
 - Wind `fromDir` is where the wind comes **from** (bearing). The default course has wind from 0 (north),
@@ -97,7 +102,7 @@ snapshot. A golden diff means behaviour changed: in a refactor, fix the code, ne
 ## Physics notes (BoatPhysics.ts)
 Each sail: sheet limits its angle; if eased past the apparent wind it weathervanes (luffs); on the windward
 side it is pinned (backed jib / by the lee). Lift/drag from angle of attack; lift points to the leeward side of
-the chord. Righting = crew force (by `crewOut`, must be on windward side) + helm hiking up to `hikeForce`;
+the chord. Righting = Crew force (by `crewOut`, must be on windward side) + Helm hiking up to `hikeForce`;
 excess side force → heel + depower (`drive *= sqrt(k)`), too much weight out → windward heel + drag.
 The centreboard rotates velocity toward the heading (costs speed when turning) only when moving forward.
 Optimal sheets are found by sampling (`optimalSheetFor`). Target speeds at 11 kn:

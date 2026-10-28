@@ -60,11 +60,11 @@ strong { font-weight: 650; font-variant-numeric: tabular-nums; }
 .penalty-track i { display: block; height: 100%; width: 0; background: var(--bad); }
 .tiller-bar u { position: absolute; top: -4px; bottom: -4px; width: 3px; margin-left: -1.5px; background: var(--good); border-radius: 2px; }
 .call { margin: -2px 0 10px; padding: 8px 10px; border-radius: 7px; background: rgba(255,181,71,.16); border: 1px solid var(--warn); color: #ffe2b8; font-size: 13px; font-weight: 650; text-align: center; }
-.crew-line { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); font-size: 12px; color: var(--muted); text-align: center; }
+.partner-line { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); font-size: 12px; color: var(--muted); text-align: center; }
 .chem { margin-top: 8px; font-size: 12px; color: var(--muted); }
 .chem b { color: var(--ink); }
-.crew-block { display: grid; gap: 14px; margin: 12px 0 4px; padding: 14px; border: 1px solid var(--line); border-radius: 10px; background: rgba(111,211,255,.04); }
-.crew-block .steer-help { max-width: 60ch; line-height: 1.45; }
+.pair-block { display: grid; gap: 14px; margin: 12px 0 4px; padding: 14px; border: 1px solid var(--line); border-radius: 10px; background: rgba(111,211,255,.04); }
+.pair-block .steer-help { max-width: 60ch; line-height: 1.45; }
 .partners { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .partner { display: grid; gap: 5px; text-align: left; background: transparent; color: var(--ink); border: 1px solid #4c7486; border-radius: 8px; padding: 9px 10px; font: inherit; cursor: pointer; }
 .partner.on { background: #1d5c7a; border-color: var(--accent); }
