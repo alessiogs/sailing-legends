@@ -7,7 +7,7 @@
   GPU Gerstner ocean; HUD with trim bar, wind compass, minimap, standings.
 - **0.3** — realistic tiller steering + Commands menu; right-of-way rules 10/11/12/13/31 with penalty turns
   and DSQ; AI avoidance; better AI starts; synthesized sound.
-- **0.4** — 420 (jib, spinnaker, trapeze), roles skipper / crew / full boat, partner choice and Crew
+- **0.4** — 420 (jib, spinnaker, trapeze), roles Helm / Crew / Full Boat Control, partner choice and Crew
   Chemistry, AI crews; GitHub repo + Pages CI/CD.
 
 ## Next (suggested order)
