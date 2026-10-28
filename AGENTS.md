@@ -47,7 +47,10 @@ src/
              RaceSession.ts (one race: wind, boats, AIs, contacts; fixed 60 Hz; no rendering)
              PlayerChoice.ts (the player's Role, helm | crew, plus Control mode, playerCareer | fullBoat;
              Full Boat Control only for the Helm; presets HELM, CREW, FULL_BOAT = the three menu buttons)
-  ai/        RacingAI.ts (the Helm: tactics, tacking state machine, avoidance, penalties, start timing),
+  ai/        RacingAI.ts (the Helm: tactics, tacking state machine, avoidance, penalties),
+             StartPlanning.ts (the Helm's start: line point, holding spot, start bias, timing the run to the line,
+             OCS return; borrows the rest of the Helm's steering through `CourseSteering`),
+             angles.ts (`CLOSE_HAULED`, shared by the AI parts),
              CrewAI.ts (the Crew: jib/spi trim, weight, side switch, spinnaker; `crewOnWrongSide` is the one
              wrong-side check, shared by the Crew AI, the browser autopilot and the HUD). Both read sailor profiles
   sailors/   Sailors.ts (sailor profiles, the Rival roster, the opponents' Crews, the extra Helm, the autopilot
@@ -93,6 +96,7 @@ tests/       Vitest tests (npm test): smoke.test.ts (every AI-only race finishes
              hud-panel.test.ts (the HUD panel's lines per Role and Control mode, as the HUD shows them)
              race-feedback.test.ts (which sounds, messages and hints the race gives, and when)
              boat-class.test.ts (class ids: a misspelt id is a type error; every class keyed by its own id)
+             start-planning.test.ts (the AI's holding spot, line point, RNG draws and start decisions)
 scripts/     polar.ts (npm run polar), golden-update.ts (npm run golden:update)
 ```
 **Rule:** `sailing/`, `race/`, `ai/`, `sailors/` must not import Babylon. They run in Node (tests) and in the browser.
@@ -140,7 +144,7 @@ Optimist ≈ 2.3 kn upwind / 3.9 reach / 3.5 run; 420 ≈ 4 kn upwind / 6.5 reac
 After changing physics run `npm run polar` and `npm test`, and check tacks still complete
 (a tack from close-hauled must get through the wind and recover).
 
-## AI notes (RacingAI.ts)
+## AI notes (RacingAI.ts, StartPlanning.ts)
 Pitfalls already fixed — keep them fixed:
 - Turning through the wind is a committed **tack** (state machine `sail | tack | recover`); without
   commitment the AI dithers into irons. Too slow to tack → it bears away round (gybe).
@@ -148,7 +152,9 @@ Pitfalls already fixed — keep them fixed:
 - Going backwards the rudder works in reverse (`rud = -rud`).
 - Distances scale with boat length (`this.k`): holding spot, rounding orbit, look-ahead.
 - Don't tack within `7k` m of another boat (rule 13), but cap the wait (6 s) or boats sail off forever.
-Start quality is still the weakest part (often 5–25 s late).
+- The start plan draws its two numbers (line point, start bias) from the Helm's RNG first, before any trim
+  error: keep that order, or every golden race changes.
+Start quality is still the weakest part (often 5–25 s late); it lives in `StartPlanning.ts`.
 
 ## Rules (Rules.ts / Race.ts / RaceSession.ts)
 Judged only on hull contact (capsule shapes). One penalty per incident (no stacking while one is owed).
