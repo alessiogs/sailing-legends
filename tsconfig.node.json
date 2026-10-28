@@ -1,6 +1,6 @@
 {
   // Tests and scripts, run in Node (Vitest, tsx): Node types, no DOM. The simulation code they import
-  // (core/math, sailing, race, ai) is checked here too, so it stays free of browser APIs.
+  // (core/math, sailing, race, ai, sailors) is checked here too, so it stays free of browser APIs.
   "compilerOptions": {
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo",
     "target": "ES2022",
