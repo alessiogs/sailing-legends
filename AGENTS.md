@@ -64,8 +64,10 @@ src/
              Menus.ts (main menu: class, wind, Role, Partner, Auto-trim; Commands menu; pause and results
              screens. Implements the controller's `Screens`; `attach(game)` wires the buttons)
   game/      GameController.ts (owns the game state: race session, class, Role and Control mode, Partner, wind,
-             Assists; the menu / racing / paused / results / controls modes; one `frame(dt)` per render; for now
-             also race feedback). Drives the page through `Screens`.
+             Assists; the menu / racing / paused / results / controls modes; one `frame(dt)` per render; plays the
+             race feedback's cues). Drives the page through `Screens`.
+             RaceFeedback.ts (countdown beeps, race events as sounds and messages, coaching hints: tack/gybe
+             calls, the Partner's calls, the irons hint; returns `Cue`s for the controller to play; DOM/audio-free)
              PlayerControls.ts (the player's input turned into the boat's controls per Role and Control mode:
              steering, sheets, weight, side switch, spinnaker key, Auto-trim, the browser autopilot; DOM-free)
              CameraRig.ts (the orbit camera and its chase / free / top views), Preferences.ts (`loadPrefs`,
@@ -86,6 +88,7 @@ tests/       Vitest tests (npm test): smoke.test.ts (every AI-only race finishes
              preferences.test.ts (saved preferences still load; saving keeps the `sl-prefs` format)
              player-controls.test.ts (what the player's input does per Role and Control mode, Auto-trim, autopilot)
              hud-panel.test.ts (the HUD panel's lines per Role and Control mode, as the HUD shows them)
+             race-feedback.test.ts (which sounds, messages and hints the race gives, and when)
 scripts/     polar.ts (npm run polar), golden-update.ts (npm run golden:update)
 ```
 **Rule:** `sailing/`, `race/`, `ai/`, `sailors/` must not import Babylon. They run in Node (tests) and in the browser.
