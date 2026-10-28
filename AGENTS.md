@@ -2,7 +2,7 @@
 
 Browser sailing game (Babylon.js 9 + TypeScript + Vite), aiming at a FIFA-style career mode.
 The game concept is in `docs/CONCEPT.md`, the plan and known issues in `docs/ROADMAP.md`.
-The player-facing README is in Italian; **in-game UI text is Italian**, code and comments are English.
+The README, code and comments are English; **in-game UI text is Italian**.
 
 ## Branches and deploys
 - `main` = published build: https://alessiogs.github.io/sailing-legends/
