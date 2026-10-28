@@ -22,8 +22,9 @@ same build works at the root and under `/dev/`.
 ```bash
 npm install
 npm run dev      # http://localhost:5173
-npm test         # Vitest: headless AI-only races, Optimist + 420, 7/11/16 kn; fails if a race doesn't finish
-                 # or a penalty goes unserved
+npm test         # Vitest: headless smoke races (every race finishes, every penalty served) and the golden
+                 # races (nine fixed-seed races must match tests/golden/races.json exactly)
+npm run golden:update  # rewrite the golden snapshot: only when behaviour is meant to change; review its diff
 npm run polar    # speed table (polar) per class: use after any physics change
 npm run build    # type-check + production build into dist/
 ```
@@ -42,8 +43,9 @@ src/
              Boat420View.ts, SailMesh.ts, CourseView.ts
   ui/        Hud.ts (role-driven panel, compass, minimap, standings, tags)
   main.ts    scene, camera, menus, game loop, player controls per role
-tests/       Vitest tests (npm test): smoke.test.ts (every AI-only race finishes, every penalty served)
-scripts/     polar.ts (npm run polar)
+tests/       Vitest tests (npm test): smoke.test.ts (every AI-only race finishes, every penalty served),
+             golden.test.ts + golden/ (races.ts sails and records the golden races, races.json is the snapshot)
+scripts/     polar.ts (npm run polar), golden-update.ts (npm run golden:update)
 ```
 **Rule:** `sailing/`, `race/`, `ai/` must not import Babylon. They run in Node (tests) and in the browser.
 
@@ -59,6 +61,13 @@ scripts/     polar.ts (npm run polar)
   Default steering = tiller (→ moves the tiller right, the boat turns left); "boat" mode is the option.
 - Sheets 0 = sheeted in, 1 = eased. Crew weight `crewOut` 0 = in, 0.5 = hiking, 1 = trapeze.
 - Port rounding = bearing from mark to boat **decreasing** (counter-clockwise from above).
+
+## Golden races
+`tests/golden.test.ts` sails six AI-only races (Optimist and 420 at 7/11/16 kn) and three 420 races with a
+player boat as Helm, as Crew and in Full Boat Control, driven by a test-only player in `tests/golden/races.ts`.
+It compares positions, headings and speeds every 10 s, finish times, standings, DSQs and event kinds (with
+boats, times and penalty turns, never wording) against `tests/golden/races.json`. `npm test` only reads the
+snapshot. A golden diff means behaviour changed: in a refactor, fix the code, never the snapshot.
 
 ## Physics notes (BoatPhysics.ts)
 Each sail: sheet limits its angle; if eased past the apparent wind it weathervanes (luffs); on the windward
