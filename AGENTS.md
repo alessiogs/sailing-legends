@@ -59,13 +59,15 @@ src/
              data-i18n text from the catalog at startup), raceEventText.ts (words race events from their data),
              raceNames.ts (names legs by `LegId` and boats by the sailors on board),
              boatStateText.ts (words the Crew weight and spinnaker states for the HUD),
-             boatColors.ts (the one boat colour table by racer id: 3D hull/sail/jacket/stripe and the HUD dot)
+             boatColors.ts (the one boat colour table by racer id: 3D hull/sail/jacket/stripe and the HUD dot),
+             Menus.ts (main menu: class, wind, Role, Partner, Auto-trim; Commands menu; pause and results
+             screens. Implements the controller's `Screens`; `attach(game)` wires the buttons)
   game/      GameController.ts (owns the game state: race session, class, Role and Control mode, Partner, wind,
              Assists; the menu / racing / paused / results / controls modes; one `frame(dt)` per render; for now
              also race feedback, player controls per Role and the HUD panel). Drives the page through `Screens`.
              CameraRig.ts (the orbit camera and its chase / free / top views), Preferences.ts (`loadPrefs`,
              `savePrefs`: controls and mute under `sl-prefs`; keep the stored format so saved preferences load)
-  main.ts    startup wiring: scene, camera rig, preferences, menus (implement `Screens`), render loop, `window.__game` hook
+  main.ts    startup wiring: scene, camera rig, preferences, `Menus`, render loop, `window.__game` hook
 tests/       Vitest tests (npm test): smoke.test.ts (every AI-only race finishes, every penalty served),
              golden.test.ts + golden/ (races.ts sails and records the golden races, races.json is the snapshot),
              rules.test.ts (rule 10/11/12/13 verdicts and penalty turns, two boats placed by hand)
