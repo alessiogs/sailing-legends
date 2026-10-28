@@ -3,35 +3,26 @@ import type { Controls } from "../sailing/BoatPhysics";
 import type { WindField } from "../sailing/Wind";
 import { distanceTo, legTarget, type Point } from "../race/Course";
 import type { Race, Racer } from "../race/Race";
-import { judge } from "../race/Rules";
 import type { SailorProfile } from "../sailors/Sailors";
-import { CLOSE_HAULED } from "./angles";
-import { StartPlanning, type CourseSteering } from "./StartPlanning";
+import { boatWithin, giveWay } from "./Avoidance";
+import { BeatTactics } from "./BeatTactics";
+import { StartPlanning } from "./StartPlanning";
+import { TackStateMachine } from "./TackStateMachine";
 
 const ORBIT_R = 9; // for an Optimist; scaled by boat length
 
 export class RacingAI {
   private rand: () => number;
-  private lastTack = -999;
-  private lastBeat = -999;
-  private onStbd: boolean | null = null;
   private time = 0;
   private exitMark: { mark: Point; dir: number } | null = null;
   private lastLeg = -1;
   private startPlan: StartPlanning;
-  /** What start planning borrows from this Helm: steering toward a point and the tack timer. */
-  private readonly steering: CourseSteering = {
-    headingToward: (p, fromDir, x, z, heading) => this.headingToward(p, fromDir, x, z, heading),
-    sinceTack: () => this.time - this.lastTack,
-    tackNow: () => { this.lastTack = this.time; },
-  };
-  private mode: "sail" | "tack" | "recover" = "sail";
-  private tackHeading = 0;
-  private tackUntil = 0;
+  /** Steering toward a point and the tack timer; start planning borrows it as its `CourseSteering`. */
+  private readonly beat: BeatTactics;
+  private readonly tackMachine: TackStateMachine;
   private trimBias = 0;
   private trimTimer = 0;
   private penaltyDir = 0;
-  private tackWait = 0;
   controls: Controls = { rudder: 0, sheet: 0.5 };
   debug = "";
 
@@ -43,6 +34,8 @@ export class RacingAI {
     this.k = Math.min(1.6, Math.max(1, racer.sim.cls.length / 2.31));
     // The start draws its numbers first: keep it constructed before anything else uses `rand`.
     this.startPlan = new StartPlanning(race, profile, this.k, this.rand, slot);
+    this.beat = new BeatTactics(profile, () => this.time);
+    this.tackMachine = new TackStateMachine(this.beat, this.k);
   }
 
   /** Start the race already waiting at the holding spot, ready for the run to the line. */
@@ -51,7 +44,7 @@ export class RacingAI {
   }
 
   /** True while the Helm is committed to a tack (used for the "Vira!" call). */
-  get tacking() { return this.mode === "tack"; }
+  get tacking() { return this.tackMachine.mode === "tack"; }
 
   update(dt: number, wind: WindField): Controls {
     this.time += dt;
@@ -82,8 +75,8 @@ export class RacingAI {
     } else if (race.phase === "prestart" || r.leg === -1) {
       // Not started yet: the start plan steers (before the gun, or OCS / late after it).
       const steer = race.phase === "prestart"
-        ? this.startPlan.prestart(this.steering, s, tel, w.speed, fromDir)
-        : this.startPlan.afterGun(this.steering, r, tel, fromDir);
+        ? this.startPlan.prestart(this.beat, s, tel, w.speed, fromDir)
+        : this.startPlan.afterGun(this.beat, r, tel, fromDir);
       ({ desired, sheet } = steer);
       this.debug = steer.debug;
     } else {
@@ -95,17 +88,21 @@ export class RacingAI {
         if (this.pathBlocked(s.x, s.z, target, m)) target = this.orbitPoint(m, this.exitMark.dir, s.x, s.z);
         else this.exitMark = null;
       }
-      desired = this.headingToward(target, fromDir, s.x, s.z, s.heading);
+      desired = this.beat.headingToward(target, fromDir, s.x, s.z, s.heading);
+      this.debug = this.beat.label;
     }
 
     // Keep clear of boats that have right of way.
-    if (r.finishTime === null) ({ desired, sheet } = this.avoid(desired, sheet, fromDir));
+    if (r.finishTime === null) {
+      const way = giveWay(r, race, this.k, desired, sheet, fromDir);
+      ({ desired, sheet } = way);
+      if (way.rule) this.debug += ` avoid r${way.rule}`;
+    }
 
     // Penalty turns: keep turning the same way (bear away first) until the turns are done.
     if (r.penalty && r.finishTime === null) {
       if (this.penaltyDir === 0) this.penaltyDir = tel.twa >= 0 ? -1 : 1;
-      this.mode = "sail";
-      this.onStbd = null;
+      this.tackMachine.breakOff();
       this.controls.sheet = tel.optimalSheet;
       this.controls.rudder = tel.speed < -0.05 ? -this.penaltyDir : this.penaltyDir;
       this.debug = "penalty";
@@ -121,40 +118,15 @@ export class RacingAI {
     }
     this.controls.sheet = clamp(sheet + this.trimBias, 0, 1);
 
-    // Helm state machine. "tack": committed turn through the wind; "recover": stuck in irons.
-    const twaNow = angleDiff(s.heading, fromDir);
-    const twaGoal = angleDiff(desired, fromDir);
-    const throughWind = (Math.sign(twaNow) || 1) !== (Math.sign(twaGoal) || 1) && Math.abs(twaNow) + Math.abs(twaGoal) < Math.PI;
-    if (this.mode === "tack") {
-      if (Math.abs(angleDiff(s.heading, this.tackHeading)) < 15 * DEG) this.mode = "sail";
-      else if (this.time > this.tackUntil) this.mode = "recover";
-      else desired = this.tackHeading;
-    }
-    if (this.mode === "sail" && throughWind) {
-      const busy = this.crowded(7 * this.k);
-      if (busy) this.tackWait += dt; else this.tackWait = 0;
-      if (tel.speed > 0.45 && (!busy || this.tackWait > 6)) {
-        this.tackWait = 0;
-        this.mode = "tack";
-        this.tackHeading = Math.abs(twaGoal) < CLOSE_HAULED ? wrapPi(fromDir - Math.sign(twaGoal) * CLOSE_HAULED) : desired;
-        this.tackUntil = this.time + 7;
-        this.onStbd = twaGoal > 0;
-        this.lastTack = this.time;
-        desired = this.tackHeading;
-      } else {
-        // Too slow to tack: go round the other way, bearing away through downwind (a gybe).
-        desired = wrapPi(fromDir + Math.PI - (Math.sign(twaNow) || 1) * 0.2);
-        this.debug += " (gybe round)";
-      }
-    }
-    if (this.mode === "sail" && Math.abs(twaNow) < 35 * DEG && tel.speed < 0.3) this.mode = "recover";
-    if (this.mode === "recover") {
-      desired = wrapPi(fromDir - (Math.sign(twaNow) || 1) * 75 * DEG);
-      this.controls.sheet = 1;
-      this.onStbd = null;
-      if (Math.abs(twaNow) > 60 * DEG) this.mode = "sail";
-    }
-    this.debug += ` [${this.mode}]`;
+    // Tack state machine: may commit to a tack, gybe round instead, or recover from irons.
+    const helm = this.tackMachine.steer({
+      time: this.time, dt, heading: s.heading, speed: tel.speed, desired, fromDir,
+      boatWithin: dist => boatWithin(r, race, dist),
+    });
+    desired = helm.desired;
+    if (helm.easeSheet) this.controls.sheet = 1;
+    if (helm.gybeRound) this.debug += " (gybe round)";
+    this.debug += ` [${this.tackMachine.mode}]`;
     const err = angleDiff(s.heading, desired);
     const gain = 2.2 + this.profile.speed;
     let rud = clamp(err * gain - s.yawRate * 0.6, -1, 1);
@@ -162,56 +134,6 @@ export class RacingAI {
     if (tel.speed < -0.05) rud = -rud;
     this.controls.rudder = rud;
     return this.controls;
-  }
-
-  /**
-   * Look a few seconds ahead for a boat we'd hit; if the rules make us the give-way boat, act:
-   * duck behind a starboard-tacker (rule 10), luff away from a leeward boat (rule 11) or slow down
-   * when coming up from clear astern (rule 12).
-   */
-  /** Another racing boat within `dist` metres (don't tack into it: rule 13). */
-  private crowded(dist: number) {
-    const s = this.racer.sim.state;
-    return this.race.racers.some(o => o !== this.racer && o.finishTime === null &&
-      Math.hypot(o.sim.state.x - s.x, o.sim.state.z - s.z) < dist);
-  }
-
-  private avoid(desired: number, sheet: number, fromDir: number): { desired: number; sheet: number } {
-    const me = this.racer, s = me.sim.state;
-    let worst: { o: Racer; t: number } | null = null;
-    for (const o of this.race.racers) {
-      if (o === me || o.finishTime !== null) continue;
-      const os = o.sim.state;
-      const dx = os.x - s.x, dz = os.z - s.z;
-      if (dx * dx + dz * dz > 14 * 14 * this.k * this.k) continue;
-      const rvx = os.vx - s.vx, rvz = os.vz - s.vz;
-      const rv2 = rvx * rvx + rvz * rvz;
-      const t = rv2 > 1e-4 ? clamp(-(dx * rvx + dz * rvz) / rv2, 0, 5) : 0;
-      const cx = dx + rvx * t, cz = dz + rvz * t;
-      if (Math.hypot(cx, cz) > 4 * this.k) continue;
-      if (!worst || t < worst.t) worst = { o, t };
-    }
-    if (!worst) return { desired, sheet };
-    const v = judge(me.sim, worst.o.sim, this.race.course.windDir);
-    if (!v || v.atFault !== 0) return { desired, sheet };
-    const twa = angleDiff(s.heading, fromDir);
-    const side = Math.sign(twa) || 1;
-    this.debug += ` avoid r${v.rule}`;
-    if (v.rule === "10") {
-      // Duck: steer for a point well behind the other boat's stern (at least 30° below our course).
-      const os = worst.o.sim.state;
-      const sx = os.x - Math.sin(os.heading) * 5, sz = os.z - Math.cos(os.heading) * 5;
-      const behind = bearingTo(s.x, s.z, sx, sz);
-      const minAway = Math.min(170 * DEG, Math.abs(twa) + 30 * DEG);
-      const away = Math.max(minAway, Math.abs(angleDiff(fromDir, behind)));
-      return { desired: wrapPi(fromDir - side * Math.min(170 * DEG, away)), sheet };
-    }
-    if (v.rule === "11") {
-      // Windward boat: head up toward the wind, but not into the no-go zone.
-      return { desired: wrapPi(fromDir - side * Math.max(42 * DEG, Math.abs(twa) - 18 * DEG)), sheet };
-    }
-    if (v.rule === "12") return { desired, sheet: Math.min(1, sheet + 0.4) };
-    return { desired, sheet };
   }
 
   /** A point on a small circle around the mark, leading the boat around it in the rounding direction. */
@@ -232,37 +154,5 @@ export class RacingAI {
     if (t <= 0 || t >= 1) return false;
     const px = x + dx * t - m.x, pz = z + dz * t - m.z;
     return px * px + pz * pz < 36;
-  }
-
-  /**
-   * Heading toward a point, tacking upwind when it lies inside the no-go zone.
-   * Picks the tack that points closer to the target; switches when the other tack is better by
-   * a hysteresis margin (smaller for tactical sailors, so they tack on headers sooner).
-   */
-  private headingToward(p: Point, fromDir: number, x: number, z: number, heading: number): number {
-    const brg = bearingTo(x, z, p.x, p.z);
-    const offWind = Math.abs(angleDiff(fromDir, brg));
-    if (offWind > CLOSE_HAULED + 3 * DEG) {
-      this.debug = "direct";
-      return brg;
-    }
-    const stbd = wrapPi(fromDir - CLOSE_HAULED); // wind over starboard side
-    const port = wrapPi(fromDir + CLOSE_HAULED);
-    if (this.onStbd === null || this.time - this.lastBeat > 2) {
-      // (Re)enter beating mode: keep whichever tack the boat is closest to now.
-      this.onStbd = Math.abs(angleDiff(heading, stbd)) < Math.abs(angleDiff(heading, port));
-    }
-    this.lastBeat = this.time;
-    const onStbd = this.onStbd;
-    const errS = Math.abs(angleDiff(stbd, brg));
-    const errP = Math.abs(angleDiff(port, brg));
-    const hyst = (20 + (1 - this.profile.tactics) * 12) * DEG;
-    const canTack = this.time - this.lastTack > 11;
-    let useStbd = onStbd;
-    if (onStbd && errP + hyst < errS && canTack) { useStbd = false; this.lastTack = this.time; }
-    else if (!onStbd && errS + hyst < errP && canTack) { useStbd = true; this.lastTack = this.time; }
-    this.onStbd = useStbd;
-    this.debug = useStbd ? "beat stbd" : "beat port";
-    return useStbd ? stbd : port;
   }
 }
