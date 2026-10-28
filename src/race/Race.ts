@@ -1,0 +1,230 @@
+import { angleDiff, bearingTo, dirX, dirZ, segmentsCross } from "../core/math";
+import type { BoatSim } from "../sailing/BoatPhysics";
+import { distanceTo, legTarget, type Course, type Line } from "./Course";
+import { judge, newPenalty, trackPenalty, type Penalty } from "./Rules";
+
+export type Racer = {
+  id: string;
+  name: string;
+  isPlayer: boolean;
+  sim: BoatSim;
+  /** -1 before starting, then index into course.legs; equals legs.length once finished. */
+  leg: number;
+  ocs: boolean;
+  /** OCS boats must get fully back behind the line before restarting. */
+  clearedBack: boolean;
+  finishTime: number | null;
+  /** Accumulated bearing sweep around the current mark (rad), for rounding detection. */
+  sweep: number;
+  lastBearing: number | null;
+  prevX: number;
+  prevZ: number;
+  /** Penalty turns still owed, if any. */
+  penalty: Penalty | null;
+  /** Finished without serving a penalty: disqualified. */
+  dsq: boolean;
+};
+
+export type RaceEvent = {
+  racer: Racer;
+  kind: "start" | "ocs" | "ocs-cleared" | "rounded" | "finish" | "gun" | "warning" | "penalty" | "penalty-done" | "contact";
+  text: string;
+  /** For contacts: the other boat involved. */
+  other?: Racer;
+};
+
+export type Phase = "prestart" | "racing" | "done";
+
+const ROUND_RADIUS = 30;
+const ROUND_SWEEP = (150 * Math.PI) / 180;
+
+export class Race {
+  phase: Phase = "prestart";
+  /** Race clock: negative during the countdown, 0 at the gun. */
+  clock: number;
+  racers: Racer[] = [];
+  events: RaceEvent[] = [];
+  private warned = new Set<number>();
+  /** Last time a given pair (or boat+mark) was judged, so one collision gives one penalty. */
+  private contactCooldown = new Map<string, number>();
+
+  constructor(public course: Course, countdown = 60) {
+    this.clock = -countdown;
+  }
+
+  add(id: string, name: string, sim: BoatSim, isPlayer = false): Racer {
+    const r: Racer = {
+      id, name, isPlayer, sim, leg: -1, ocs: false, clearedBack: true, finishTime: null,
+      sweep: 0, lastBearing: null, prevX: sim.state.x, prevZ: sim.state.z, penalty: null, dsq: false,
+    };
+    this.racers.push(r);
+    return r;
+  }
+
+  /** Signed distance "upwind" of the start line (positive = course side). */
+  aboveStart(x: number, z: number) {
+    const a = this.course.start.a;
+    return (x - a.x) * dirX(this.course.windDir) + (z - a.z) * dirZ(this.course.windDir);
+  }
+
+  private crossedUp(r: Racer, line: Line) {
+    const s = r.sim.state;
+    if (!segmentsCross(r.prevX, r.prevZ, s.x, s.z, line.a.x, line.a.z, line.b.x, line.b.z)) return false;
+    const mx = s.x - r.prevX, mz = s.z - r.prevZ;
+    return mx * dirX(this.course.windDir) + mz * dirZ(this.course.windDir) > 0;
+  }
+
+  private emit(racer: Racer, kind: RaceEvent["kind"], text: string, other?: Racer) {
+    this.events.push({ racer, kind, text, other });
+  }
+
+  private cooled(key: string) {
+    const last = this.contactCooldown.get(key);
+    if (last !== undefined && this.clock - last < 15) return false;
+    this.contactCooldown.set(key, this.clock);
+    return true;
+  }
+
+  private givePenalty(r: Racer, turns: number, reason: string) {
+    // One incident, one penalty: while turns are still owed, further bumps don't stack up.
+    if (r.finishTime !== null || r.penalty) return;
+    r.penalty = newPenalty(turns, r.sim.state.heading, reason);
+    const total = Math.round(r.penalty.needed / (2 * Math.PI));
+    this.emit(r, "penalty", `Penalità: ${total === 1 ? "un giro" : `${total} giri`} (${reason})`);
+  }
+
+  /** Two boats touched: apply the right-of-way rules. */
+  contact(a: Racer, b: Racer) {
+    if (a.finishTime !== null || b.finishTime !== null) return;
+    if (!this.cooled([a.id, b.id].sort().join("|"))) return;
+    const v = judge(a.sim, b.sim, this.course.windDir);
+    if (!v) return;
+    const fault = v.atFault === 0 ? a : b, right = v.atFault === 0 ? b : a;
+    this.emit(fault, "contact", `Contatto con ${right.name}: regola ${v.rule}, ${v.why}`, right);
+    this.emit(right, "contact", `${fault.name} ti ha toccato (regola ${v.rule}): penalità a ${fault.name}`, fault);
+    this.givePenalty(fault, 2, `regola ${v.rule}`);
+  }
+
+  /** A boat touched a mark or the committee boat (rule 31). */
+  markTouch(r: Racer, markKey: string) {
+    if (r.finishTime !== null) return;
+    if (!this.cooled(`${r.id}|${markKey}`)) return;
+    this.givePenalty(r, 1, "boa toccata, regola 31");
+  }
+
+  update(dt: number) {
+    const before = this.clock;
+    if (this.phase !== "done") this.clock += dt;
+
+    // Countdown signals.
+    for (const t of [-30, -10, -5]) {
+      if (before < t && this.clock >= t && !this.warned.has(t)) {
+        this.warned.add(t);
+        const p = this.racers.find(r => r.isPlayer);
+        if (p) this.emit(p, "warning", `${-t} secondi alla partenza`);
+      }
+    }
+
+    if (this.phase === "prestart" && this.clock >= 0) {
+      this.phase = "racing";
+      for (const r of this.racers) {
+        if (this.aboveStart(r.sim.state.x, r.sim.state.z) > 0) {
+          r.ocs = true;
+          r.clearedBack = false;
+          this.emit(r, "ocs", "OCS! Partenza anticipata: torna sotto la linea");
+        }
+      }
+      const p = this.racers.find(r => r.isPlayer);
+      if (p) this.emit(p, "gun", "PARTENZA!");
+    }
+
+    for (const r of this.racers) {
+      const s = r.sim.state;
+      if (r.penalty && trackPenalty(r.penalty, s.heading)) {
+        r.penalty = null;
+        this.emit(r, "penalty-done", "Penalità scontata");
+      }
+      if (this.phase === "racing" && r.finishTime === null) this.updateRacer(r);
+      r.prevX = s.x;
+      r.prevZ = s.z;
+    }
+
+    if (this.phase === "racing" && this.racers.every(r => r.finishTime !== null)) this.phase = "done";
+  }
+
+  private updateRacer(r: Racer) {
+    const s = r.sim.state;
+    const legs = this.course.legs;
+
+    if (r.leg === -1) {
+      if (r.ocs && !r.clearedBack) {
+        if (this.aboveStart(s.x, s.z) < -2) {
+          r.clearedBack = true;
+          this.emit(r, "ocs-cleared", "Rientrato: ora puoi ripartire");
+        }
+        return;
+      }
+      if (this.crossedUp(r, this.course.start)) {
+        r.leg = 0;
+        r.ocs = false;
+        this.emit(r, "start", `Partito · ${legs[0].name}`);
+      }
+      return;
+    }
+
+    const leg = legs[r.leg];
+    if (leg.kind === "finish") {
+      if (this.crossedUp(r, leg.line)) {
+        r.finishTime = this.clock;
+        r.leg = legs.length;
+        if (r.penalty) {
+          r.dsq = true;
+          r.penalty = null;
+          this.emit(r, "finish", "ARRIVO, ma penalità non scontata: squalificato (DSQ)");
+        } else {
+          const pos = this.racers.filter(o => o.finishTime !== null && !o.dsq).length;
+          this.emit(r, "finish", `ARRIVO! ${pos}° posto`);
+        }
+      }
+      return;
+    }
+
+    // Mark rounding: accumulate how far the boat travels around the mark while close to it.
+    const d = distanceTo(leg.mark, s.x, s.z);
+    if (d < ROUND_RADIUS) {
+      const b = bearingTo(leg.mark.x, leg.mark.z, s.x, s.z);
+      if (r.lastBearing !== null) r.sweep += angleDiff(r.lastBearing, b);
+      r.lastBearing = b;
+      const done = leg.rounding === "port" ? r.sweep <= -ROUND_SWEEP : r.sweep >= ROUND_SWEEP;
+      if (done) {
+        r.leg++;
+        r.sweep = 0;
+        r.lastBearing = null;
+        const next = legs[r.leg];
+        this.emit(r, "rounded", `${leg.name} girata · ora: ${next.name}`);
+      }
+    } else if (d > ROUND_RADIUS * 2) {
+      r.sweep = 0;
+      r.lastBearing = null;
+    }
+  }
+
+  /** Higher = further ahead. */
+  progress(r: Racer): number {
+    if (r.dsq) return -1e7 - (r.finishTime ?? 0);
+    if (r.finishTime !== null) return 1e6 - r.finishTime;
+    if (r.leg < 0) return -1e4 + this.aboveStart(r.sim.state.x, r.sim.state.z) - (r.ocs ? 1e3 : 0);
+    const leg = this.course.legs[r.leg];
+    return r.leg * 1e4 - distanceTo(legTarget(leg), r.sim.state.x, r.sim.state.z);
+  }
+
+  standings(): Racer[] {
+    return [...this.racers].sort((a, b) => this.progress(b) - this.progress(a));
+  }
+
+  drainEvents(): RaceEvent[] {
+    const e = this.events;
+    this.events = [];
+    return e;
+  }
+}
