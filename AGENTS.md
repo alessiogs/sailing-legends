@@ -2,7 +2,9 @@
 
 Browser sailing game (Babylon.js 9 + TypeScript + Vite), aiming at a FIFA-style career mode.
 The game concept is in `docs/CONCEPT.md`, the plan and known issues in `docs/ROADMAP.md`.
-The README, code and comments are English; **in-game UI text is Italian**.
+**Languages:** code, comments, docs and the README are English, and their terms follow `GLOSSARY.md`.
+**In-game text is Italian** and lives only in the translation catalogs (`src/i18n/`): the simulation emits data,
+the UI words it (`docs/adr/0001-simulation-emits-data-not-text.md`). How to add text: see Conventions.
 
 ## Branches and deploys
 - `main` = published build: https://alessiogs.github.io/sailing-legends/
@@ -24,7 +26,8 @@ same build works at the root and under `/dev/`.
 npm install
 npm run dev      # http://localhost:5173
 npm test         # Vitest: headless smoke races (every race finishes, every penalty served), the golden
-                 # races (nine fixed-seed races must match tests/golden/races.json exactly) and rule verdicts
+                 # races (nine fixed-seed races must match tests/golden/races.json exactly), rule verdicts
+                 # and the unit tests listed under tests/ below
 npm run golden:update  # rewrite the golden snapshot: only when behaviour is meant to change; review its diff
 npm run polar    # speed table (polar) per class: use after any physics change
 npm run build    # type-check + production build into dist/
@@ -43,7 +46,8 @@ src/
              sailed by a Pair, which has `crewRighting`),
              BoatPhysics.ts (the model), Wind.ts (shifts + puffs), BoatStates.ts (Crew weight in/hiking/trapeze
              and spinnaker down/moving/up from the boat state: the one home of their thresholds)
-  race/      Course.ts, Race.ts (start/OCS, rounding, finish, penalties), Rules.ts (RRS 10/11/12/13/31),
+  race/      Course.ts (marks, start/finish lines and legs, each with a `LegId`),
+             Race.ts (start/OCS, rounding, finish, penalties), Rules.ts (RRS 10/11/12/13/31),
              RaceSession.ts (one race from a `Fleet`: wind, course, boats, AIs, contacts; fixed 60 Hz; no rendering)
              Fleet.ts (`makeFleet`: the player's boat with the Partner, the opponents with their Crews, and every
              boat's starting spot, from the class, the player's choices and the Rivals; plain data)
@@ -118,7 +122,10 @@ tests/       Vitest tests (npm test): smoke.test.ts (every AI-only race finishes
              sail-shape.test.ts (the shared sail grid draws the Optimist and 420 sails exactly as before)
 scripts/     polar.ts (npm run polar), golden-update.ts (npm run golden:update)
 ```
-**Rule:** `sailing/`, `race/`, `ai/`, `sailors/` must not import Babylon. They run in Node (tests) and in the browser.
+**Rule:** `core/math.ts`, `sailing/`, `race/`, `ai/`, `sailors/`, `i18n/` and every other file a test imports
+(`hudPanel.ts`, `raceEventText.ts`, `PlayerControls.ts`, `RaceFeedback.ts`, `sailShape.ts`, `sceneCache.ts`, …)
+import neither Babylon nor browser APIs: they run in Node (tests) and in the browser, and `tsconfig.node.json`
+type-checks them without DOM types.
 
 ## Conventions (get these right)
 - Vocabulary: names in code, comments and docs follow `GLOSSARY.md`. The steering sailor is the **Helm** (never
@@ -180,7 +187,7 @@ Judged only on hull contact (capsule shapes, in `Collisions.ts`). One penalty pe
 Rule 31 counts only the marks of the leg being sailed (finish buoys sit on the first beat!) and the start
 marks before starting. Unserved penalty at the finish ⇒ DSQ.
 Race events (`RaceEvent`) and verdicts (`Verdict`) are data: kind, racer, other, rule, turns, who was at fault,
-reason. No text: `ui/raceEventText.ts` words them, and the UI reads facts (e.g. fault) from the data.
+reason. No text (ADR 0001): `ui/raceEventText.ts` words them, and the UI reads facts (e.g. fault) from the data.
 Legs carry a `LegId` (`mark1`, `mark2`, `finish`) and racers their `sailors` (Helm, Crew; the player is
 `{ kind: "player" }`), never a display name: `ui/raceNames.ts` (`legName`, `racerName`) names them.
 
@@ -207,4 +214,4 @@ Default vocabulary: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-
 
 ### Domain docs
 
-Single-context: `GLOSSARY.md` + `docs/adr/` at the repo root (created lazily when needed). See `docs/agents/domain.md`.
+Single-context: `GLOSSARY.md` + `docs/adr/` at the repo root (add an ADR when a decision is hard to reverse). See `docs/agents/domain.md`.

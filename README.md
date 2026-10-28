@@ -18,10 +18,19 @@ npm run build      # optimised build into dist/
 Requirements: Node.js 20+, a desktop browser with WebGL 2.
 
 ## Tests and publishing
-- `npm test`: simulates AI-only Optimist and 420 races without a browser (light, medium and strong wind) and checks
-  that every boat finishes and every penalty is served.
-- Every push to `main` runs the GitHub Action `.github/workflows/deploy.yml`: it installs, runs the tests,
-  type-checks, builds and publishes `dist/` to GitHub Pages. Pull requests are only built and tested.
+- `npm test` (Vitest, no browser):
+  - smoke races: AI-only Optimist and 420 races in light, medium and strong wind; every boat finishes and every
+    penalty is served;
+  - golden races: nine fixed-seed races (six AI-only, three 420 races with a player boat as Helm, as Crew and in
+    Full Boat Control) must match the snapshot `tests/golden/races.json` exactly; `npm run golden:update`
+    rewrites it, only when behaviour is meant to change;
+  - unit tests: rule verdicts and penalty turns, translation catalogs, race event wording, the AI's parts, the
+    HUD panel, the player's controls and more (the full list is in [AGENTS.md](AGENTS.md)).
+- `npm run polar`: speed table (polar) per class, after any physics change.
+- Every push to `main` or `develop` runs the GitHub Action `.github/workflows/deploy.yml`: it installs, runs the
+  tests, type-checks and builds both branches, and publishes them together to GitHub Pages: `main` at
+  https://alessiogs.github.io/sailing-legends/, `develop` (the test build) under
+  https://alessiogs.github.io/sailing-legends/dev/. Pull requests are only tested and type-checked, never deployed.
 
 ## Controls
 | Keyboard | Gamepad | Action |
@@ -103,16 +112,23 @@ direction).
 ## Architecture
 ```
 src/
-├── core/        math.ts (angles, RNG), Input.ts (keyboard + gamepad)
-├── sailing/     BoatClass.ts (class data), BoatPhysics.ts, Wind.ts
-├── race/        Course.ts, Race.ts (rules), RaceSession.ts (fixed-step simulation, no graphics)
-├── ai/          RacingAI.ts (Helm), CrewAI.ts (Crew and Crew Chemistry)
-├── world/       Ocean.ts, Waves.ts, BoatView.ts (Optimist), Boat420View.ts, SailMesh.ts, CourseView.ts
-├── ui/          Hud.ts
-└── main.ts      scene, camera, game loop
+├── core/        math.ts (angles, RNG), Input.ts (keyboard + gamepad), ControlSettings.ts, Sound.ts
+├── sailing/     BoatClass.ts (class data), BoatPhysics.ts, Wind.ts, BoatStates.ts
+├── race/        Course.ts, Race.ts, Rules.ts, RaceSession.ts (fixed-step simulation, no graphics),
+│                Fleet.ts, Collisions.ts, PlayerChoice.ts (Role + Control mode)
+├── ai/          RacingAI.ts (the Helm) with StartPlanning, BeatTactics, TackStateMachine, Avoidance;
+│                CrewAI.ts (the Crew)
+├── sailors/     Sailors.ts (Rivals, sailor profiles, Crew Chemistry)
+├── world/       Ocean.ts, Waves.ts, the boat views (BoatViewBase, BoatView, Boat420View), sails, CourseView.ts
+├── i18n/        translation catalogs (it.ts: Italian) and the typed lookup
+├── ui/          Hud.ts, hudPanel.ts, Menus.ts, race event and name wording, boat colours
+├── game/        GameController.ts (game state and modes), PlayerControls, RaceFeedback, CameraRig, Preferences
+└── main.ts      startup wiring and render loop
 ```
-The simulation (`sailing/`, `race/`, `ai/`) doesn't depend on Babylon: it runs at a fixed 60 Hz and can be tested
-in Node without a browser. A new class (ILCA, 420…) starts from a new entry in `BoatClass.ts`.
+The simulation (`sailing/`, `race/`, `ai/`, `sailors/`) doesn't depend on Babylon: it runs at a fixed 60 Hz and can
+be tested in Node without a browser. It emits data, never text: every in-game text lives in the catalogs in
+`src/i18n/`. A new class (ILCA…) starts from a new entry in `BoatClass.ts`. The full module map and the
+conventions are in the developer guide, [AGENTS.md](AGENTS.md).
 
 ## Known limitations
 - The physics model is tuned by feel, not validated against real data. Optimist at 11 knots: ~2.3 kn upwind,
