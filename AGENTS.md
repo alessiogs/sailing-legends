@@ -39,7 +39,8 @@ src/
   core/      math.ts (angles, RNG, segment tests), Input.ts (keyboard/gamepad, tiller vs boat-direction
              steering, what the keys move per Role), Sound.ts (WebAudio synthesis, no assets)
   sailing/   BoatClass.ts (class data: Optimist, I420; `isTwoPerson` = sailed by a Pair, which has `crewRighting`),
-             BoatPhysics.ts (the model), Wind.ts (shifts + puffs)
+             BoatPhysics.ts (the model), Wind.ts (shifts + puffs), BoatStates.ts (Crew weight in/hiking/trapeze
+             and spinnaker down/moving/up from the boat state: the one home of their thresholds)
   race/      Course.ts, Race.ts (start/OCS, rounding, finish, penalties), Rules.ts (RRS 10/11/12/13/31),
              RaceSession.ts (one race: wind, boats, AIs, contacts; fixed 60 Hz; no rendering)
              PlayerChoice.ts (the player's Role, helm | crew, plus Control mode, playerCareer | fullBoat;
@@ -55,7 +56,8 @@ src/
              keys), plural.ts (plural forms from Intl.PluralRules). All player-facing text lives in a catalog
   ui/        Hud.ts (role-driven panel, compass, minimap, standings, tags), pageText.ts (fills index.html's
              data-i18n text from the catalog at startup), raceEventText.ts (words race events from their data),
-             raceNames.ts (names legs by `LegId` and boats by the sailors on board)
+             raceNames.ts (names legs by `LegId` and boats by the sailors on board),
+             boatStateText.ts (words the Crew weight and spinnaker states for the HUD)
   main.ts    scene, camera, menus, game loop, player controls per Role, Assists (Auto-trim)
 tests/       Vitest tests (npm test): smoke.test.ts (every AI-only race finishes, every penalty served),
              golden.test.ts + golden/ (races.ts sails and records the golden races, races.json is the snapshot),
@@ -67,6 +69,7 @@ tests/       Vitest tests (npm test): smoke.test.ts (every AI-only race finishes
              sailors.test.ts (rosters, Partner swap, Crew Chemistry values as the menu shows them)
              player-choice.test.ts (Crew with Full Boat Control is a type error; the Partner set up per choice)
              crew-side.test.ts (the shared Crew wrong-side check)
+             boat-states.test.ts (Crew weight and spinnaker thresholds, and their HUD wording)
 scripts/     polar.ts (npm run polar), golden-update.ts (npm run golden:update)
 ```
 **Rule:** `sailing/`, `race/`, `ai/`, `sailors/` must not import Babylon. They run in Node (tests) and in the browser.
