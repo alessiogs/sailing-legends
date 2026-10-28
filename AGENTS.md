@@ -4,9 +4,15 @@ Browser sailing game (Babylon.js 9 + TypeScript + Vite), aiming at a FIFA-style 
 The game concept is in `docs/CONCEPT.md`, the plan and known issues in `docs/ROADMAP.md`.
 The player-facing README is in Italian; **in-game UI text is Italian**, code and comments are English.
 
-Live: https://alessiogs.github.io/sailing-legends/ — every push to `main` deploys via
-`.github/workflows/deploy.yml` (install → `npm test` → `npm run build` (tsc + vite) → Pages).
-PRs are built and tested only.
+## Branches and deploys
+- `main` = published build: https://alessiogs.github.io/sailing-legends/
+- `develop` = test build: https://alessiogs.github.io/sailing-legends/dev/
+- Work goes to `develop` first; merge `develop` → `main` to publish.
+
+`.github/workflows/deploy.yml`: every push to `main` or `develop` runs `npm test` + `npm run build` on that
+commit, then rebuilds **both** branches (main at the root, develop under `/dev/`) and deploys them together,
+since a Pages deploy replaces the whole site. PRs are built and tested only. Keep Vite's `base: "./"` so the
+same build works at the root and under `/dev/`.
 
 ## Commands
 ```bash
