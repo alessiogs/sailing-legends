@@ -44,7 +44,9 @@ src/
              BoatPhysics.ts (the model), Wind.ts (shifts + puffs), BoatStates.ts (Crew weight in/hiking/trapeze
              and spinnaker down/moving/up from the boat state: the one home of their thresholds)
   race/      Course.ts, Race.ts (start/OCS, rounding, finish, penalties), Rules.ts (RRS 10/11/12/13/31),
-             RaceSession.ts (one race: wind, boats, AIs, contacts; fixed 60 Hz; no rendering)
+             RaceSession.ts (one race from a `Fleet`: wind, course, boats, AIs, contacts; fixed 60 Hz; no rendering)
+             Fleet.ts (`makeFleet`: the player's boat with the Partner, the opponents with their Crews, and every
+             boat's starting spot, from the class, the player's choices and the Rivals; plain data)
              Collisions.ts (hull capsules, mark discs and the committee capsule; closest points; pushing
              overlaps apart. Geometry only: the session tells the race about contacts and mark touches)
              PlayerChoice.ts (the player's Role, helm | crew, plus Control mode, playerCareer | fullBoat;
@@ -106,6 +108,7 @@ tests/       Vitest tests (npm test): smoke.test.ts (every AI-only race finishes
              start-planning.test.ts (the AI's holding spot, line point, RNG draws and start decisions)
              racing-ai-parts.test.ts (the AI's avoidance, beat tactics and tack state machine on their own)
              collisions.test.ts (hull capsules, closest points, hulls pushed apart and out of marks)
+             fleet.test.ts (who races per class and choice, starting spots, the session racing the fleet it is given)
 scripts/     polar.ts (npm run polar), golden-update.ts (npm run golden:update)
 ```
 **Rule:** `sailing/`, `race/`, `ai/`, `sailors/` must not import Babylon. They run in Node (tests) and in the browser.

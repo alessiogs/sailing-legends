@@ -5,11 +5,12 @@
 import { describe, expect, it } from "vitest";
 import { RaceFeedback, type Cue } from "../src/game/RaceFeedback";
 import { CREW, HELM, type PlayerChoice } from "../src/race/PlayerChoice";
+import { makeFleet } from "../src/race/Fleet";
 import { RaceSession } from "../src/race/RaceSession";
 import { I420, OPTIMIST, type BoatClass } from "../src/sailing/BoatClass";
 
 function setup(choice: PlayerChoice = HELM, boatClass: BoatClass = OPTIMIST, countdown?: number) {
-  const session = new RaceSession({ seed: 7, boatClass, choice, countdown });
+  const session = new RaceSession({ seed: 7, countdown, fleet: makeFleet({ boatClass, choice }) });
   session.step(1 / 60); // fills the telemetry
   const feedback = new RaceFeedback();
   feedback.newRace(session);

@@ -7,16 +7,17 @@ import { describe, expect, it } from "vitest";
 import { t } from "../src/i18n";
 import { RIVALS } from "../src/sailors/Sailors";
 import { CREW, FULL_BOAT, HELM } from "../src/race/PlayerChoice";
-import { RaceSession, type SessionOptions } from "../src/race/RaceSession";
+import { makeFleet, type FleetOptions } from "../src/race/Fleet";
+import { RaceSession } from "../src/race/RaceSession";
 import { I420, OPTIMIST } from "../src/sailing/BoatClass";
 import { legName, racerName } from "../src/ui/raceNames";
 
-const names = (opts: SessionOptions) => new RaceSession(opts).race.racers.map(r => `${r.id}=${racerName(r)}`);
+const names = (opts: FleetOptions) => new RaceSession({ fleet: makeFleet(opts) }).race.racers.map(r => `${r.id}=${racerName(r)}`);
 
 describe("race names", () => {
   it("names the legs of the course", () => {
     expect(new RaceSession().race.course.legs.map(legName)).toEqual(["Boa 1", "Boa 2", "Arrivo"]);
-    expect(new RaceSession({ boatClass: I420 }).race.course.legs.map(legName)).toEqual(["Boa 1", "Boa 2", "Arrivo"]);
+    expect(new RaceSession({ fleet: makeFleet({ boatClass: I420 }) }).race.course.legs.map(legName)).toEqual(["Boa 1", "Boa 2", "Arrivo"]);
   });
 
   it("shows the leg's name as the HUD target", () => {
@@ -44,7 +45,7 @@ describe("race names", () => {
   });
 
   it("shows the name in the standings tag", () => {
-    const player = new RaceSession({ boatClass: I420 }).player!;
+    const player = new RaceSession({ fleet: makeFleet({ boatClass: I420 }) }).player!;
     expect(t("hud.tag", { position: 2, name: racerName(player), ocs: true })).toBe("2° Tu/Giulia · OCS");
   });
 });
