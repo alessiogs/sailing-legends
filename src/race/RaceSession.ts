@@ -1,9 +1,10 @@
-import { DEG, dirX, dirZ, segmentsCross } from "../core/math";
+import { DEG, dirX, dirZ } from "../core/math";
 import { CrewAI } from "../ai/CrewAI";
 import { RacingAI } from "../ai/RacingAI";
 import { isTwoPerson, OPTIMIST, type BoatClass } from "../sailing/BoatClass";
 import { BoatSim, createBoat, type Controls } from "../sailing/BoatPhysics";
 import { WindField } from "../sailing/Wind";
+import { courseObstacles, hullRadius, hullSegment, overlapObstacle, pushOut, separateHulls } from "./Collisions";
 import { makeWindwardLeeward } from "./Course";
 import { Race, type Racer, type Sailor } from "./Race";
 import { opponentCrew, opponentHelms, RIVALS, type SailorProfile } from "../sailors/Sailors";
@@ -129,15 +130,13 @@ export class RaceSession {
   }
 
   /**
-   * Contacts. Each hull is a capsule (bow-stern segment, half-beam radius); marks are discs and the
-   * committee boat is a larger capsule. Overlaps are pushed apart, closing speed is removed, and the
-   * race is told so it can apply the rules.
+   * Contacts: overlapping hulls, marks and the committee boat are pushed apart (see Collisions.ts),
+   * and the race is told so it can apply the rules.
    */
   private resolveCollisions() {
     const rs = this.race.racers;
     const c = this.race.course;
-    const marks = c.marks.map((m, i) => ({ p: m, r: i < 2 ? 0.75 : 0.4, key: `m${i}` }));
-    marks.push({ p: c.pin, r: 0.45, key: "pin" });
+    const obstacles = courseObstacles(c);
     const finishIdx = c.legs.findIndex(l => l.kind === "finish");
     // Rule 31 only covers the marks of the leg being sailed (and the start marks before starting).
     const counts = (r: Racer, key: string) => {
@@ -146,87 +145,21 @@ export class RaceSession {
       if (key === "m1") return r.leg === 1;
       return r.leg === finishIdx;
     };
-    const cbx = dirX(c.windDir) * 3.2, cbz = dirZ(c.windDir) * 3.2;
     for (let i = 0; i < rs.length; i++) {
       const A = rs[i], a = A.sim.state;
       for (let j = i + 1; j < rs.length; j++) {
-        const B = rs[j], b = B.sim.state;
-        if (Math.abs(a.x - b.x) > 6 || Math.abs(a.z - b.z) > 6) continue;
-        const h = hullSegment(a, A.sim.cls), k = hullSegment(b, B.sim.cls);
-        const q = closestSegSeg(h, k);
-        const minD = hullR(A.sim.cls) + hullR(B.sim.cls);
-        if (q.d < minD) {
-          let nx = q.qx - q.px, nz = q.qz - q.pz;
-          const len = Math.hypot(nx, nz) || 1;
-          nx /= len; nz /= len;
-          if (q.d < 1e-4) { nx = b.x - a.x; nz = b.z - a.z; const l = Math.hypot(nx, nz) || 1; nx /= l; nz /= l; }
-          const push = (minD - q.d) / 2;
-          a.x -= nx * push; a.z -= nz * push;
-          b.x += nx * push; b.z += nz * push;
-          const closing = (b.vx - a.vx) * nx + (b.vz - a.vz) * nz;
-          if (closing < 0) {
-            a.vx += nx * closing * 0.5; a.vz += nz * closing * 0.5;
-            b.vx -= nx * closing * 0.5; b.vz -= nz * closing * 0.5;
-          }
-          this.race.contact(A, B);
-        }
+        const B = rs[j];
+        if (separateHulls(a, A.sim.cls, B.sim.state, B.sim.cls)) this.race.contact(A, B);
       }
+      // One hull position for every obstacle, taken before any of them pushes the boat.
       const h = hullSegment(a, A.sim.cls);
-      const HULL_R = hullR(A.sim.cls);
-      for (const m of marks) {
-        const q = closestPointSeg(m.p.x, m.p.z, h);
-        const minD = m.r + HULL_R;
-        if (q.d < minD) this.pushOut(A, q.px, q.pz, m.p.x, m.p.z, minD - q.d, counts(A, m.key) ? m.key : null);
+      const r = hullRadius(A.sim.cls);
+      for (const o of obstacles) {
+        const overlap = overlapObstacle(h, r, o.shape);
+        if (!overlap) continue;
+        pushOut(a, overlap);
+        if (counts(A, o.key)) this.race.markTouch(A, o.key);
       }
-      // Committee boat: a capsule lying along the wind.
-      const cb = { ax: c.committee.x - cbx, az: c.committee.z - cbz, bx: c.committee.x + cbx, bz: c.committee.z + cbz };
-      const q = closestSegSeg(h, cb);
-      if (q.d < 1.3 + HULL_R) this.pushOut(A, q.px, q.pz, q.qx, q.qz, 1.3 + HULL_R - q.d, counts(A, "committee") ? "committee" : null);
     }
   }
-
-  /** Push boat A away from obstacle point (ox, oz) as seen from its hull point (px, pz). */
-  private pushOut(A: Racer, px: number, pz: number, ox: number, oz: number, depth: number, key: string | null) {
-    const a = A.sim.state;
-    let nx = px - ox, nz = pz - oz;
-    const l = Math.hypot(nx, nz) || 1;
-    nx /= l; nz /= l;
-    a.x += nx * depth; a.z += nz * depth;
-    const into = a.vx * nx + a.vz * nz;
-    if (into < 0) { a.vx -= nx * into; a.vz -= nz * into; }
-    if (key) this.race.markTouch(A, key);
-  }
-}
-
-type Seg = { ax: number; az: number; bx: number; bz: number };
-
-/** Hull capsule radius (about half the beam) and half-length of its centre segment. */
-const hullR = (cls: BoatClass) => cls.beam * 0.44;
-function hullSegment(s: { x: number; z: number; heading: number }, cls: BoatClass): Seg {
-  const half = Math.max(0.3, cls.length / 2 - hullR(cls));
-  const fx = Math.sin(s.heading) * half, fz = Math.cos(s.heading) * half;
-  return { ax: s.x - fx, az: s.z - fz, bx: s.x + fx, bz: s.z + fz };
-}
-
-function closestPointSeg(px: number, pz: number, g: Seg) {
-  const ex = g.bx - g.ax, ez = g.bz - g.az;
-  const t = Math.max(0, Math.min(1, ((px - g.ax) * ex + (pz - g.az) * ez) / (ex * ex + ez * ez || 1)));
-  const qx = g.ax + ex * t, qz = g.az + ez * t;
-  return { px: qx, pz: qz, d: Math.hypot(px - qx, pz - qz) };
-}
-
-/** Closest points between two segments (crossing segments, otherwise endpoint-to-segment). */
-function closestSegSeg(g: Seg, h: Seg) {
-  if (segmentsCross(g.ax, g.az, g.bx, g.bz, h.ax, h.az, h.bx, h.bz)) {
-    const mx = (g.ax + g.bx + h.ax + h.bx) / 4, mz = (g.az + g.bz + h.az + h.bz) / 4;
-    return { px: mx, pz: mz, qx: mx, qz: mz, d: 0 };
-  }
-  let best = { px: 0, pz: 0, qx: 0, qz: 0, d: Infinity };
-  const tryPair = (px: number, pz: number, qx: number, qz: number) => {
-    const d = Math.hypot(px - qx, pz - qz);
-    if (d < best.d) best = { px, pz, qx, qz, d };
-  };
-  for (const [x, z] of [[g.ax, g.az], [g.bx, g.bz]]) { const q = closestPointSeg(x, z, h); tryPair(x, z, q.px, q.pz); }
-  for (const [x, z] of [[h.ax, h.az], [h.bx, h.bz]]) { const q = closestPointSeg(x, z, g); tryPair(q.px, q.pz, x, z); }
-  return best;
 }
