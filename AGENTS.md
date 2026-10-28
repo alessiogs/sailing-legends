@@ -7,7 +7,11 @@ The player-facing README is in Italian; **in-game UI text is Italian**, code and
 ## Branches and deploys
 - `main` = published build: https://alessiogs.github.io/sailing-legends/
 - `develop` = test build: https://alessiogs.github.io/sailing-legends/dev/
-- Work goes to `develop` first; merge `develop` → `main` to publish.
+- Every change: branch from `develop` as `<type>/<short-name>` (`feature/`, `fix/`, `chore/`, `docs/`, …),
+  then open a PR into `develop` and merge it yourself (merge commit, keeps every commit) once CI is green.
+- Publishing is the user's call: merge `develop` → `main` only when asked.
+- `gh` GraphQL is blocked in agent sessions; open and merge PRs via REST
+  (`gh api repos/alessiogs/sailing-legends/pulls`, then `.../pulls/<n>/merge`).
 
 `.github/workflows/deploy.yml`: every push to `main` or `develop` runs `npm test` + `npm run build` on that
 commit, then rebuilds **both** branches (main at the root, develop under `/dev/`) and deploys them together,
