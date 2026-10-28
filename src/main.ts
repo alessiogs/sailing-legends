@@ -1,7 +1,7 @@
 import {
   ArcRotateCamera, Color3, Color4, DirectionalLight, Engine, HemisphericLight, Matrix, Scene, Vector3,
 } from "@babylonjs/core";
-import { wantSpinnaker } from "./ai/CrewAI";
+import { crewOnWrongSide, wantSpinnaker } from "./ai/CrewAI";
 import { RacingAI } from "./ai/RacingAI";
 import { AUTOPILOT_HELM, crewChemistry, RIVALS, rivalById, type SailorProfile } from "./sailors/Sailors";
 import { DEFAULT_CONTROLS, Input, type ControlSettings } from "./core/Input";
@@ -414,7 +414,7 @@ function autopilotCrew(pc: Controls, p: Racer) {
   const tel = p.sim.telemetry;
   pc.jibSheet = tel.jib?.optimal; pc.spiSheet = tel.spi?.optimal; pc.crewOut = tel.crew?.ideal;
   pc.spi = wantSpinnaker(session.race, p);
-  if (tel.jib?.backed || !tel.crew?.onWindward) pc.switchSide = Math.abs(tel.awa) > 22 * DEG;
+  if (crewOnWrongSide(p.sim)) pc.switchSide = true;
 }
 
 function buildPanel(p: Racer): Panel {
@@ -428,9 +428,8 @@ function buildPanel(p: Racer): Panel {
     const sheet = spiUp ? s.spiSheet : s.jibSheet;
     // Calls from the Partner (the Helm), most urgent first.
     let call: string | null = null;
-    const wrongSide = tel.jib!.backed || !tel.crew!.onWindward || (s.spiHoist > 0.3 && tel.spi!.wrongSide);
     const ideal = tel.crew!.ideal;
-    if (wrongSide && Math.abs(tel.awa) > 22 * DEG) call = t("call.switchSide", { name });
+    if (crewOnWrongSide(p.sim)) call = t("call.switchSide", { name });
     else if (session.race.phase !== "prestart" && wantSpinnaker(session.race, p) !== !!session.playerControls.spi)
       call = session.playerControls.spi ? t("call.spiDrop", { name }) : t("call.spiHoist", { name });
     else if (tel.crew!.balance > 60) call = t("call.hikeOut", { name });
