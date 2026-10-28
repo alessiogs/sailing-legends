@@ -1,12 +1,13 @@
-import { angleDiff, bearingTo, clamp, DEG, dirX, dirZ, rng, wrapPi } from "../core/math";
+import { angleDiff, bearingTo, clamp, DEG, rng, wrapPi } from "../core/math";
 import type { Controls } from "../sailing/BoatPhysics";
 import type { WindField } from "../sailing/Wind";
 import { distanceTo, legTarget, type Point } from "../race/Course";
 import type { Race, Racer } from "../race/Race";
 import { judge } from "../race/Rules";
 import type { SailorProfile } from "../sailors/Sailors";
+import { CLOSE_HAULED } from "./angles";
+import { StartPlanning, type CourseSteering } from "./StartPlanning";
 
-const CLOSE_HAULED = 47 * DEG;
 const ORBIT_R = 9; // for an Optimist; scaled by boat length
 
 export class RacingAI {
@@ -17,14 +18,16 @@ export class RacingAI {
   private time = 0;
   private exitMark: { mark: Point; dir: number } | null = null;
   private lastLeg = -1;
-  private holdSpot: Point;
-  private linePoint: Point;
-  private holding = false;
-  private going = false;
+  private startPlan: StartPlanning;
+  /** What start planning borrows from this Helm: steering toward a point and the tack timer. */
+  private readonly steering: CourseSteering = {
+    headingToward: (p, fromDir, x, z, heading) => this.headingToward(p, fromDir, x, z, heading),
+    sinceTack: () => this.time - this.lastTack,
+    tackNow: () => { this.lastTack = this.time; },
+  };
   private mode: "sail" | "tack" | "recover" = "sail";
   private tackHeading = 0;
   private tackUntil = 0;
-  private startBias: number;
   private trimBias = 0;
   private trimTimer = 0;
   private penaltyDir = 0;
@@ -38,34 +41,13 @@ export class RacingAI {
   constructor(public racer: Racer, public profile: SailorProfile, private race: Race, seed: number, slot: number) {
     this.rand = rng(seed);
     this.k = Math.min(1.6, Math.max(1, racer.sim.cls.length / 2.31));
-    // Pre-start: pick a spot on the line, wait below and to the right of it, then time a
-    // starboard-tack run so the boat reaches the line around the gun.
-    const c = race.course;
-    const t = 0.2 + slot * 0.25 + (this.rand() - 0.5) * 0.1;
-    this.linePoint = {
-      x: c.start.a.x + (c.start.b.x - c.start.a.x) * t,
-      z: c.start.a.z + (c.start.b.z - c.start.a.z) * t,
-    };
-    const back = 15 * this.k, right = 13 * this.k;
-    const rx = dirX(c.windDir + Math.PI / 2), rz = dirZ(c.windDir + Math.PI / 2);
-    this.holdSpot = {
-      x: this.linePoint.x - dirX(c.windDir) * back + rx * right,
-      z: this.linePoint.z - dirZ(c.windDir) * back + rz * right,
-    };
-    // Late/early bias in seconds: undisciplined sailors push the line (risking OCS).
-    this.startBias = (1 - profile.discipline) * 5 + (this.rand() - 0.5) * 2.5;
+    // The start draws its numbers first: keep it constructed before anything else uses `rand`.
+    this.startPlan = new StartPlanning(race, profile, this.k, this.rand, slot);
   }
 
   /** Start the race already waiting at the holding spot, ready for the run to the line. */
   placeAtStart() {
-    const s = this.racer.sim.state;
-    s.x = this.holdSpot.x;
-    s.z = this.holdSpot.z;
-    s.heading = wrapPi(this.race.course.windDir - 75 * DEG);
-    s.vx = s.vz = 0;
-    this.racer.prevX = s.x;
-    this.racer.prevZ = s.z;
-    this.holding = true;
+    this.startPlan.placeAtStart(this.racer);
   }
 
   /** True while the Helm is committed to a tack (used for the "Vira!" call). */
@@ -97,49 +79,13 @@ export class RacingAI {
       desired = wrapPi(fromDir + 100 * DEG);
       sheet = 1;
       this.debug = "finished";
-    } else if (race.phase === "prestart") {
-      const above = race.aboveStart(s.x, s.z);
-      // Time needed to reach the line close-hauled from here, including accelerating.
-      const runDist = Math.max(0, -above) / Math.cos(CLOSE_HAULED);
-      const need = runDist / ((0.55 + 0.11 * w.speed) * this.k) + 3.5;
-      if (!this.going && race.clock >= -need + this.startBias) this.going = true;
-      if (!this.going) {
-        const d = distanceTo(this.holdSpot, s.x, s.z);
-        if (this.holding && d > 16) this.holding = false;
-        if (!this.holding && d < 7) this.holding = true;
-        if (above > -3) {
-          // Too close to / over the line: bear away and go back down.
-          desired = wrapPi(fromDir + Math.PI * 0.75 * (tel.twa >= 0 ? -1 : 1));
-          this.debug = "back off";
-        } else if (!this.holding) {
-          desired = this.headingToward(this.holdSpot, fromDir, s.x, s.z, s.heading);
-          this.debug = "to hold";
-        } else {
-          // Hold position: close reach with the sail luffing.
-          desired = wrapPi(fromDir - 75 * DEG); // starboard close reach, ready to go
-          // Crawl: just enough sail to hold steerage way without gaining speed.
-          sheet = tel.speed > 0.35 ? 1 : Math.min(1, tel.optimalSheet + 0.18);
-          this.debug = "hold";
-        }
-      } else {
-        desired = this.toStartLine(fromDir, s.x, s.z, s.heading);
-        // Early? Spill wind to kill time (disciplined sailors are more careful).
-        const eta = runDist / Math.max(tel.speed, 0.5);
-        const margin = 1.5 * this.profile.discipline - (1 - this.profile.discipline) * 2;
-        if (race.clock + eta < -margin - 1.5 && above < -1.5 && tel.speed > 0.6) sheet = Math.min(1, tel.optimalSheet + 0.3);
-        this.debug = "go";
-      }
-    } else if (r.leg === -1) {
-      // OCS: duck back below the line, otherwise start upwind.
-      if (r.ocs && !r.clearedBack) {
-        // Bear away on the current side (never tack) to get back below the line.
-        desired = wrapPi(fromDir + Math.PI - (Math.sign(tel.twa) || 1) * 0.35);
-        sheet = 1;
-        this.debug = "ocs return";
-      } else {
-        desired = this.toStartLine(fromDir, s.x, s.z, s.heading);
-        this.debug = "restart";
-      }
+    } else if (race.phase === "prestart" || r.leg === -1) {
+      // Not started yet: the start plan steers (before the gun, or OCS / late after it).
+      const steer = race.phase === "prestart"
+        ? this.startPlan.prestart(this.steering, s, tel, w.speed, fromDir)
+        : this.startPlan.afterGun(this.steering, r, tel, fromDir);
+      ({ desired, sheet } = steer);
+      this.debug = steer.debug;
     } else {
       const leg = c.legs[r.leg];
       let target = legTarget(leg);
@@ -266,32 +212,6 @@ export class RacingAI {
     }
     if (v.rule === "12") return { desired, sheet: Math.min(1, sheet + 0.4) };
     return { desired, sheet };
-  }
-
-  /**
-   * Heading for crossing the start line: stay close-hauled on starboard if that course hits the line
-   * between the committee boat and the pin, otherwise head for the middle of the line.
-   */
-  private toStartLine(fromDir: number, x: number, z: number, heading: number): number {
-    const c = this.race.course;
-    const a = c.start.a, b = c.start.b;
-    const ex = b.x - a.x, ez = b.z - a.z, len = Math.hypot(ex, ez);
-    const fetches = (h: number) => {
-      const dx = Math.sin(h), dz = Math.cos(h);
-      const den = dx * ez - dz * ex;
-      if (Math.abs(den) < 1e-6) return false;
-      const t = ((a.x - x) * ez - (a.z - z) * ex) / den;
-      const u = ((a.x - x) * dz - (a.z - z) * dx) / den;
-      return t > 0 && u > 4 / len && u < 1 - 6 / len;
-    };
-    const stbd = wrapPi(fromDir - CLOSE_HAULED), port = wrapPi(fromDir + CLOSE_HAULED);
-    const onStbd = angleDiff(heading, fromDir) > 0;
-    const cur = onStbd ? stbd : port, other = onStbd ? port : stbd;
-    // Keep the current tack if it reaches the line; tack only when necessary (and not too often).
-    if (fetches(cur)) return cur;
-    if (fetches(other) && this.time - this.lastTack > 6) { this.lastTack = this.time; return other; }
-    const mid = { x: (a.x + b.x) / 2, z: (a.z + b.z) / 2 };
-    return this.headingToward(mid, fromDir, x, z, heading);
   }
 
   /** A point on a small circle around the mark, leading the boat around it in the rounding direction. */
