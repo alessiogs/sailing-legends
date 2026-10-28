@@ -4,7 +4,7 @@ import type { GameController, Mode, Screens } from "../game/GameController";
 import { t, type MessageKey } from "../i18n";
 import type { Racer } from "../race/Race";
 import { CREW, FULL_BOAT, HELM, type PlayerChoice } from "../race/PlayerChoice";
-import { CLASSES, isTwoPerson } from "../sailing/BoatClass";
+import { CLASSES, isClassId, isTwoPerson } from "../sailing/BoatClass";
 import { crewChemistry, RIVALS, rivalById } from "../sailors/Sailors";
 import { racerName } from "./raceNames";
 
@@ -112,7 +112,11 @@ export class Menus implements Screens {
   private attachBoatMenu() {
     const { game } = this;
     for (const b of buttons("#class-opt button")) {
-      b.addEventListener("click", () => { game.boatClass = CLASSES[b.dataset.v!] ?? CLASSES.optimist; this.syncBoatMenu(); });
+      b.addEventListener("click", () => {
+        const id = b.dataset.v;
+        game.boatClass = isClassId(id) ? CLASSES[id] : CLASSES.optimist;
+        this.syncBoatMenu();
+      });
     }
     for (const b of buttons("#role-opt button")) {
       b.addEventListener("click", () => { game.choice = ROLE_OPTIONS[b.dataset.v as RoleOption].choice; this.syncBoatMenu(); });
