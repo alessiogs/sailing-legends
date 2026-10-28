@@ -12,7 +12,6 @@ import { RIVALS, type SailorProfile } from "../sailors/Sailors";
 import { boatColors } from "../ui/boatColors";
 import type { Hud } from "../ui/Hud";
 import { buildPanel } from "../ui/hudPanel";
-import { eventText } from "../ui/raceEventText";
 import { Boat420View } from "../world/Boat420View";
 import { boatLook, BoatView } from "../world/BoatView";
 import { CourseView } from "../world/CourseView";
@@ -20,6 +19,7 @@ import { Ocean } from "../world/Ocean";
 import { makeWaves, type Wave } from "../world/Waves";
 import type { CameraRig } from "./CameraRig";
 import { PlayerControls, type Assists } from "./PlayerControls";
+import { RaceFeedback, type Cue } from "./RaceFeedback";
 
 /** What the game is doing: each mode but racing shows its own screen. */
 export type Mode = "menu" | "racing" | "paused" | "results" | "controls";
@@ -77,11 +77,8 @@ export class GameController {
   private waves: Wave[] = [];
   private time = 0;
 
-  // ---------- Race feedback ----------
-  private lastClock = 0;
-  private lastBoomSide = 1;
-  private ironsHintShown = false;
-  private wasTacking = false;
+  /** The sounds, messages and coaching hints the player gets from the race. */
+  private readonly feedback = new RaceFeedback();
 
   // ---------- Player on board ----------
   /** The player's input turned into the player boat's controls, per Role; also the browser autopilot. */
@@ -135,7 +132,7 @@ export class GameController {
     const session = this.session = new RaceSession({ seed, windKn: this.windKn, boatClass: this.boatClass, choice: this.choice, partner: this.partner });
     input.role = isTwoPerson(this.boatClass) ? this.choice.role : "helm";
     this.controls.newRace();
-    this.wasTacking = false;
+    this.feedback.newRace(session);
     this.waves = makeWaves(session.wind.meanDir, this.windKn);
     if (!this.ocean) this.ocean = new Ocean(scene, this.waves);
     else this.ocean.setWaves(this.waves);
@@ -145,9 +142,6 @@ export class GameController {
       this.boats.set(r.id, isTwoPerson(r.sim.cls) ? new Boat420View(scene, r.id, look) : new BoatView(scene, r.id, look));
     }
     input.reset();
-    this.lastBoomSide = 0;
-    this.lastClock = session.race.clock;
-    this.ironsHintShown = false;
     this.cameraRig.placeBehind(session.player!.sim.state, isTwoPerson(this.boatClass));
     hud.show(true);
     hud.toast(t("toast.startSequence"), "big");
@@ -238,8 +232,7 @@ export class GameController {
       this.time += dt;
       this.controls.apply(dt, session);
       session.advance(dt);
-      this.processEvents();
-      this.playerCoaching();
+      this.play(this.feedback.update(session, this.input.steering));
     }
     const mode = this._mode;
     for (const r of session.race.racers) this.boats.get(r.id)!.update(mode === "racing" ? dt : 0, this.time, r.sim.state, r.sim.telemetry, this.waves);
@@ -274,50 +267,27 @@ export class GameController {
   }
 
   // ---------- Race feedback ----------
-  private processEvents() {
-    const { session, sound, hud } = this;
-    const clock = session.race.clock;
-    // Countdown signals: beeps in the last 5 seconds and at -30/-10, horn at the gun.
-    for (const t of [-30, -10, -5, -4, -3, -2, -1]) if (this.lastClock < t && clock >= t) sound.beep();
-    this.lastClock = clock;
-    for (const e of session.race.drainEvents()) {
-      if (e.kind === "gun") sound.horn(1.2);
-      if (e.kind === "ocs" && e.racer.isPlayer) sound.horn(0.5);
-      // One bump per contact involving the player: on the at-fault boat's event (each boat gets one).
-      if (e.kind === "contact" && (e.racer.isPlayer || e.other.isPlayer) && e.atFault === e.racer) sound.bump();
-      if (!e.racer.isPlayer) continue;
-      if (e.kind === "rounded") sound.chime();
-      if (e.kind === "penalty") sound.buzzer();
-      if (e.kind === "finish") { sound.horn(0.6); setTimeout(() => sound.horn(0.6), 700); }
-      const kind = e.kind === "ocs" || e.kind === "penalty" ? "bad"
-        : e.kind === "gun" || e.kind === "finish" ? "big"
-        : e.kind === "rounded" || e.kind === "ocs-cleared" || e.kind === "penalty-done" ? "good" : "";
-      hud.toast(eventText(e), kind);
-      if (e.kind === "finish") setTimeout(() => { if (this._mode === "racing") this.showResults(); }, 2500);
-    }
-    if (session.race.phase === "done" && this._mode === "racing" && session.player!.finishTime === null) this.showResults();
-  }
-
-  private playerCoaching() {
-    const { session, hud } = this;
-    const p = session.player!;
-    const s = p.sim.state, tel = p.sim.telemetry;
-    if (this.lastBoomSide === 0) this.lastBoomSide = s.boomSide;
-    if (s.boomSide !== this.lastBoomSide) {
-      const gybe = Math.abs(tel.awa) > 90 * DEG;
-      // When the Partner is the Helm, the call comes from them (the player, as Crew, must react).
-      if (session.partnerHelm) hud.toast(t(gybe ? "coach.partnerGybe" : "coach.partnerTack", { name: session.partner!.name }), "bad");
-      else hud.toast(gybe ? t("coach.gybe") : t("coach.tack"));
-      this.lastBoomSide = s.boomSide;
-    }
-    if (session.partnerHelm) {
-      const tacking = session.partnerHelm.tacking;
-      if (tacking && !this.wasTacking) { hud.toast(t("coach.partnerReadyAbout", { name: session.partner!.name })); this.sound.beep(); }
-      this.wasTacking = tacking;
-    }
-    if (!this.ironsHintShown && tel.trimState === "irons" && Math.abs(tel.speed) < 0.3 && session.race.clock > -40) {
-      this.ironsHintShown = true;
-      hud.toast(this.input.steering === "tiller" ? t("coach.irons.tiller") : t("coach.irons.boat"), "bad");
+  /** Plays the race feedback's cues, in order. */
+  private play(cues: Cue[]) {
+    const { sound, hud } = this;
+    for (const c of cues) {
+      switch (c.kind) {
+        case "beep": sound.beep(); break;
+        case "bump": sound.bump(); break;
+        case "chime": sound.chime(); break;
+        case "buzzer": sound.buzzer(); break;
+        case "horn":
+          if (c.afterMs > 0) setTimeout(() => sound.horn(c.seconds), c.afterMs);
+          else sound.horn(c.seconds);
+          break;
+        case "toast": hud.toast(c.text, c.style); break;
+        case "results": {
+          const show = () => { if (this._mode === "racing") this.showResults(); };
+          if (c.afterMs > 0) setTimeout(show, c.afterMs);
+          else show();
+          break;
+        }
+      }
     }
   }
 
