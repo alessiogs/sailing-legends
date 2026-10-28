@@ -41,7 +41,9 @@ src/
   race/      Course.ts, Race.ts (start/OCS, rounding, finish, penalties), Rules.ts (RRS 10/11/12/13/31),
              RaceSession.ts (one race: wind, boats, AIs, contacts; fixed 60 Hz; no rendering)
   ai/        RacingAI.ts (helm: tactics, tacking state machine, avoidance, penalties, start timing),
-             CrewAI.ts (crew: jib/spi trim, weight, side switch, spinnaker; Crew Chemistry)
+             CrewAI.ts (crew: jib/spi trim, weight, side switch, spinnaker). Both read sailor profiles
+  sailors/   Sailors.ts (sailor profiles, the Rival roster, the opponents' Crews, the extra Helm, the autopilot
+             Helm, the Crew Chemistry formula; sailors are matched by `id`, never by name)
   world/     Ocean.ts (Gerstner waves in GLSL), Waves.ts (same waves on CPU), BoatView.ts (Optimist),
              Boat420View.ts, SailMesh.ts, CourseView.ts
   i18n/      index.ts (`t(key, params)`: typed lookup), it.ts (Italian catalog, the reference: it defines the
@@ -57,9 +59,10 @@ tests/       Vitest tests (npm test): smoke.test.ts (every AI-only race finishes
              page-text.test.ts (index.html filled from the catalog reads as page-text/original.json)
              event-text.test.ts (every race event kind, worded through the Italian catalog, reads as before)
              race-names.test.ts (leg and boat names of every session setup read as before)
+             sailors.test.ts (rosters, Partner swap, Crew Chemistry values as the menu shows them)
 scripts/     polar.ts (npm run polar), golden-update.ts (npm run golden:update)
 ```
-**Rule:** `sailing/`, `race/`, `ai/` must not import Babylon. They run in Node (tests) and in the browser.
+**Rule:** `sailing/`, `race/`, `ai/`, `sailors/` must not import Babylon. They run in Node (tests) and in the browser.
 
 ## Conventions (get these right)
 - World: Babylon left-handed, seen from above **+Z = north, +X = east**. A *bearing/heading* is 0 at +Z and
