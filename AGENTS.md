@@ -65,7 +65,8 @@ src/
   sailors/   Sailors.ts (sailor profiles, the Rival roster, the opponents' Crews, the extra Helm, the autopilot
              Helm, the Crew Chemistry formula; sailors are matched by `id`, never by name)
   world/     Ocean.ts (Gerstner waves in GLSL), Waves.ts (same waves on CPU), BoatView.ts (Optimist),
-             Boat420View.ts, SailMesh.ts, CourseView.ts
+             Boat420View.ts, boatMaterials.ts (`boatLook` from the colour table, `boatMaterial`: the one material
+             cache of both boat views, per scene via sceneCache.ts), SailMesh.ts, CourseView.ts
   i18n/      index.ts (`t(key, params)`: typed lookup), it.ts (Italian catalog, the reference: it defines the
              keys), plural.ts (plural forms from Intl.PluralRules). All player-facing text lives in a catalog
   ui/        Hud.ts (draws the panel, compass, minimap, standings, tags), hudPanel.ts (`buildPanel`: the
@@ -109,6 +110,7 @@ tests/       Vitest tests (npm test): smoke.test.ts (every AI-only race finishes
              racing-ai-parts.test.ts (the AI's avoidance, beat tactics and tack state machine on their own)
              collisions.test.ts (hull capsules, closest points, hulls pushed apart and out of marks)
              fleet.test.ts (who races per class and choice, starting spots, the session racing the fleet it is given)
+             scene-cache.test.ts (boat materials made once per scene, again for a recreated scene)
 scripts/     polar.ts (npm run polar), golden-update.ts (npm run golden:update)
 ```
 **Rule:** `sailing/`, `race/`, `ai/`, `sailors/` must not import Babylon. They run in Node (tests) and in the browser.

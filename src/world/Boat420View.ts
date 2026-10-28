@@ -3,23 +3,9 @@ import {
 } from "@babylonjs/core";
 import { clamp, DEG, lerpAngle } from "../core/math";
 import type { BoatState, Telemetry } from "../sailing/BoatPhysics";
-import type { BoatLook } from "./BoatView";
+import { boatMaterial, type BoatLook } from "./boatMaterials";
 import { SailMesh } from "./SailMesh";
 import { surfaceAt, type Wave } from "./Waves";
-
-const mats = new Map<string, StandardMaterial>();
-function mat(scene: Scene, name: string, color: Color3, spec = 0.15, twoSided = false): StandardMaterial {
-  const key = `420-${name}-${color.toHexString()}`;
-  let m = mats.get(key);
-  if (!m || m.getScene() !== scene) {
-    m = new StandardMaterial(key, scene);
-    m.diffuseColor = color;
-    m.specularColor = new Color3(spec, spec, spec);
-    if (twoSided) { m.backFaceCulling = false; m.twoSidedLighting = true; }
-    mats.set(key, m);
-  }
-  return m;
-}
 
 const MAST_Z = 0.45;
 const SPI_COLORS = [new Color3(0.95, 0.25, 0.2), new Color3(0.15, 0.4, 0.9), new Color3(1, 0.8, 0.15), new Color3(0.2, 0.75, 0.45)];
@@ -49,15 +35,15 @@ export class Boat420View {
     this.root = new TransformNode(name, scene);
     this.body = new TransformNode(`${name}-body`, scene);
     this.body.parent = this.root;
-    const hullMat = mat(scene, "hull", look.hull, 0.4, true);
-    const deckMat = mat(scene, "deck", new Color3(0.93, 0.94, 0.95), 0.3, true);
-    const darkMat = mat(scene, "spar", new Color3(0.72, 0.74, 0.77), 0.6);
-    const sailMat = mat(scene, "sail", look.sail, 0.05, true);
-    const jacketMat = mat(scene, "jacket", look.jacket, 0.1);
-    const skinMat = mat(scene, "skin", new Color3(0.86, 0.66, 0.52), 0.05);
-    const stripeMat = mat(scene, "stripe", look.stripe, 0.2);
-    const legMat = mat(scene, "legs", new Color3(0.1, 0.12, 0.2));
-    const spiMat = mat(scene, "spi", SPI_COLORS[spiColorIdx++ % SPI_COLORS.length], 0.05, true);
+    const hullMat = boatMaterial(scene, "420-hull", look.hull, 0.4, true);
+    const deckMat = boatMaterial(scene, "420-deck", new Color3(0.93, 0.94, 0.95), 0.3, true);
+    const darkMat = boatMaterial(scene, "420-spar", new Color3(0.72, 0.74, 0.77), 0.6);
+    const sailMat = boatMaterial(scene, "420-sail", look.sail, 0.05, true);
+    const jacketMat = boatMaterial(scene, "420-jacket", look.jacket, 0.1);
+    const skinMat = boatMaterial(scene, "420-skin", new Color3(0.86, 0.66, 0.52), 0.05);
+    const stripeMat = boatMaterial(scene, "420-stripe", look.stripe, 0.2);
+    const legMat = boatMaterial(scene, "420-legs", new Color3(0.1, 0.12, 0.2));
+    const spiMat = boatMaterial(scene, "420-spi", SPI_COLORS[spiColorIdx++ % SPI_COLORS.length], 0.05, true);
 
     // --- Hull: lofted sections with a fine bow, open cockpit, foredeck.
     const N = 15;
@@ -123,7 +109,7 @@ export class Boat420View {
     blade.parent = this.rudder;
     const tiller = MeshBuilder.CreateBox(`${name}-tiller`, { width: 0.035, height: 0.035, depth: 1.1 }, scene);
     tiller.position.set(0, 0.25, 0.55);
-    tiller.material = mat(scene, "wood", new Color3(0.62, 0.45, 0.26), 0.1);
+    tiller.material = boatMaterial(scene, "420-wood", new Color3(0.62, 0.45, 0.26), 0.1);
     tiller.parent = this.rudder;
 
     // --- Rig.
@@ -185,7 +171,7 @@ export class Boat420View {
       return node;
     };
     this.helm = person("helm", jacketMat);
-    this.crew = person("crew", mat(scene, "jacket2", look.stripe, 0.1));
+    this.crew = person("crew", boatMaterial(scene, "420-jacket2", look.stripe, 0.1));
     this.wire = MeshBuilder.CreateLines(`${name}-wire`, { points: [Vector3.Zero(), Vector3.Zero()], updatable: true }, scene);
     this.wire.color = new Color3(0.2, 0.2, 0.22);
     this.wire.parent = this.body;

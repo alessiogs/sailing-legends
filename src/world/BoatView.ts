@@ -1,32 +1,10 @@
 import {
-  Color3, Mesh, MeshBuilder, StandardMaterial, TransformNode, Vector3, VertexData, type Scene,
+  Color3, Mesh, MeshBuilder, TransformNode, Vector3, VertexData, type Scene,
 } from "@babylonjs/core";
 import { clamp, DEG, lerpAngle } from "../core/math";
 import type { BoatState, Telemetry } from "../sailing/BoatPhysics";
-import type { BoatColors } from "../ui/boatColors";
+import { boatMaterial, type BoatLook } from "./boatMaterials";
 import { surfaceAt, type Wave } from "./Waves";
-
-/** A boat's colours as Babylon colours, for its materials. */
-export type BoatLook = { hull: Color3; sail: Color3; jacket: Color3; stripe: Color3 };
-
-/** The 3D colours of a boat from its entry in the boat colour table. */
-export function boatLook(c: BoatColors): BoatLook {
-  return { hull: new Color3(...c.hull), sail: new Color3(...c.sail), jacket: new Color3(...c.jacket), stripe: new Color3(...c.stripe) };
-}
-
-const mats = new Map<string, StandardMaterial>();
-function mat(scene: Scene, name: string, color: Color3, spec = 0.15, twoSided = false): StandardMaterial {
-  const key = `${name}-${color.toHexString()}`;
-  let m = mats.get(key);
-  if (!m) {
-    m = new StandardMaterial(key, scene);
-    m.diffuseColor = color;
-    m.specularColor = new Color3(spec, spec, spec);
-    if (twoSided) { m.backFaceCulling = false; m.twoSidedLighting = true; }
-    mats.set(key, m);
-  }
-  return m;
-}
 
 // Sail corners in the rig frame (mast at origin, boom along -Z, sail plane = YZ).
 const TACK = new Vector3(0, 0.5, 0);
@@ -56,13 +34,13 @@ export class BoatView {
     this.body = new TransformNode(`${name}-body`, scene);
     this.body.parent = this.root;
 
-    const hullMat = mat(scene, "hull", look.hull, 0.35, true);
-    const woodMat = mat(scene, "wood", new Color3(0.62, 0.45, 0.26), 0.1);
-    const darkMat = mat(scene, "spar", new Color3(0.12, 0.13, 0.15), 0.4);
-    const sailMat = mat(scene, "sail", look.sail, 0.05, true);
-    const jacketMat = mat(scene, "jacket", look.jacket, 0.1);
-    const skinMat = mat(scene, "skin", new Color3(0.86, 0.66, 0.52), 0.05);
-    const stripeMat = mat(scene, "stripe", look.stripe, 0.2);
+    const hullMat = boatMaterial(scene, "hull", look.hull, 0.35, true);
+    const woodMat = boatMaterial(scene, "wood", new Color3(0.62, 0.45, 0.26), 0.1);
+    const darkMat = boatMaterial(scene, "spar", new Color3(0.12, 0.13, 0.15), 0.4);
+    const sailMat = boatMaterial(scene, "sail", look.sail, 0.05, true);
+    const jacketMat = boatMaterial(scene, "jacket", look.jacket, 0.1);
+    const skinMat = boatMaterial(scene, "skin", new Color3(0.86, 0.66, 0.52), 0.05);
+    const stripeMat = boatMaterial(scene, "stripe", look.stripe, 0.2);
 
     // --- Hull: lofted pram sections, open on top so the cockpit is visible.
     const stations = 11;
@@ -200,7 +178,7 @@ export class BoatView {
     const legs = MeshBuilder.CreateCapsule(`${name}-legs`, { radius: 0.08, height: 0.6, tessellation: 6 }, scene);
     legs.rotation.z = Math.PI / 2;
     legs.position.set(0, 0.0, 0.0);
-    legs.material = mat(scene, "shorts", new Color3(0.1, 0.12, 0.2));
+    legs.material = boatMaterial(scene, "shorts", new Color3(0.1, 0.12, 0.2));
     legs.parent = this.sailor;
 
     for (const m of this.root.getChildMeshes()) m.isPickable = false;
