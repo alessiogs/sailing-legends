@@ -22,8 +22,8 @@ same build works at the root and under `/dev/`.
 ```bash
 npm install
 npm run dev      # http://localhost:5173
-npm test         # Vitest: headless smoke races (every race finishes, every penalty served) and the golden
-                 # races (nine fixed-seed races must match tests/golden/races.json exactly)
+npm test         # Vitest: headless smoke races (every race finishes, every penalty served), the golden
+                 # races (nine fixed-seed races must match tests/golden/races.json exactly) and rule verdicts
 npm run golden:update  # rewrite the golden snapshot: only when behaviour is meant to change; review its diff
 npm run polar    # speed table (polar) per class: use after any physics change
 npm run build    # type-check + production build into dist/
@@ -44,7 +44,8 @@ src/
   ui/        Hud.ts (role-driven panel, compass, minimap, standings, tags)
   main.ts    scene, camera, menus, game loop, player controls per role
 tests/       Vitest tests (npm test): smoke.test.ts (every AI-only race finishes, every penalty served),
-             golden.test.ts + golden/ (races.ts sails and records the golden races, races.json is the snapshot)
+             golden.test.ts + golden/ (races.ts sails and records the golden races, races.json is the snapshot),
+             rules.test.ts (rule 10/11/12/13 verdicts and penalty turns, two boats placed by hand)
 scripts/     polar.ts (npm run polar), golden-update.ts (npm run golden:update)
 ```
 **Rule:** `sailing/`, `race/`, `ai/` must not import Babylon. They run in Node (tests) and in the browser.
