@@ -45,6 +45,8 @@ src/
              and spinnaker down/moving/up from the boat state: the one home of their thresholds)
   race/      Course.ts, Race.ts (start/OCS, rounding, finish, penalties), Rules.ts (RRS 10/11/12/13/31),
              RaceSession.ts (one race: wind, boats, AIs, contacts; fixed 60 Hz; no rendering)
+             Collisions.ts (hull capsules, mark discs and the committee capsule; closest points; pushing
+             overlaps apart. Geometry only: the session tells the race about contacts and mark touches)
              PlayerChoice.ts (the player's Role, helm | crew, plus Control mode, playerCareer | fullBoat;
              Full Boat Control only for the Helm; presets HELM, CREW, FULL_BOAT = the three menu buttons)
   ai/        RacingAI.ts (the Helm: composes the parts below; mark rounding, trim error, penalty turns, rudder),
@@ -103,6 +105,7 @@ tests/       Vitest tests (npm test): smoke.test.ts (every AI-only race finishes
              boat-class.test.ts (class ids: a misspelt id is a type error; every class keyed by its own id)
              start-planning.test.ts (the AI's holding spot, line point, RNG draws and start decisions)
              racing-ai-parts.test.ts (the AI's avoidance, beat tactics and tack state machine on their own)
+             collisions.test.ts (hull capsules, closest points, hulls pushed apart and out of marks)
 scripts/     polar.ts (npm run polar), golden-update.ts (npm run golden:update)
 ```
 **Rule:** `sailing/`, `race/`, `ai/`, `sailors/` must not import Babylon. They run in Node (tests) and in the browser.
@@ -163,7 +166,7 @@ Pitfalls already fixed — keep them fixed:
 Start quality is still the weakest part (often 5–25 s late); it lives in `StartPlanning.ts`.
 
 ## Rules (Rules.ts / Race.ts / RaceSession.ts)
-Judged only on hull contact (capsule shapes). One penalty per incident (no stacking while one is owed).
+Judged only on hull contact (capsule shapes, in `Collisions.ts`). One penalty per incident (no stacking while one is owed).
 Rule 31 counts only the marks of the leg being sailed (finish buoys sit on the first beat!) and the start
 marks before starting. Unserved penalty at the finish ⇒ DSQ.
 Race events (`RaceEvent`) and verdicts (`Verdict`) are data: kind, racer, other, rule, turns, who was at fault,
