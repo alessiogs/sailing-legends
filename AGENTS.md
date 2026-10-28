@@ -86,3 +86,20 @@ Some agent sandboxes can't reach the npm registry. Workaround used so far: spars
 bundle with esbuild using `--alias:@babylonjs/core=<core/src> --alias:core=<core/src>` and a stub for
 `draco3dgltf`. Headless Chromium (`--use-angle=swiftshader`) renders it at ~10 fps — fine for screenshots.
 `window.__game` exposes `session`, `input`, `autopilot`, `fastForward(sec)` for scripted browser tests.
+
+## Agent skills
+
+Matt Pocock's engineering and productivity skills are vendored in `.claude/skills/`
+(from `mattpocock/skills` @ 59db609; update by re-copying from that repo).
+
+### Issue tracker
+
+Issues are tracked in this repo's GitHub Issues via the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Default vocabulary: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: `GLOSSARY.md` + `docs/adr/` at the repo root (created lazily when needed). See `docs/agents/domain.md`.
