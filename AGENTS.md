@@ -39,7 +39,8 @@ src/
   core/      math.ts (angles, RNG, segment tests), Input.ts (keyboard/gamepad, tiller vs boat-direction
              steering, what the keys move per Role), ControlSettings.ts (the Commands menu settings and their
              defaults; DOM-free), Sound.ts (WebAudio synthesis, no assets)
-  sailing/   BoatClass.ts (class data: Optimist, I420; `isTwoPerson` = sailed by a Pair, which has `crewRighting`),
+  sailing/   BoatClass.ts (class data: Optimist, I420, keyed by the closed `ClassId` union; `isTwoPerson` =
+             sailed by a Pair, which has `crewRighting`),
              BoatPhysics.ts (the model), Wind.ts (shifts + puffs), BoatStates.ts (Crew weight in/hiking/trapeze
              and spinnaker down/moving/up from the boat state: the one home of their thresholds)
   race/      Course.ts, Race.ts (start/OCS, rounding, finish, penalties), Rules.ts (RRS 10/11/12/13/31),
@@ -71,8 +72,9 @@ src/
              PlayerControls.ts (the player's input turned into the boat's controls per Role and Control mode:
              steering, sheets, weight, side switch, spinnaker key, Auto-trim, the browser autopilot; DOM-free)
              CameraRig.ts (the orbit camera and its chase / free / top views), Preferences.ts (`loadPrefs`,
-             `savePrefs`: controls and mute under `sl-prefs`; keep the stored format so saved preferences load)
-  main.ts    startup wiring: scene, camera rig, preferences, `Menus`, render loop, `window.__game` hook
+             `savePrefs`: controls and mute under `sl-prefs`; keep the stored format so saved preferences load),
+             testHook.ts (the typed `window.__game` test hook, `GameTestHook`, and `window.__fps`)
+  main.ts    startup wiring: scene, camera rig, preferences, `Menus`, render loop, installs the test hook
 tests/       Vitest tests (npm test): smoke.test.ts (every AI-only race finishes, every penalty served),
              golden.test.ts + golden/ (races.ts sails and records the golden races, races.json is the snapshot),
              rules.test.ts (rule 10/11/12/13 verdicts and penalty turns, two boats placed by hand)
@@ -89,6 +91,7 @@ tests/       Vitest tests (npm test): smoke.test.ts (every AI-only race finishes
              player-controls.test.ts (what the player's input does per Role and Control mode, Auto-trim, autopilot)
              hud-panel.test.ts (the HUD panel's lines per Role and Control mode, as the HUD shows them)
              race-feedback.test.ts (which sounds, messages and hints the race gives, and when)
+             boat-class.test.ts (class ids: a misspelt id is a type error; every class keyed by its own id)
 scripts/     polar.ts (npm run polar), golden-update.ts (npm run golden:update)
 ```
 **Rule:** `sailing/`, `race/`, `ai/`, `sailors/` must not import Babylon. They run in Node (tests) and in the browser.
@@ -158,7 +161,8 @@ Some agent sandboxes can't reach the npm registry. Workaround used so far: spars
 (`packages/dev/core`), generate its shader `.ts` files from `.fx` with the build-tools `BuildShader`, then
 bundle with esbuild using `--alias:@babylonjs/core=<core/src> --alias:core=<core/src>` and a stub for
 `draco3dgltf`. Headless Chromium (`--use-angle=swiftshader`) renders it at ~10 fps — fine for screenshots.
-`window.__game` exposes `session`, `input`, `autopilot`, `fastForward(sec)` for scripted browser tests.
+`window.__game` (typed as `GameTestHook` in `src/game/testHook.ts`) exposes `session`, `input`, `mode`, `start()`,
+`angleDiff`, `autopilot`, `fastForward(sec)` for scripted browser tests; `window.__fps` is the frame rate.
 
 ## Agent skills
 
