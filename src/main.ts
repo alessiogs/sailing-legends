@@ -1,5 +1,5 @@
 import {
-  ArcRotateCamera, Color3, Color4, DirectionalLight, Engine, HemisphericLight, Scene, Vector3,
+  Color3, Color4, DirectionalLight, Engine, HemisphericLight, Scene, Vector3,
 } from "@babylonjs/core";
 import { crewChemistry, RIVALS, rivalById } from "./sailors/Sailors";
 import { DEFAULT_CONTROLS } from "./core/ControlSettings";
@@ -11,6 +11,7 @@ import { CREW, FULL_BOAT, HELM, type PlayerChoice } from "./race/PlayerChoice";
 import { CLASSES, isTwoPerson } from "./sailing/BoatClass";
 import { t, type MessageKey } from "./i18n";
 import { GameController, type Mode, type Screens } from "./game/GameController";
+import { CameraRig } from "./game/CameraRig";
 import { loadPrefs, savePrefs } from "./game/Preferences";
 import { Hud } from "./ui/Hud";
 import { fillPageText } from "./ui/pageText";
@@ -28,17 +29,7 @@ const scene = new Scene(engine);
 scene.clearColor = new Color4(0.72, 0.83, 0.9, 1);
 scene.skipPointerMovePicking = true;
 
-const camera = new ArcRotateCamera("cam", -Math.PI / 2, 1.18, 12, Vector3.Zero(), scene);
-camera.lowerRadiusLimit = 5;
-camera.upperRadiusLimit = 120;
-camera.lowerBetaLimit = 0.08;
-camera.upperBetaLimit = 1.45;
-camera.wheelPrecision = 30;
-camera.panningSensibility = 0;
-camera.minZ = 0.1;
-camera.maxZ = 3000;
-camera.attachControl(canvas, true);
-camera.inputs.removeByType("ArcRotateCameraKeyboardMoveInput");
+const cameraRig = new CameraRig(scene, canvas);
 
 const hemi = new HemisphericLight("sky", new Vector3(0.1, 1, -0.2), scene);
 hemi.intensity = 0.75;
@@ -83,7 +74,7 @@ const screens: Screens = {
 };
 
 // ---------- Game ----------
-const game = new GameController({ engine, scene, camera, canvas, input, hud, sound, screens, savePrefs: savePlayerPrefs });
+const game = new GameController({ engine, scene, cameraRig, canvas, input, hud, sound, screens, savePrefs: savePlayerPrefs });
 
 $("start-btn").addEventListener("click", () => game.startFromMenu());
 // ---------- Commands menu ----------

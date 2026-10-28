@@ -1,9 +1,9 @@
-import { Matrix, Vector3, type ArcRotateCamera, type Engine, type Scene } from "@babylonjs/core";
+import { Matrix, Vector3, type Engine, type Scene } from "@babylonjs/core";
 import { crewOnWrongSide, wantSpinnaker } from "../ai/CrewAI";
 import { RacingAI } from "../ai/RacingAI";
 import type { Input } from "../core/Input";
 import type { Sound } from "../core/Sound";
-import { DEG, lerpAngle } from "../core/math";
+import { DEG } from "../core/math";
 import { t } from "../i18n";
 import { legTarget } from "../race/Course";
 import { HELM, type PlayerChoice } from "../race/PlayerChoice";
@@ -22,6 +22,7 @@ import { boatLook, BoatView } from "../world/BoatView";
 import { CourseView } from "../world/CourseView";
 import { Ocean } from "../world/Ocean";
 import { makeWaves, type Wave } from "../world/Waves";
+import type { CameraRig } from "./CameraRig";
 
 /** What the game is doing: each mode but racing shows its own screen. */
 export type Mode = "menu" | "racing" | "paused" | "results" | "controls";
@@ -48,7 +49,7 @@ export interface Screens {
 export type GameDeps = {
   engine: Engine;
   scene: Scene;
-  camera: ArcRotateCamera;
+  cameraRig: CameraRig;
   canvas: HTMLCanvasElement;
   input: Input;
   hud: Hud;
@@ -85,9 +86,6 @@ export class GameController {
   private waves: Wave[] = [];
   private time = 0;
 
-  // ---------- Camera ----------
-  private camMode: "chase" | "free" | "top" = "chase";
-
   // ---------- Race feedback ----------
   private lastClock = 0;
   private lastBoomSide = 1;
@@ -110,7 +108,7 @@ export class GameController {
 
   private readonly engine: Engine;
   private readonly scene: Scene;
-  private readonly camera: ArcRotateCamera;
+  private readonly cameraRig: CameraRig;
   private readonly canvas: HTMLCanvasElement;
   private readonly input: Input;
   private readonly hud: Hud;
@@ -121,7 +119,7 @@ export class GameController {
   constructor(deps: GameDeps) {
     this.engine = deps.engine;
     this.scene = deps.scene;
-    this.camera = deps.camera;
+    this.cameraRig = deps.cameraRig;
     this.canvas = deps.canvas;
     this.input = deps.input;
     this.hud = deps.hud;
@@ -140,7 +138,7 @@ export class GameController {
   }
 
   newRace() {
-    const { scene, camera, hud, input } = this;
+    const { scene, hud, input } = this;
     for (const b of this.boats.values()) b.dispose();
     this.boats.clear();
     this.courseView?.dispose();
@@ -162,12 +160,7 @@ export class GameController {
     this.lastBoomSide = 0;
     this.lastClock = session.race.clock;
     this.ironsHintShown = false;
-    // Put the camera behind the player.
-    const s = session.player!.sim.state;
-    camera.target.set(s.x, 0.8, s.z);
-    camera.alpha = Math.atan2(-Math.cos(s.heading), -Math.sin(s.heading));
-    camera.beta = 1.18;
-    camera.radius = this.chaseRadius();
+    this.cameraRig.placeBehind(session.player!.sim.state, isTwoPerson(this.boatClass));
     hud.show(true);
     hud.toast(t("toast.startSequence"), "big");
   }
@@ -198,7 +191,7 @@ export class GameController {
   }
 
   private handleActions() {
-    const { input, sound, hud, camera } = this;
+    const { input, sound, hud } = this;
     for (const a of input.consume()) {
       if (a === "mute") {
         sound.init();
@@ -232,10 +225,7 @@ export class GameController {
         hud.toast(t("toast.switchSide"));
       }
       if (a === "camera") {
-        this.camMode = this.camMode === "chase" ? "free" : this.camMode === "free" ? "top" : "chase";
-        hud.toast(t(`toast.camera.${this.camMode}`));
-        if (this.camMode === "chase") { camera.beta = 1.18; camera.radius = this.chaseRadius(); }
-        if (this.camMode === "top") { camera.beta = 0.12; camera.radius = isTwoPerson(this.boatClass) ? 70 : 48; }
+        hud.toast(t(`toast.camera.${this.cameraRig.nextMode(isTwoPerson(this.boatClass))}`));
       }
     }
   }
@@ -254,7 +244,8 @@ export class GameController {
   }
 
   private renderRace(dt: number, session: RaceSession) {
-    const { camera, engine, hud, scene } = this;
+    const { engine, hud, scene } = this;
+    const { camera } = this.cameraRig;
     if (this._mode === "racing") {
       this.time += dt;
       const p = session.player!;
@@ -269,7 +260,7 @@ export class GameController {
     const leg = p.leg >= 0 && p.leg < session.race.course.legs.length ? session.race.course.legs[p.leg] : null;
     this.courseView!.setTarget(p.finishTime !== null ? null : leg ? legTarget(leg) : null);
     this.courseView!.update(this.time, this.waves, p.leg < 0, !!leg && leg.kind === "finish");
-    this.updateCamera(dt);
+    this.cameraRig.follow(dt, p.sim.state, isTwoPerson(this.boatClass));
     this.ocean!.update(this.time, camera, session.wind);
     hud.update(dt, session.race, p, session.wind, this.buildPanel(p));
     const tel = p.sim.telemetry;
@@ -295,26 +286,6 @@ export class GameController {
     for (let i = 0; i < seconds * 60; i++) {
       if (this.autopilotOn && this.autopilot) Object.assign(this.session.playerControls, this.autopilot.update(1 / 60, this.session.wind));
       this.session.step(1 / 60);
-    }
-  }
-
-  // ---------- Camera ----------
-  private chaseRadius() { return isTwoPerson(this.boatClass) ? 17 : 12; }
-
-  private updateCamera(dt: number) {
-    const { camera } = this;
-    const s = this.session.player!.sim.state;
-    const far = Math.hypot(s.x - camera.target.x, s.z - camera.target.z) > 25;
-    const k = far ? 1 : Math.min(1, dt * 3);
-    camera.target.x += (s.x - camera.target.x) * k;
-    camera.target.z += (s.z - camera.target.z) * k;
-    camera.target.y = isTwoPerson(this.boatClass) ? 1.6 : 0.9;
-    if (this.camMode === "chase") {
-      const behind = Math.atan2(-Math.cos(s.heading), -Math.sin(s.heading));
-      camera.alpha = far ? behind : lerpAngle(camera.alpha, behind, Math.min(1, dt * 1.6));
-    } else if (this.camMode === "top") {
-      // North-up tactical view (wind from the top of the screen).
-      camera.alpha = lerpAngle(camera.alpha, -Math.PI / 2, Math.min(1, dt * 2));
     }
   }
 
