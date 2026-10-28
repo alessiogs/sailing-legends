@@ -103,7 +103,7 @@ describe("rule 11: same tack, overlapped, the windward boat keeps clear", () => 
 describe("penalty turns", () => {
   /** Turns a penalty in 10° steps; returns the step (1-based) on which it completed, or null. */
   function turn(turns: number, dir: 1 | -1, start = 0, maxSteps = 200): number | null {
-    const p = newPenalty(turns, start, "test");
+    const p = newPenalty(turns, start);
     for (let i = 1; i <= maxSteps; i++) {
       if (trackPenalty(p, start + dir * i * 10 * DEG)) return i;
     }
@@ -124,14 +124,14 @@ describe("penalty turns", () => {
   });
 
   it("a circle and a half is not two turns", () => {
-    const p = newPenalty(2, 0, "test");
+    const p = newPenalty(2, 0);
     let done = false;
     for (let i = 1; i <= 54; i++) done = trackPenalty(p, i * 10 * DEG);
     expect(done).toBe(false);
   });
 
   it("turning back unwinds the turn already made", () => {
-    const p = newPenalty(1, 0, "test");
+    const p = newPenalty(1, 0);
     let done = false;
     for (let i = 1; i <= 18; i++) done = trackPenalty(p, i * 10 * DEG);
     for (let i = 17; i >= 0; i--) done = trackPenalty(p, i * 10 * DEG);
@@ -143,7 +143,7 @@ describe("penalty turns", () => {
   });
 
   it("holding a steady course never completes a penalty", () => {
-    const p = newPenalty(1, STBD, "test");
+    const p = newPenalty(1, STBD);
     let done = false;
     for (let i = 0; i < 600; i++) done = trackPenalty(p, STBD + Math.sin(i / 10) * 20 * DEG);
     expect(done).toBe(false);

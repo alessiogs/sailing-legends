@@ -11,7 +11,14 @@ import type { BoatSim } from "../sailing/BoatPhysics";
  * Penalties (Rule 44): two turns (720°) for a Part 2 breach, one turn (360°) for touching a mark.
  * Not modelled yet: mark-room (18), changing course near a right-of-way boat (16), proper course.
  */
-export type Verdict = { atFault: 0 | 1; rule: string; why: string } | null;
+export type Verdict = { atFault: 0 | 1; rule: RightOfWayRule; reason: VerdictReason } | null;
+
+/** The Part 2 right-of-way rules judged on contact. */
+export type RightOfWayRule = "10" | "11" | "12" | "13";
+/** Any rule a boat can be penalised under: a right-of-way rule, or 31 for touching a mark. */
+export type Rule = RightOfWayRule | "31";
+/** Why the boat at fault had to keep clear (one per right-of-way rule; the UI words it). */
+export type VerdictReason = "tacking" | "portStarboard" | "clearAstern" | "windward";
 
 
 /** +1 starboard tack (wind over the starboard side), -1 port tack. */
@@ -36,22 +43,22 @@ export function clearAstern(a: BoatSim, b: BoatSim): boolean {
 /** Which of two boats had to keep clear, given the mean wind direction (for windward/leeward). */
 export function judge(a: BoatSim, b: BoatSim, windDir: number): Verdict {
   const ta = isTacking(a), tb = isTacking(b);
-  if (ta !== tb) return { atFault: ta ? 0 : 1, rule: "13", why: "stava virando" };
+  if (ta !== tb) return { atFault: ta ? 0 : 1, rule: "13", reason: "tacking" };
   if (ta && tb) return null;
   const tackA = tackOf(a), tackB = tackOf(b);
-  if (tackA !== tackB) return { atFault: tackA < 0 ? 0 : 1, rule: "10", why: "mure a sinistra contro mure a dritta" };
-  if (clearAstern(a, b)) return { atFault: 1, rule: "12", why: "libera dietro" };
-  if (clearAstern(b, a)) return { atFault: 0, rule: "12", why: "libera dietro" };
+  if (tackA !== tackB) return { atFault: tackA < 0 ? 0 : 1, rule: "10", reason: "portStarboard" };
+  if (clearAstern(a, b)) return { atFault: 1, rule: "12", reason: "clearAstern" };
+  if (clearAstern(b, a)) return { atFault: 0, rule: "12", reason: "clearAstern" };
   const ux = dirX(windDir), uz = dirZ(windDir);
   const upA = a.state.x * ux + a.state.z * uz, upB = b.state.x * ux + b.state.z * uz;
-  return { atFault: upA > upB ? 0 : 1, rule: "11", why: "sopravvento in ingaggio" };
+  return { atFault: upA > upB ? 0 : 1, rule: "11", reason: "windward" };
 }
 
 /** Penalty turns still owed by a boat. Turns count in one direction; tacks and gybes are part of it. */
-export type Penalty = { needed: number; turned: number; lastHeading: number; reason: string };
+export type Penalty = { needed: number; turned: number; lastHeading: number };
 
-export function newPenalty(turns: number, heading: number, reason: string): Penalty {
-  return { needed: turns * 2 * Math.PI, turned: 0, lastHeading: heading, reason };
+export function newPenalty(turns: number, heading: number): Penalty {
+  return { needed: turns * 2 * Math.PI, turned: 0, lastHeading: heading };
 }
 
 /** Advances a penalty; returns true when it has been completed. */
