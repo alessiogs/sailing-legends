@@ -62,6 +62,7 @@ src/
              raceNames.ts (names legs by `LegId` and boats by the sailors on board),
              boatStateText.ts (words the Crew weight and spinnaker states for the HUD),
              boatColors.ts (the one boat colour table by racer id: 3D hull/sail/jacket/stripe and the HUD dot),
+             dom.ts (`h(tag, attributes, ...children)`: builds elements; strings become text, never markup),
              Menus.ts (main menu: class, wind, Role, Partner, Auto-trim; Commands menu; pause and results
              screens. Implements the controller's `Screens`; `attach(game)` wires the buttons)
   game/      GameController.ts (owns the game state: race session, class, Role and Control mode, Partner, wind,
@@ -117,6 +118,8 @@ scripts/     polar.ts (npm run polar), golden-update.ts (npm run golden:update)
   Messages with parameters are functions of a typed object; counts use `plurals(locale)`, never `n === 1`.
   Text in `index.html` is no exception: give the element `data-i18n="key"` (or `data-i18n-aria-label="key"`)
   and leave it empty; `ui/pageText.ts` fills it at startup, before child elements such as key hints.
+  Runtime text, sailor names above all, reaches the page as text (`textContent`, or `h` from `ui/dom.ts`), never
+  through `innerHTML`, so a player-created name can't break the page.
   The only Italian kept in the page is `#loading` (shown before the scripts run; a test keeps it equal to `menu.loading`).
 
 ## Golden races
