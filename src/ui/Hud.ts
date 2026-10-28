@@ -5,11 +5,10 @@ import { isTwoPerson } from "../sailing/BoatClass";
 import type { Telemetry, TrimState } from "../sailing/BoatPhysics";
 import { WindField } from "../sailing/Wind";
 import { t } from "../i18n";
+import { boatDot } from "./boatColors";
 import { legName, racerName } from "./raceNames";
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
-
-export const BOAT_COLORS: Record<string, string> = { player: "#ffffff", ai0: "#4aa3ff", ai1: "#ffd23f", ai2: "#ff5a4e" };
 
 const fmtClock = (t: number) => {
   const neg = t < 0;
@@ -170,7 +169,7 @@ export class Hud {
         : r.penalty ? t("standings.penalty")
         : r.leg < 0 ? t(r.ocs && !r.clearedBack ? "standings.ocs" : race.phase === "prestart" ? "standings.prestart" : "standings.start")
         : t("standings.leg", { leg: r.leg + 1, legs });
-      return `<li class="${r === me ? "me" : ""}"><span class="n">${i + 1}</span><span><i class="dot" style="background:${BOAT_COLORS[r.id] ?? "#ccc"}"></i>${racerName(r)}</span><span class="s">${status}</span></li>`;
+      return `<li class="${r === me ? "me" : ""}"><span class="n">${i + 1}</span><span><i class="dot" style="background:${boatDot(r.id)}"></i>${racerName(r)}</span><span class="s">${status}</span></li>`;
     }).join("");
   }
 
@@ -287,7 +286,7 @@ export class Hud {
       // Keep boats that wander off the chart pinned to its edge.
       g.translate(Math.max(10, Math.min(W - 10, sx(st.x))), Math.max(10, Math.min(H - 10, sz(st.z))));
       g.rotate(st.heading);
-      g.fillStyle = BOAT_COLORS[r.id] ?? "#ccc";
+      g.fillStyle = boatDot(r.id);
       g.beginPath(); g.moveTo(0, -11); g.lineTo(7, 8); g.lineTo(-7, 8); g.closePath(); g.fill();
       if (r === me) { g.strokeStyle = "#071827"; g.lineWidth = 2; g.stroke(); }
       g.restore();
@@ -312,7 +311,7 @@ export class Hud {
       let el = this.tagEls.get(r.id);
       if (!el) {
         el = document.createElement("div");
-        el.style.borderLeft = `3px solid ${BOAT_COLORS[r.id] ?? "#ccc"}`;
+        el.style.borderLeft = `3px solid ${boatDot(r.id)}`;
         this.el.tags.appendChild(el);
         this.tagEls.set(r.id, el);
       }

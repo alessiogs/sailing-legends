@@ -57,7 +57,8 @@ src/
   ui/        Hud.ts (role-driven panel, compass, minimap, standings, tags), pageText.ts (fills index.html's
              data-i18n text from the catalog at startup), raceEventText.ts (words race events from their data),
              raceNames.ts (names legs by `LegId` and boats by the sailors on board),
-             boatStateText.ts (words the Crew weight and spinnaker states for the HUD)
+             boatStateText.ts (words the Crew weight and spinnaker states for the HUD),
+             boatColors.ts (the one boat colour table by racer id: 3D hull/sail/jacket/stripe and the HUD dot)
   main.ts    scene, camera, menus, game loop, player controls per Role, Assists (Auto-trim)
 tests/       Vitest tests (npm test): smoke.test.ts (every AI-only race finishes, every penalty served),
              golden.test.ts + golden/ (races.ts sails and records the golden races, races.json is the snapshot),
@@ -70,6 +71,7 @@ tests/       Vitest tests (npm test): smoke.test.ts (every AI-only race finishes
              player-choice.test.ts (Crew with Full Boat Control is a type error; the Partner set up per choice)
              crew-side.test.ts (the shared Crew wrong-side check)
              boat-states.test.ts (Crew weight and spinnaker thresholds, and their HUD wording)
+             boat-colors.test.ts (every boat has its colours; 3D and HUD colours as before)
 scripts/     polar.ts (npm run polar), golden-update.ts (npm run golden:update)
 ```
 **Rule:** `sailing/`, `race/`, `ai/`, `sailors/` must not import Babylon. They run in Node (tests) and in the browser.

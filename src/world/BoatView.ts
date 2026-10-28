@@ -3,11 +3,18 @@ import {
 } from "@babylonjs/core";
 import { clamp, DEG, lerpAngle } from "../core/math";
 import type { BoatState, Telemetry } from "../sailing/BoatPhysics";
+import type { BoatColors } from "../ui/boatColors";
 import { surfaceAt, type Wave } from "./Waves";
 
-/** Visual of an Optimist: pram hull, sprit rig with a cambered sail that luffs, sailor, foils. */
+/** A boat's colours as Babylon colours, for its materials. */
 export type BoatLook = { hull: Color3; sail: Color3; jacket: Color3; stripe: Color3 };
 
+/** The 3D colours of a boat from its entry in the boat colour table. */
+export function boatLook(c: BoatColors): BoatLook {
+  return { hull: new Color3(...c.hull), sail: new Color3(...c.sail), jacket: new Color3(...c.jacket), stripe: new Color3(...c.stripe) };
+}
+
+/** Visual of an Optimist: pram hull, sprit rig with a cambered sail that luffs, sailor, foils. */
 const mats = new Map<string, StandardMaterial>();
 function mat(scene: Scene, name: string, color: Color3, spec = 0.15, twoSided = false): StandardMaterial {
   const key = `${name}-${color.toHexString()}`;

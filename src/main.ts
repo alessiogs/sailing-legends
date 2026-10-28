@@ -16,12 +16,13 @@ import { CREW, FULL_BOAT, HELM, type PlayerChoice } from "./race/PlayerChoice";
 import { CLASSES, isTwoPerson, type BoatClass } from "./sailing/BoatClass";
 import { t, type MessageKey } from "./i18n";
 import { crewWeightText, spinnakerText } from "./ui/boatStateText";
+import { boatColors } from "./ui/boatColors";
 import { Hud, type Panel } from "./ui/Hud";
 import { fillPageText } from "./ui/pageText";
 import { eventText } from "./ui/raceEventText";
 import { racerName } from "./ui/raceNames";
 import { Boat420View } from "./world/Boat420View";
-import { BoatView, type BoatLook } from "./world/BoatView";
+import { boatLook, BoatView } from "./world/BoatView";
 import { CourseView } from "./world/CourseView";
 import { Ocean } from "./world/Ocean";
 import { makeWaves, type Wave } from "./world/Waves";
@@ -58,13 +59,6 @@ sun.intensity = 1.05;
 sun.diffuse = new Color3(1, 0.96, 0.88);
 
 // ---------- Game state ----------
-const LOOKS: Record<string, BoatLook> = {
-  player: { hull: new Color3(0.95, 0.96, 0.95), sail: new Color3(0.98, 0.98, 0.96), jacket: new Color3(0.95, 0.35, 0.12), stripe: new Color3(0.85, 0.12, 0.12) },
-  ai0: { hull: new Color3(0.2, 0.45, 0.85), sail: new Color3(0.93, 0.95, 0.98), jacket: new Color3(0.2, 0.3, 0.8), stripe: new Color3(0.95, 0.95, 0.95) },
-  ai1: { hull: new Color3(0.98, 0.83, 0.25), sail: new Color3(0.98, 0.96, 0.86), jacket: new Color3(0.95, 0.75, 0.1), stripe: new Color3(0.15, 0.15, 0.2) },
-  ai2: { hull: new Color3(0.86, 0.22, 0.18), sail: new Color3(0.98, 0.93, 0.92), jacket: new Color3(0.8, 0.12, 0.12), stripe: new Color3(0.95, 0.95, 0.95) },
-};
-
 /** Help the game gives by doing a secondary task for the player; each can be switched off. */
 type Assists = {
   /** Auto-trim: the player's sail trim is set automatically. */
@@ -133,7 +127,7 @@ function newRace() {
   else ocean.setWaves(waves);
   courseView = new CourseView(scene, session.race.course);
   for (const r of session.race.racers) {
-    const look = LOOKS[r.id] ?? LOOKS.ai0;
+    const look = boatLook(boatColors(r.id));
     boats.set(r.id, isTwoPerson(r.sim.cls) ? new Boat420View(scene, r.id, look) : new BoatView(scene, r.id, look));
   }
   input.reset();
