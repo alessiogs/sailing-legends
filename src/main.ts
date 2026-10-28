@@ -62,7 +62,7 @@ setTimeout(() => document.getElementById("loading")!.classList.add("hidden"), 30
 (window as any).__game = {
   get session() { return game.session; }, input, get mode() { return game.mode; },
   start: () => game.startFromMenu(), angleDiff,
-  get autopilot() { return game.autopilotOn; },
-  set autopilot(on: boolean) { game.autopilotOn = on; },
+  get autopilot() { return game.controls.autopilotOn; },
+  set autopilot(on: boolean) { game.controls.autopilotOn = on; },
   fastForward(seconds: number) { game.fastForward(seconds); },
 };
