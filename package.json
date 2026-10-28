@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "test": "vitest run --reporter=verbose",
-    "polar": "tsx scripts/polar.ts"
+    "polar": "tsx scripts/polar.ts",
+    "golden:update": "tsx scripts/golden-update.ts"
   },
   "dependencies": {
     "@babylonjs/core": "^9.0.0"
