@@ -55,8 +55,9 @@ src/
              Boat420View.ts, SailMesh.ts, CourseView.ts
   i18n/      index.ts (`t(key, params)`: typed lookup), it.ts (Italian catalog, the reference: it defines the
              keys), plural.ts (plural forms from Intl.PluralRules). All player-facing text lives in a catalog
-  ui/        Hud.ts (role-driven panel, compass, minimap, standings, tags), pageText.ts (fills index.html's
-             data-i18n text from the catalog at startup), raceEventText.ts (words race events from their data),
+  ui/        Hud.ts (draws the panel, compass, minimap, standings, tags), hudPanel.ts (`buildPanel`: the
+             Role-driven bottom panel built from the race and the player's choices; pure, DOM-free),
+             pageText.ts (fills index.html's data-i18n text from the catalog at startup), raceEventText.ts (words race events from their data),
              raceNames.ts (names legs by `LegId` and boats by the sailors on board),
              boatStateText.ts (words the Crew weight and spinnaker states for the HUD),
              boatColors.ts (the one boat colour table by racer id: 3D hull/sail/jacket/stripe and the HUD dot),
@@ -64,7 +65,7 @@ src/
              screens. Implements the controller's `Screens`; `attach(game)` wires the buttons)
   game/      GameController.ts (owns the game state: race session, class, Role and Control mode, Partner, wind,
              Assists; the menu / racing / paused / results / controls modes; one `frame(dt)` per render; for now
-             also race feedback and the HUD panel). Drives the page through `Screens`.
+             also race feedback). Drives the page through `Screens`.
              PlayerControls.ts (the player's input turned into the boat's controls per Role and Control mode:
              steering, sheets, weight, side switch, spinnaker key, Auto-trim, the browser autopilot; DOM-free)
              CameraRig.ts (the orbit camera and its chase / free / top views), Preferences.ts (`loadPrefs`,
@@ -84,6 +85,7 @@ tests/       Vitest tests (npm test): smoke.test.ts (every AI-only race finishes
              boat-colors.test.ts (every boat has its colours; 3D and HUD colours as before)
              preferences.test.ts (saved preferences still load; saving keeps the `sl-prefs` format)
              player-controls.test.ts (what the player's input does per Role and Control mode, Auto-trim, autopilot)
+             hud-panel.test.ts (the HUD panel's lines per Role and Control mode, as the HUD shows them)
 scripts/     polar.ts (npm run polar), golden-update.ts (npm run golden:update)
 ```
 **Rule:** `sailing/`, `race/`, `ai/`, `sailors/` must not import Babylon. They run in Node (tests) and in the browser.

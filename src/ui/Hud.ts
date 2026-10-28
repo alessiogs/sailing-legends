@@ -2,10 +2,11 @@ import { angleDiff, bearingTo, DEG, KNOTS } from "../core/math";
 import { distanceTo, legTarget, type Course } from "../race/Course";
 import type { Race, Racer } from "../race/Race";
 import { isTwoPerson } from "../sailing/BoatClass";
-import type { Telemetry, TrimState } from "../sailing/BoatPhysics";
+import type { Telemetry } from "../sailing/BoatPhysics";
 import { WindField } from "../sailing/Wind";
 import { t } from "../i18n";
 import { boatDot } from "./boatColors";
+import type { Panel } from "./hudPanel";
 import { legName, racerName } from "./raceNames";
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
@@ -15,19 +16,6 @@ const fmtClock = (t: number) => {
   const a = Math.abs(neg ? Math.ceil(t) : Math.floor(t));
   return `${neg ? "-" : ""}${Math.floor(a / 60)}:${String(a % 60).padStart(2, "0")}`;
 };
-
-/** What the bottom panel shows; depends on the player's Role on board. */
-export type Panel = {
-  gauge: { label: string; value: number; centered: boolean; ideal?: number; ends: [string, string] };
-  sail: { label: string; sheet: number; optimal: number; state: TrimState; autoTrim: boolean; text?: string };
-  /** A call from the Partner the player should act on (as Crew), or null. */
-  call: string | null;
-  /** One-line status of the Partner on board, or null. */
-  partnerLine: string | null;
-  /** Crew Chemistry with the Partner, or null for single-handers. */
-  chem: { name: string; value: number } | null;
-};
-
 
 export class Hud {
   private el = {
