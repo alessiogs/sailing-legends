@@ -10,10 +10,12 @@ import { angleDiff, DEG, lerpAngle } from "./core/math";
 import { legTarget } from "./race/Course";
 import type { Racer } from "./race/Race";
 import type { Controls } from "./sailing/BoatPhysics";
+import { crewWeight, spinnakerState } from "./sailing/BoatStates";
 import { RaceSession } from "./race/RaceSession";
 import { CREW, FULL_BOAT, HELM, type PlayerChoice } from "./race/PlayerChoice";
 import { CLASSES, isTwoPerson, type BoatClass } from "./sailing/BoatClass";
 import { t, type MessageKey } from "./i18n";
+import { crewWeightText, spinnakerText } from "./ui/boatStateText";
 import { Hud, type Panel } from "./ui/Hud";
 import { fillPageText } from "./ui/pageText";
 import { eventText } from "./ui/raceEventText";
@@ -434,8 +436,8 @@ function buildPanel(p: Racer): Panel {
       call = session.playerControls.spi ? t("call.spiDrop", { name }) : t("call.spiHoist", { name });
     else if (tel.crew!.balance > 60) call = t("call.hikeOut", { name });
     else if (s.crewOut - ideal > 0.25 && tel.crew!.balance < -20) call = t("call.comeIn", { name });
-    const where = t(s.crewOut > 0.75 ? "hud.weight.trapeze" : s.crewOut > 0.3 ? "hud.weight.hiking" : "hud.weight.seated");
-    const spi = t(s.spiHoist > 0.9 ? "hud.spi.up" : s.spiHoist > 0.05 ? "hud.spi.moving" : "hud.spi.down");
+    const where = crewWeightText(crewWeight(s.crewOut), "own");
+    const spi = spinnakerText(spinnakerState(s.spiHoist));
     return {
       gauge: { label: t("hud.gauge.weight", { position: where }), value: s.crewOut, centered: false, ideal, ends: [t("hud.gauge.in"), t("hud.gauge.out")] },
       sail: { label: spiUp ? t("hud.sail.spinnaker") : t("hud.sail.jib"), sheet, optimal: sailTel.optimal, state: sailTel.trimState, autoTrim: assists.autoTrim,
@@ -447,8 +449,8 @@ function buildPanel(p: Racer): Panel {
   const sail = { label: two ? t("hud.sail.main") : t("hud.sail.single"), sheet: s.sheet, optimal: tel.optimalSheet, state: tel.trimState, autoTrim: assists.autoTrim };
   let partnerLine: string | null = null;
   if (two) {
-    const weight = t(s.crewOut > 0.75 ? "hud.weight.trapeze" : s.crewOut > 0.3 ? "hud.weight.hiking" : "hud.weight.in");
-    const spi = t(s.spiHoist > 0.9 ? "hud.spi.up" : s.spiHoist > 0.05 ? "hud.spi.moving" : "hud.spi.down");
+    const weight = crewWeightText(crewWeight(s.crewOut), "partner");
+    const spi = spinnakerText(spinnakerState(s.spiHoist));
     partnerLine = t(choice.control === "fullBoat" ? "hud.partnerLine.crewOnCall" : "hud.partnerLine.crew", { name, weight, spi });
   }
   return { gauge: tillerGauge, sail, call: null, partnerLine, chem };
