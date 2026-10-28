@@ -6,6 +6,7 @@
 import { describe, expect, it } from "vitest";
 import { t } from "../src/i18n";
 import { RIVALS } from "../src/sailors/Sailors";
+import { CREW, FULL_BOAT, HELM } from "../src/race/PlayerChoice";
 import { RaceSession, type SessionOptions } from "../src/race/RaceSession";
 import { I420, OPTIMIST } from "../src/sailing/BoatClass";
 import { legName, racerName } from "../src/ui/raceNames";
@@ -34,10 +35,10 @@ describe("race names", () => {
 
   it("names a two-person boat Helm/Crew, with the player in their Role", () => {
     const rivals = ["ai0=Luca/Sara", "ai1=Marco/Tommaso", "ai2=Elena/Pietro"];
-    expect(names({ boatClass: I420, role: "skipper" })).toEqual(["player=Tu/Giulia", ...rivals]);
-    expect(names({ boatClass: I420, role: "full" })).toEqual(["player=Tu/Giulia", ...rivals]);
-    expect(names({ boatClass: I420, role: "crew" })).toEqual(["player=Giulia/Tu", ...rivals]);
-    expect(names({ boatClass: I420, role: "crew", partner: RIVALS[2] }))
+    expect(names({ boatClass: I420, choice: HELM })).toEqual(["player=Tu/Giulia", ...rivals]);
+    expect(names({ boatClass: I420, choice: FULL_BOAT })).toEqual(["player=Tu/Giulia", ...rivals]);
+    expect(names({ boatClass: I420, choice: CREW })).toEqual(["player=Giulia/Tu", ...rivals]);
+    expect(names({ boatClass: I420, choice: CREW, partner: RIVALS[2] }))
       .toEqual(["player=Marco/Tu", "ai0=Luca/Sara", "ai1=Giulia/Tommaso", "ai2=Elena/Pietro"]);
     expect(names({ boatClass: I420, withPlayer: false })).toEqual(["ai0=Luca/Sara", "ai1=Giulia/Tommaso", "ai2=Marco/Pietro"]);
   });

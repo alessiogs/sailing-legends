@@ -14,11 +14,15 @@ import { DEG } from "../../src/core/math";
 import { RacingAI } from "../../src/ai/RacingAI";
 import { distanceTo, legTarget } from "../../src/race/Course";
 import type { Race, Racer } from "../../src/race/Race";
-import { FIXED_DT, RaceSession, type PlayerRole } from "../../src/race/RaceSession";
+import { CREW, FULL_BOAT, HELM, type PlayerChoice } from "../../src/race/PlayerChoice";
+import { FIXED_DT, RaceSession } from "../../src/race/RaceSession";
 import { I420, OPTIMIST, type BoatClass } from "../../src/sailing/BoatClass";
 
-/** How the player boat is sailed: its Role and Control mode, as the session option spells them today. */
-type PlayerSetup = PlayerRole;
+/** How the player boat is sailed: its Role and Control mode, named as when the snapshot was first recorded. */
+type PlayerSetup = "skipper" | "crew" | "full";
+
+/** Each recorded player setup as the session's Role and Control mode. */
+const PLAYER_CHOICE: Record<PlayerSetup, PlayerChoice> = { skipper: HELM, crew: CREW, full: FULL_BOAT };
 
 export type GoldenRace = { name: string; cls: BoatClass; seed: number; windKn: number; player: PlayerSetup | null };
 
@@ -102,7 +106,7 @@ function spinnakerWanted(race: Race, r: Racer): boolean {
 
 export function sailGoldenRace(g: GoldenRace): GoldenRecord {
   const session = new RaceSession({
-    seed: g.seed, windKn: g.windKn, boatClass: g.cls, withPlayer: g.player !== null, ...(g.player ? { role: g.player } : {}),
+    seed: g.seed, windKn: g.windKn, boatClass: g.cls, withPlayer: g.player !== null, ...(g.player ? { choice: PLAYER_CHOICE[g.player] } : {}),
   });
   const race = session.race;
   const player = g.player ? new TestPlayer(session, g.player) : null;

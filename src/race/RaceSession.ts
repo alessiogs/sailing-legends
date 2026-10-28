@@ -7,6 +7,7 @@ import { WindField } from "../sailing/Wind";
 import { makeWindwardLeeward } from "./Course";
 import { Race, type Racer, type Sailor } from "./Race";
 import { opponentCrew, opponentHelms, RIVALS, type SailorProfile } from "../sailors/Sailors";
+import { HELM, type PlayerChoice } from "./PlayerChoice";
 
 /**
  * Everything that makes up one race, with no rendering: wind, course, boats, AI and rules.
@@ -25,17 +26,10 @@ export type SessionOptions = {
   boatClass?: BoatClass;
   /** Include a player-controlled boat (false for AI-only test races). */
   withPlayer?: boolean;
-  /** Two-person classes: what the player does, and who sails with them. */
-  role?: PlayerRole;
+  /** Two-person classes: the player's Role and Control mode (default: Helm, Player Career), and their Partner. */
+  choice?: PlayerChoice;
   partner?: SailorProfile;
 };
-
-/**
- * "skipper": you helm and trim the main; your crew decides the rest (career mode, your role only).
- * "crew": your partner helms; you trim jib/spinnaker, move your weight and do the manoeuvres.
- * "full": you helm and call every manoeuvre (spinnaker up/down); the crew carries them out.
- */
-export type PlayerRole = "skipper" | "crew" | "full";
 
 export class RaceSession {
   wind: WindField;
@@ -46,7 +40,7 @@ export class RaceSession {
   /** The player's partner: helms when the player is crew, crews when the player helms. */
   partnerHelm: RacingAI | null = null;
   partnerCrew: CrewAI | null = null;
-  role: PlayerRole = "skipper";
+  choice: PlayerChoice = HELM;
   partner: SailorProfile | null = null;
   playerControls: Controls = { rudder: 0, sheet: 0.55, jibSheet: 0.5, spiSheet: 0.5, crewOut: 0.3, spi: false };
   private acc = 0;
@@ -68,15 +62,15 @@ export class RaceSession {
       const p = down(30 * scale);
       const sim = new BoatSim(cls, createBoat(p.x + 6 * scale, p.z, course.windDir - 70 * DEG));
       if (two) {
-        this.role = opts.role ?? "skipper";
+        this.choice = opts.choice ?? HELM;
         this.partner = opts.partner ?? rivals[1];
         const partner = aiSailor(this.partner);
-        this.player = this.race.add("player", this.role === "crew" ? { helm: partner, crew: PLAYER } : { helm: PLAYER, crew: partner }, sim, true);
-        if (this.role === "crew") {
+        this.player = this.race.add("player", this.choice.role === "crew" ? { helm: partner, crew: PLAYER } : { helm: PLAYER, crew: partner }, sim, true);
+        if (this.choice.role === "crew") {
           this.partnerHelm = new RacingAI(this.player, this.partner, this.race, seed * 17, 3);
         } else {
           this.partnerCrew = new CrewAI(this.player, this.partner, this.race, seed * 19);
-          this.partnerCrew.spiMode = this.role === "full" ? "command" : "auto";
+          this.partnerCrew.spiMode = this.choice.control === "fullBoat" ? "command" : "auto";
         }
         // The partner is on our boat, so race against the others plus a new helm.
         rivals = opponentHelms(rivals, this.partner);
