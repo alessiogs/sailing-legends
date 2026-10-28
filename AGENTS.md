@@ -56,8 +56,8 @@ src/
   i18n/      index.ts (`t(key, params)`: typed lookup), it.ts (Italian catalog, the reference: it defines the
              keys), plural.ts (plural forms from Intl.PluralRules). All player-facing text lives in a catalog
   ui/        Hud.ts (draws the panel, compass, minimap, standings, tags), hudPanel.ts (`buildPanel`: the
-             Role-driven bottom panel built from the race and the player's choices; pure, DOM-free), pageText.ts (fills index.html's
-             data-i18n text from the catalog at startup), raceEventText.ts (words race events from their data),
+             Role-driven bottom panel built from the race and the player's choices; pure, DOM-free),
+             pageText.ts (fills index.html's data-i18n text from the catalog at startup), raceEventText.ts (words race events from their data),
              raceNames.ts (names legs by `LegId` and boats by the sailors on board),
              boatStateText.ts (words the Crew weight and spinnaker states for the HUD),
              boatColors.ts (the one boat colour table by racer id: 3D hull/sail/jacket/stripe and the HUD dot),
