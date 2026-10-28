@@ -3,9 +3,15 @@ import type { BoatSim } from "../sailing/BoatPhysics";
 import { distanceTo, legTarget, type Course, type Leg, type Line } from "./Course";
 import { judge, newPenalty, trackPenalty, type Penalty, type RightOfWayRule, type Rule, type VerdictReason } from "./Rules";
 
+/** A sailor on board: the player, or an AI sailor by their own name. The UI words them (`racerName`). */
+export type Sailor = { kind: "player" } | { kind: "ai"; name: string };
+
+/** Who sails a boat: its Helm, and its Crew on two-person classes. */
+export type Sailors = { helm: Sailor; crew: Sailor | null };
+
 export type Racer = {
   id: string;
-  name: string;
+  sailors: Sailors;
   isPlayer: boolean;
   sim: BoatSim;
   /** -1 before starting, then index into course.legs; equals legs.length once finished. */
@@ -64,9 +70,9 @@ export class Race {
     this.clock = -countdown;
   }
 
-  add(id: string, name: string, sim: BoatSim, isPlayer = false): Racer {
+  add(id: string, sailors: Sailors, sim: BoatSim, isPlayer = false): Racer {
     const r: Racer = {
-      id, name, isPlayer, sim, leg: -1, ocs: false, clearedBack: true, finishTime: null,
+      id, sailors, isPlayer, sim, leg: -1, ocs: false, clearedBack: true, finishTime: null,
       sweep: 0, lastBearing: null, prevX: sim.state.x, prevZ: sim.state.z, penalty: null, dsq: false,
     };
     this.racers.push(r);

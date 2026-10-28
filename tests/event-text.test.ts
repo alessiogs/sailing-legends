@@ -14,8 +14,8 @@ import { eventText } from "../src/ui/raceEventText";
 
 const race = new Race(makeWindwardLeeward(0));
 const boat = () => new BoatSim(OPTIMIST, createBoat(0, 0, 0));
-const player = race.add("player", "Tu/Giulia", boat(), true);
-const marco = race.add("ai0", "Marco/Tommaso", boat());
+const player = race.add("player", { helm: { kind: "player" }, crew: { kind: "ai", name: "Giulia" } }, boat(), true);
+const marco = race.add("ai0", { helm: { kind: "ai", name: "Marco" }, crew: { kind: "ai", name: "Tommaso" } }, boat());
 const [mark1, mark2, finish] = race.course.legs;
 
 type Case = [event: RaceEvent, text: string];

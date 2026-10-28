@@ -35,7 +35,7 @@ export class CourseView {
 
     const legs = course.legs;
     for (const leg of legs) {
-      if (leg.kind === "mark") this.addInflatable(leg.mark, leg.name.includes("1") ? orange : yellow, 1.6, 1.5);
+      if (leg.kind === "mark") this.addInflatable(leg.mark, leg.id === "mark1" ? orange : yellow, 1.6, 1.5);
       else {
         this.addFlagBuoy(leg.line.a, blue);
         this.addFlagBuoy(leg.line.b, blue);

@@ -7,7 +7,7 @@
  * Plural forms come from the language's plural rules (`plural.ts`), never from `n === 1` checks.
  *
  * Key convention: `area.name` in camelCase, with more dotted segments for variants of one message
- * (`hud.phase.prestart`, `trim.luffing`). Areas: `menu`, `pause`, `controls`, `key`, `toast`, `event`, `coach`, `call`, `hud`,
+ * (`hud.phase.prestart`, `trim.luffing`). Areas: `menu`, `pause`, `controls`, `key`, `toast`, `event`, `coach`, `call`, `race`, `hud`,
  * `trim`, `standings`, `results`.
  *
  * Static text in `index.html` names its key in a `data-i18n` (text) or `data-i18n-aria-label` attribute and is filled

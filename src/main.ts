@@ -15,6 +15,7 @@ import { t } from "./i18n";
 import { Hud, type Panel } from "./ui/Hud";
 import { fillPageText } from "./ui/pageText";
 import { eventText } from "./ui/raceEventText";
+import { racerName } from "./ui/raceNames";
 import { Boat420View } from "./world/Boat420View";
 import { BoatView, type BoatLook } from "./world/BoatView";
 import { CourseView } from "./world/CourseView";
@@ -234,7 +235,7 @@ for (const b of Array.from(document.querySelectorAll<HTMLButtonElement>("#wind-o
 function showResults() {
   const rows = session.race.standings().map((r, i) => {
     const time = r.dsq ? t("results.dsq") : r.finishTime !== null ? `${Math.floor(r.finishTime / 60)}:${String(Math.floor(r.finishTime % 60)).padStart(2, "0")}` : "—";
-    return `<tr class="${r.isPlayer ? "me" : ""}"><td>${r.dsq ? "–" : t("results.place", { place: i + 1 })}</td><td>${r.name}</td><td>${time}</td></tr>`;
+    return `<tr class="${r.isPlayer ? "me" : ""}"><td>${r.dsq ? "–" : t("results.place", { place: i + 1 })}</td><td>${racerName(r)}</td><td>${time}</td></tr>`;
   }).join("");
   $("results-table").innerHTML = rows;
   setMode("results");

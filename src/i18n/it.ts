@@ -118,6 +118,13 @@ export const italian = {
   "toast.spi.partnerDecides": ({ name }: { name: string }) => `Lo spi lo decide ${name} (in "Barca completa" lo chiami tu)`,
   "toast.spi.crewDecides": `Lo spi lo decide il prodiere (in "Barca completa" lo chiami tu)`,
 
+  // Names in a race (ui/raceNames.ts): the course's legs, the player, and a boat as "Helm/Crew".
+  "race.leg.mark1": "Boa 1",
+  "race.leg.mark2": "Boa 2",
+  "race.leg.finish": "Arrivo",
+  "race.player": "Tu",
+  "race.pair": ({ helm, crew }: { helm: string; crew: string }) => `${helm}/${crew}`,
+
   // Race events (ui/raceEventText.ts words each event the race emits).
   "event.warning": ({ seconds }: { seconds: number }) => `${seconds} secondi alla partenza`,
   "event.gun": "PARTENZA!",
