@@ -37,7 +37,8 @@ so that code can't use browser APIs).
 ```
 src/
   core/      math.ts (angles, RNG, segment tests), Input.ts (keyboard/gamepad, tiller vs boat-direction
-             steering, what the keys move per Role), Sound.ts (WebAudio synthesis, no assets)
+             steering, what the keys move per Role), ControlSettings.ts (the Commands menu settings and their
+             defaults; DOM-free), Sound.ts (WebAudio synthesis, no assets)
   sailing/   BoatClass.ts (class data: Optimist, I420; `isTwoPerson` = sailed by a Pair, which has `crewRighting`),
              BoatPhysics.ts (the model), Wind.ts (shifts + puffs), BoatStates.ts (Crew weight in/hiking/trapeze
              and spinnaker down/moving/up from the boat state: the one home of their thresholds)
@@ -61,8 +62,10 @@ src/
              boatColors.ts (the one boat colour table by racer id: 3D hull/sail/jacket/stripe and the HUD dot)
   game/      GameController.ts (owns the game state: race session, class, Role and Control mode, Partner, wind,
              Assists; the menu / racing / paused / results / controls modes; one `frame(dt)` per render; for now
-             also camera, race feedback, player controls per Role and the HUD panel). Drives the page through `Screens`
-  main.ts    startup wiring: scene, preferences, menus (implement `Screens`), render loop, `window.__game` hook
+             also race feedback, player controls per Role and the HUD panel). Drives the page through `Screens`.
+             CameraRig.ts (the orbit camera and its chase / free / top views), Preferences.ts (`loadPrefs`,
+             `savePrefs`: controls and mute under `sl-prefs`; keep the stored format so saved preferences load)
+  main.ts    startup wiring: scene, camera rig, preferences, menus (implement `Screens`), render loop, `window.__game` hook
 tests/       Vitest tests (npm test): smoke.test.ts (every AI-only race finishes, every penalty served),
              golden.test.ts + golden/ (races.ts sails and records the golden races, races.json is the snapshot),
              rules.test.ts (rule 10/11/12/13 verdicts and penalty turns, two boats placed by hand)
@@ -75,6 +78,7 @@ tests/       Vitest tests (npm test): smoke.test.ts (every AI-only race finishes
              crew-side.test.ts (the shared Crew wrong-side check)
              boat-states.test.ts (Crew weight and spinnaker thresholds, and their HUD wording)
              boat-colors.test.ts (every boat has its colours; 3D and HUD colours as before)
+             preferences.test.ts (saved preferences still load; saving keeps the `sl-prefs` format)
 scripts/     polar.ts (npm run polar), golden-update.ts (npm run golden:update)
 ```
 **Rule:** `sailing/`, `race/`, `ai/`, `sailors/` must not import Babylon. They run in Node (tests) and in the browser.

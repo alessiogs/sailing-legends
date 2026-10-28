@@ -1,8 +1,9 @@
 import {
-  ArcRotateCamera, Color3, Color4, DirectionalLight, Engine, HemisphericLight, Scene, Vector3,
+  Color3, Color4, DirectionalLight, Engine, HemisphericLight, Scene, Vector3,
 } from "@babylonjs/core";
 import { crewChemistry, RIVALS, rivalById } from "./sailors/Sailors";
-import { DEFAULT_CONTROLS, Input, type ControlSettings } from "./core/Input";
+import { DEFAULT_CONTROLS } from "./core/ControlSettings";
+import { Input } from "./core/Input";
 import { Sound } from "./core/Sound";
 import { angleDiff } from "./core/math";
 import type { Racer } from "./race/Race";
@@ -10,6 +11,8 @@ import { CREW, FULL_BOAT, HELM, type PlayerChoice } from "./race/PlayerChoice";
 import { CLASSES, isTwoPerson } from "./sailing/BoatClass";
 import { t, type MessageKey } from "./i18n";
 import { GameController, type Mode, type Screens } from "./game/GameController";
+import { CameraRig } from "./game/CameraRig";
+import { loadPrefs, savePrefs } from "./game/Preferences";
 import { Hud } from "./ui/Hud";
 import { fillPageText } from "./ui/pageText";
 import { racerName } from "./ui/raceNames";
@@ -26,17 +29,7 @@ const scene = new Scene(engine);
 scene.clearColor = new Color4(0.72, 0.83, 0.9, 1);
 scene.skipPointerMovePicking = true;
 
-const camera = new ArcRotateCamera("cam", -Math.PI / 2, 1.18, 12, Vector3.Zero(), scene);
-camera.lowerRadiusLimit = 5;
-camera.upperRadiusLimit = 120;
-camera.lowerBetaLimit = 0.08;
-camera.upperBetaLimit = 1.45;
-camera.wheelPrecision = 30;
-camera.panningSensibility = 0;
-camera.minZ = 0.1;
-camera.maxZ = 3000;
-camera.attachControl(canvas, true);
-camera.inputs.removeByType("ArcRotateCameraKeyboardMoveInput");
+const cameraRig = new CameraRig(scene, canvas);
 
 const hemi = new HemisphericLight("sky", new Vector3(0.1, 1, -0.2), scene);
 hemi.intensity = 0.75;
@@ -51,24 +44,11 @@ const hud = new Hud();
 const sound = new Sound();
 
 // ---------- Preferences ----------
-// Per-viewer preferences (best effort: storage may be unavailable).
-function loadPrefs() {
-  const prefs = (() => {
-    try { return JSON.parse(localStorage.getItem("sl-prefs") || "{}") as { controls?: Partial<ControlSettings>; muted?: boolean }; } catch { return {}; }
-  })();
-  const c = prefs.controls ?? {};
-  input.settings = {
-    steering: c.steering === "boat" ? "boat" : "tiller",
-    autoCenter: c.autoCenter !== false,
-    tillerSpeed: typeof c.tillerSpeed === "number" ? c.tillerSpeed : 1,
-    sheetSpeed: typeof c.sheetSpeed === "number" ? c.sheetSpeed : 1,
-  };
-  sound.muted = !!prefs.muted;
-}
-function savePrefs() {
-  try { localStorage.setItem("sl-prefs", JSON.stringify({ controls: input.settings, muted: sound.muted })); } catch { /* ignore */ }
-}
-loadPrefs();
+const storage = () => localStorage;
+const prefs = loadPrefs(storage);
+input.settings = prefs.controls;
+sound.muted = prefs.muted;
+const savePlayerPrefs = () => savePrefs(storage, { controls: input.settings, muted: sound.muted });
 
 // ---------- Screens ----------
 const $ = (id: string) => document.getElementById(id)!;
@@ -94,7 +74,7 @@ const screens: Screens = {
 };
 
 // ---------- Game ----------
-const game = new GameController({ engine, scene, camera, canvas, input, hud, sound, screens, savePrefs });
+const game = new GameController({ engine, scene, cameraRig, canvas, input, hud, sound, screens, savePrefs: savePlayerPrefs });
 
 $("start-btn").addEventListener("click", () => game.startFromMenu());
 // ---------- Commands menu ----------
@@ -115,7 +95,7 @@ function syncControls() {
 }
 const bindSeg = (id: string, apply: (v: string) => void) => {
   for (const b of Array.from(document.querySelectorAll<HTMLButtonElement>(`#${id} button`))) {
-    b.addEventListener("click", () => { apply(b.dataset.v!); input.tiller = 0; syncControls(); savePrefs(); });
+    b.addEventListener("click", () => { apply(b.dataset.v!); input.tiller = 0; syncControls(); savePlayerPrefs(); });
   }
 };
 bindSeg("steer-opt", v => { input.settings.steering = v === "boat" ? "boat" : "tiller"; });
@@ -125,7 +105,7 @@ bindSeg("sspeed-opt", v => { input.settings.sheetSpeed = Number(v); });
 $("open-controls").addEventListener("click", () => game.openControls());
 $("pause-controls").addEventListener("click", () => game.openControls());
 $("controls-back").addEventListener("click", () => game.closeControls());
-$("controls-reset").addEventListener("click", () => { input.settings = { ...DEFAULT_CONTROLS }; syncControls(); savePrefs(); });
+$("controls-reset").addEventListener("click", () => { input.settings = { ...DEFAULT_CONTROLS }; syncControls(); savePlayerPrefs(); });
 $("resume-btn").addEventListener("click", () => game.setMode("racing"));
 $("pause-menu").addEventListener("click", () => game.setMode("menu"));
 syncControls();
