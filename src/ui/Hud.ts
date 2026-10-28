@@ -4,6 +4,7 @@ import type { Race, Racer } from "../race/Race";
 import type { Telemetry, TrimState } from "../sailing/BoatPhysics";
 import { WindField } from "../sailing/Wind";
 import { t } from "../i18n";
+import { legName, racerName } from "./raceNames";
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 
@@ -78,7 +79,7 @@ export class Hud {
       this.el.leg.textContent = t("hud.leg.done");
     } else {
       const leg = legs[me.leg];
-      this.el.leg.textContent = t("hud.leg.sailing", { leg: me.leg + 1, legs: legs.length, upwind: leg.upwind, target: leg.name, toPort: leg.kind === "mark" });
+      this.el.leg.textContent = t("hud.leg.sailing", { leg: me.leg + 1, legs: legs.length, upwind: leg.upwind, target: legName(leg), toPort: leg.kind === "mark" });
     }
     const dist = distanceTo(target, s.x, s.z);
     const brg = bearingTo(s.x, s.z, target.x, target.z);
@@ -168,7 +169,7 @@ export class Hud {
         : r.penalty ? t("standings.penalty")
         : r.leg < 0 ? t(r.ocs && !r.clearedBack ? "standings.ocs" : race.phase === "prestart" ? "standings.prestart" : "standings.start")
         : t("standings.leg", { leg: r.leg + 1, legs });
-      return `<li class="${r === me ? "me" : ""}"><span class="n">${i + 1}</span><span><i class="dot" style="background:${BOAT_COLORS[r.id] ?? "#ccc"}"></i>${r.name}</span><span class="s">${status}</span></li>`;
+      return `<li class="${r === me ? "me" : ""}"><span class="n">${i + 1}</span><span><i class="dot" style="background:${BOAT_COLORS[r.id] ?? "#ccc"}"></i>${racerName(r)}</span><span class="s">${status}</span></li>`;
     }).join("");
   }
 
@@ -320,7 +321,7 @@ export class Hud {
       el.style.left = `${p.x}px`;
       el.style.top = `${p.y}px`;
       const pos = standings.indexOf(r) + 1;
-      el.textContent = race.phase === "prestart" ? r.name : t("hud.tag", { position: pos, name: r.name, ocs: r.ocs && !r.clearedBack });
+      el.textContent = race.phase === "prestart" ? racerName(r) : t("hud.tag", { position: pos, name: racerName(r), ocs: r.ocs && !r.clearedBack });
     }
   }
 

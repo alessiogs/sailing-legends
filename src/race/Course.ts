@@ -8,9 +8,12 @@ import { bearingTo, dirX, dirZ } from "../core/math";
 export type Point = { x: number; z: number };
 export type Line = { a: Point; b: Point };
 
+/** Which leg of the course this is; the UI names it (`legName`), the simulation never shows it. */
+export type LegId = "mark1" | "mark2" | "finish";
+
 export type Leg =
-  | { kind: "mark"; name: string; mark: Point; rounding: "port" | "starboard"; upwind: boolean }
-  | { kind: "finish"; name: string; line: Line; upwind: boolean };
+  | { kind: "mark"; id: LegId; mark: Point; rounding: "port" | "starboard"; upwind: boolean }
+  | { kind: "finish"; id: LegId; line: Line; upwind: boolean };
 
 export type Course = {
   windDir: number;
@@ -42,9 +45,9 @@ export function makeWindwardLeeward(windDir: number, opts: { beat?: number; line
     committee,
     marks: [m1, m2, finish.a, finish.b],
     legs: [
-      { kind: "mark", name: "Boa 1", mark: m1, rounding: "port", upwind: true },
-      { kind: "mark", name: "Boa 2", mark: m2, rounding: "port", upwind: false },
-      { kind: "finish", name: "Arrivo", line: finish, upwind: true },
+      { kind: "mark", id: "mark1", mark: m1, rounding: "port", upwind: true },
+      { kind: "mark", id: "mark2", mark: m2, rounding: "port", upwind: false },
+      { kind: "finish", id: "finish", line: finish, upwind: true },
     ],
   };
 }

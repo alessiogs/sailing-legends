@@ -6,6 +6,7 @@
 import { t } from "../i18n";
 import type { RaceEvent } from "../race/Race";
 import type { Rule, VerdictReason } from "../race/Rules";
+import { legName, racerName } from "./raceNames";
 
 const REASON = {
   tacking: "event.reason.tacking",
@@ -26,14 +27,14 @@ export function eventText(e: RaceEvent): string {
     case "gun": return t("event.gun");
     case "ocs": return t("event.ocs");
     case "ocs-cleared": return t("event.ocsCleared");
-    case "start": return t("event.start", { next: e.next.name });
-    case "rounded": return t("event.rounded", { rounded: e.rounded.name, next: e.next.name });
+    case "start": return t("event.start", { next: legName(e.next) });
+    case "rounded": return t("event.rounded", { rounded: legName(e.rounded), next: legName(e.next) });
     case "finish": return e.place === null ? t("event.finishDsq") : t("event.finish", { place: e.place });
     case "penalty": return t("event.penalty", { turns: e.turns, reason: penaltyReason(e.rule) });
     case "penalty-done": return t("event.penaltyDone");
     case "contact":
       return e.atFault === e.racer
-        ? t("event.contact.atFault", { other: e.other.name, rule: e.rule, reason: t(REASON[e.reason]) })
-        : t("event.contact.touchedBy", { other: e.other.name, rule: e.rule });
+        ? t("event.contact.atFault", { other: racerName(e.other), rule: e.rule, reason: t(REASON[e.reason]) })
+        : t("event.contact.touchedBy", { other: racerName(e.other), rule: e.rule });
   }
 }

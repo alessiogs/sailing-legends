@@ -5,13 +5,16 @@ import { OPTIMIST, type BoatClass } from "../sailing/BoatClass";
 import { BoatSim, createBoat, type Controls } from "../sailing/BoatPhysics";
 import { WindField } from "../sailing/Wind";
 import { makeWindwardLeeward } from "./Course";
-import { Race, type Racer } from "./Race";
+import { Race, type Racer, type Sailor } from "./Race";
 
 /**
  * Everything that makes up one race, with no rendering: wind, course, boats, AI and rules.
  * It runs at a fixed timestep, so the same code drives the browser game and headless tests.
  */
 export const FIXED_DT = 1 / 60;
+
+const PLAYER: Sailor = { kind: "player" };
+const aiSailor = (profile: SailorProfile): Sailor => ({ kind: "ai", name: profile.name });
 
 export type SessionOptions = {
   seed?: number;
@@ -66,8 +69,8 @@ export class RaceSession {
       if (two) {
         this.role = opts.role ?? "skipper";
         this.partner = opts.partner ?? rivals[1];
-        const pn = this.partner.name;
-        this.player = this.race.add("player", this.role === "crew" ? `${pn}/Tu` : `Tu/${pn}`, sim, true);
+        const pn = this.partner.name, partner = aiSailor(this.partner);
+        this.player = this.race.add("player", this.role === "crew" ? { helm: partner, crew: PLAYER } : { helm: PLAYER, crew: partner }, sim, true);
         if (this.role === "crew") {
           this.partnerHelm = new RacingAI(this.player, this.partner, this.race, seed * 17, 3);
         } else {
@@ -77,14 +80,14 @@ export class RaceSession {
         // The partner is on our boat, so race against the others plus a new helm.
         rivals = rivals.filter(r => r.name !== pn).concat([EXTRA_HELM]);
       } else {
-        this.player = this.race.add("player", "Tu", sim, true);
+        this.player = this.race.add("player", { helm: PLAYER, crew: null }, sim, true);
       }
     }
     rivals.forEach((prof, i) => {
       const p = down((24 + i * 2) * scale);
       const sim = new BoatSim(cls, createBoat(p.x + (-16 + i * 14) * scale, p.z, course.windDir - 80 * DEG));
       const crew = two ? CREWS[i % CREWS.length] : null;
-      const racer = this.race.add(`ai${i}`, crew ? `${prof.name}/${crew.name}` : prof.name, sim);
+      const racer = this.race.add(`ai${i}`, { helm: aiSailor(prof), crew: crew && aiSailor(crew) }, sim);
       const ai = new RacingAI(racer, prof, this.race, seed * 31 + i * 7, i);
       ai.placeAtStart();
       this.ais.push(ai);
