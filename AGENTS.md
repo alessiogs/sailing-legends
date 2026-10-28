@@ -68,8 +68,9 @@ src/
              visuals share: wave riding, heel, boom swing, rudder, burgee; each class gives its `BoatMotion` and
              draws its own sails and sailors), BoatView.ts (Optimist), Boat420View.ts, SailorFigure.ts (the sailor
              figure and its placement on the gunwale), boatMaterials.ts (`boatLook` from the colour table,
-             `boatMaterial`: the one material cache of both boat views, per scene via sceneCache.ts), SailMesh.ts,
-             CourseView.ts
+             `boatMaterial`: the one material cache of both boat views, per scene via sceneCache.ts), SailMesh.ts (the
+             one sail mesh, for every sail of both classes) and sailShape.ts (its Babylon-free grid maths; a
+             `SailCut` per class: the 420's in proportion to the chord, the Optimist's fixed offsets), CourseView.ts
   i18n/      index.ts (`t(key, params)`: typed lookup), it.ts (Italian catalog, the reference: it defines the
              keys), plural.ts (plural forms from Intl.PluralRules). All player-facing text lives in a catalog
   ui/        Hud.ts (draws the panel, compass, minimap, standings, tags), hudPanel.ts (`buildPanel`: the
@@ -114,6 +115,7 @@ tests/       Vitest tests (npm test): smoke.test.ts (every AI-only race finishes
              collisions.test.ts (hull capsules, closest points, hulls pushed apart and out of marks)
              fleet.test.ts (who races per class and choice, starting spots, the session racing the fleet it is given)
              scene-cache.test.ts (boat materials made once per scene, again for a recreated scene)
+             sail-shape.test.ts (the shared sail grid draws the Optimist and 420 sails exactly as before)
 scripts/     polar.ts (npm run polar), golden-update.ts (npm run golden:update)
 ```
 **Rule:** `sailing/`, `race/`, `ai/`, `sailors/` must not import Babylon. They run in Node (tests) and in the browser.
