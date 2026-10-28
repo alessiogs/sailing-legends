@@ -1,30 +1,14 @@
 import type { Role } from "../race/PlayerChoice";
+import { DEFAULT_CONTROLS, type ControlSettings } from "./ControlSettings";
 import { clamp } from "./math";
 
 /**
  * Keyboard + gamepad. Produces smooth tiller and sheet commands plus one-shot actions.
  * Keyboard: A/D or ←/→ move the tiller, W/↑ sheet in, S/↓ ease, T Auto-trim, C camera, R restart,
  * H/M menu, P/Esc pause, V sound. Gamepad: left stick tiller, RT sheet in, LT ease, Y camera,
- * X Auto-trim, Start pause, Back restart.
- *
- * Steering modes:
- *  - "tiller" (realistic, default): the keys move the tiller. Tiller to the right turns the boat left.
- *  - "boat": the keys say which way the bow should turn.
+ * X Auto-trim, Start pause, Back restart. How the keys steer is set by `settings` (see ControlSettings.ts).
  */
 export type Action = "autoTrim" | "camera" | "restart" | "help" | "pause" | "start" | "menu" | "mute" | "controls" | "spi" | "switch";
-export type SteeringMode = "tiller" | "boat";
-
-/** Player-adjustable control settings (the Commands menu). */
-export type ControlSettings = {
-  steering: SteeringMode;
-  /** Tiller springs back to the centre when the keys are released. */
-  autoCenter: boolean;
-  /** Multipliers for how fast the tiller and the sheet move. */
-  tillerSpeed: number;
-  sheetSpeed: number;
-};
-
-export const DEFAULT_CONTROLS: ControlSettings = { steering: "tiller", autoCenter: true, tillerSpeed: 1, sheetSpeed: 1 };
 
 export class Input {
   /** Tiller position: -1 = pushed fully to port (left), +1 = fully to starboard (right). */
