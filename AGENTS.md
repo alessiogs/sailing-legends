@@ -28,6 +28,9 @@ npm run golden:update  # rewrite the golden snapshot: only when behaviour is mea
 npm run polar    # speed table (polar) per class: use after any physics change
 npm run build    # type-check + production build into dist/
 ```
+`tsc -b` checks two projects: `tsconfig.app.json` (`src/`, browser: DOM types, no Node types) and
+`tsconfig.node.json` (`tests/`, `scripts/`, Node types, no DOM; it also checks the simulation code they import,
+so that code can't use browser APIs).
 
 ## Architecture
 ```
