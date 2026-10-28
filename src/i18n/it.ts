@@ -210,7 +210,7 @@ export const italian = {
   "hud.partnerLine.crew": ({ name, weight, spi }: { name: string; weight: string; spi: string }) => `${name}: ${weight} · spi ${spi}`,
   "hud.partnerLine.crewOnCall": ({ name, weight, spi }: { name: string; weight: string; spi: string }) =>
     `${name}: ${weight} · spi ${spi} · Spazio = issa/ammaina`,
-  // Crew weight and spinnaker state, as shown in the lines above and the weight gauge.
+  // Crew weight and spinnaker state (sailing/BoatStates), worded by ui/boatStateText for the lines above and the weight gauge.
   "hud.weight.trapeze": "al trapezio",
   "hud.weight.hiking": "in cinghia",
   "hud.weight.seated": "seduto dentro",
