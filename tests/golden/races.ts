@@ -15,6 +15,7 @@ import { RacingAI } from "../../src/ai/RacingAI";
 import { distanceTo, legTarget } from "../../src/race/Course";
 import type { Race, Racer } from "../../src/race/Race";
 import { CREW, FULL_BOAT, HELM, type PlayerChoice } from "../../src/race/PlayerChoice";
+import { makeFleet } from "../../src/race/Fleet";
 import { FIXED_DT, RaceSession } from "../../src/race/RaceSession";
 import { I420, OPTIMIST, type BoatClass } from "../../src/sailing/BoatClass";
 
@@ -105,9 +106,8 @@ function spinnakerWanted(race: Race, r: Racer): boolean {
 }
 
 export function sailGoldenRace(g: GoldenRace): GoldenRecord {
-  const session = new RaceSession({
-    seed: g.seed, windKn: g.windKn, boatClass: g.cls, withPlayer: g.player !== null, ...(g.player ? { choice: PLAYER_CHOICE[g.player] } : {}),
-  });
+  const fleet = makeFleet({ boatClass: g.cls, withPlayer: g.player !== null, ...(g.player ? { choice: PLAYER_CHOICE[g.player] } : {}) });
+  const session = new RaceSession({ seed: g.seed, windKn: g.windKn, fleet });
   const race = session.race;
   const player = g.player ? new TestPlayer(session, g.player) : null;
   const rec: GoldenRecord = { samples: [], events: [], results: [], standings: [], endClock: 0 };

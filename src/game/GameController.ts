@@ -6,6 +6,7 @@ import { t } from "../i18n";
 import { legTarget } from "../race/Course";
 import { HELM, type PlayerChoice } from "../race/PlayerChoice";
 import type { Racer } from "../race/Race";
+import { makeFleet } from "../race/Fleet";
 import { RaceSession } from "../race/RaceSession";
 import { CLASSES, isTwoPerson, type BoatClass } from "../sailing/BoatClass";
 import { RIVALS, type SailorProfile } from "../sailors/Sailors";
@@ -129,7 +130,9 @@ export class GameController {
     this.courseView?.dispose();
     hud.clearTags();
     const seed = Math.floor(Math.random() * 1e6);
-    const session = this.session = new RaceSession({ seed, windKn: this.windKn, boatClass: this.boatClass, choice: this.choice, partner: this.partner });
+    const session = this.session = new RaceSession({
+      seed, windKn: this.windKn, fleet: makeFleet({ boatClass: this.boatClass, choice: this.choice, partner: this.partner }),
+    });
     input.role = isTwoPerson(this.boatClass) ? this.choice.role : "helm";
     this.controls.newRace();
     this.feedback.newRace(session);

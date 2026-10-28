@@ -1,14 +1,15 @@
-import { DEG, dirX, dirZ } from "../core/math";
+import { dirX, dirZ } from "../core/math";
 import { CrewAI } from "../ai/CrewAI";
 import { RacingAI } from "../ai/RacingAI";
-import { isTwoPerson, OPTIMIST, type BoatClass } from "../sailing/BoatClass";
+import { isTwoPerson, type BoatClass } from "../sailing/BoatClass";
 import { BoatSim, createBoat, type Controls } from "../sailing/BoatPhysics";
 import { WindField } from "../sailing/Wind";
 import { courseObstacles, hullRadius, hullSegment, overlapObstacle, pushOut, separateHulls } from "./Collisions";
-import { makeWindwardLeeward } from "./Course";
+import { makeWindwardLeeward, type Course } from "./Course";
+import { makeFleet, type Aboard, type Fleet, type StartSpot } from "./Fleet";
 import { Race, type Racer, type Sailor } from "./Race";
-import { opponentCrew, opponentHelms, RIVALS, type SailorProfile } from "../sailors/Sailors";
-import { HELM, type PlayerChoice } from "./PlayerChoice";
+import type { SailorProfile } from "../sailors/Sailors";
+import type { PlayerChoice } from "./PlayerChoice";
 
 /**
  * Everything that makes up one race, with no rendering: wind, course, boats, AI and rules.
@@ -16,20 +17,14 @@ import { HELM, type PlayerChoice } from "./PlayerChoice";
  */
 export const FIXED_DT = 1 / 60;
 
-const PLAYER: Sailor = { kind: "player" };
-const aiSailor = (profile: SailorProfile): Sailor => ({ kind: "ai", name: profile.name });
+const sailor = (a: Aboard): Sailor => a === "player" ? { kind: "player" } : { kind: "ai", name: a.name };
 
 export type SessionOptions = {
   seed?: number;
   windKn?: number;
   countdown?: number;
-  rivals?: readonly SailorProfile[];
-  boatClass?: BoatClass;
-  /** Include a player-controlled boat (false for AI-only test races). */
-  withPlayer?: boolean;
-  /** Two-person classes: the player's Role and Control mode (default: Helm, Player Career), and their Partner. */
-  choice?: PlayerChoice;
-  partner?: SailorProfile;
+  /** Who races and where they start (default: `makeFleet()`, an Optimist race with the player as Helm). */
+  fleet?: Fleet;
 };
 
 export class RaceSession {
@@ -41,53 +36,40 @@ export class RaceSession {
   /** The player's Partner: the Helm when the player is the Crew, the Crew when the player is the Helm. */
   partnerHelm: RacingAI | null = null;
   partnerCrew: CrewAI | null = null;
-  choice: PlayerChoice = HELM;
-  partner: SailorProfile | null = null;
+  readonly choice: PlayerChoice;
+  readonly partner: SailorProfile | null;
   playerControls: Controls = { rudder: 0, sheet: 0.55, jibSheet: 0.5, spiSheet: 0.5, crewOut: 0.3, spi: false };
   private acc = 0;
 
   constructor(opts: SessionOptions = {}) {
     const seed = opts.seed ?? 11;
-    const cls = opts.boatClass ?? OPTIMIST;
+    const fleet = opts.fleet ?? makeFleet();
+    const cls = fleet.boatClass;
+    this.choice = fleet.choice;
+    this.partner = fleet.partner;
     this.wind = new WindField({ seed, meanDirDeg: 0, meanSpeedKn: opts.windKn ?? 11 });
-    const two = isTwoPerson(cls);
-    const course = two
+    const course = isTwoPerson(cls)
       ? makeWindwardLeeward(this.wind.meanDir, { beat: 125, lineHalf: 34, run: 50 })
       : makeWindwardLeeward(this.wind.meanDir);
     this.race = new Race(course, opts.countdown ?? 45);
-    const scale = two ? 1.4 : 1;
 
-    const down = (d: number) => ({ x: -dirX(course.windDir) * d, z: -dirZ(course.windDir) * d });
-    let rivals: readonly SailorProfile[] = opts.rivals ?? RIVALS;
-    if (opts.withPlayer !== false) {
-      const p = down(30 * scale);
-      const sim = new BoatSim(cls, createBoat(p.x + 6 * scale, p.z, course.windDir - 70 * DEG));
-      if (two) {
-        this.choice = opts.choice ?? HELM;
-        this.partner = opts.partner ?? rivals[1];
-        const partner = aiSailor(this.partner);
-        this.player = this.race.add("player", this.choice.role === "crew" ? { helm: partner, crew: PLAYER } : { helm: PLAYER, crew: partner }, sim, true);
-        if (this.choice.role === "crew") {
-          this.partnerHelm = new RacingAI(this.player, this.partner, this.race, seed * 17, 3);
-        } else {
-          this.partnerCrew = new CrewAI(this.player, this.partner, this.race, seed * 19);
-          this.partnerCrew.spiMode = this.choice.control === "fullBoat" ? "command" : "auto";
-        }
-        // The Partner is on our boat, so race against the other Rivals plus the extra Helm.
-        rivals = opponentHelms(rivals, this.partner);
-      } else {
-        this.player = this.race.add("player", { helm: PLAYER, crew: null }, sim, true);
+    // Every AI is seeded from the session's seed and its place in the fleet, so a seed always sails the same race.
+    const p = fleet.player;
+    if (p) {
+      this.player = this.race.add(p.id, { helm: sailor(p.helm), crew: p.crew && sailor(p.crew) }, boatAt(cls, course, p.start), true);
+      if (p.helm !== "player") {
+        this.partnerHelm = new RacingAI(this.player, p.helm, this.race, seed * 17, 3);
+      } else if (p.crew && p.crew !== "player") {
+        this.partnerCrew = new CrewAI(this.player, p.crew, this.race, seed * 19);
+        this.partnerCrew.spiMode = this.choice.control === "fullBoat" ? "command" : "auto";
       }
     }
-    rivals.forEach((prof, i) => {
-      const p = down((24 + i * 2) * scale);
-      const sim = new BoatSim(cls, createBoat(p.x + (-16 + i * 14) * scale, p.z, course.windDir - 80 * DEG));
-      const crew = two ? opponentCrew(i) : null;
-      const racer = this.race.add(`ai${i}`, { helm: aiSailor(prof), crew: crew && aiSailor(crew) }, sim);
-      const ai = new RacingAI(racer, prof, this.race, seed * 31 + i * 7, i);
+    fleet.opponents.forEach((b, i) => {
+      const racer = this.race.add(b.id, { helm: sailor(b.helm), crew: b.crew && sailor(b.crew) }, boatAt(cls, course, b.start));
+      const ai = new RacingAI(racer, b.helm, this.race, seed * 31 + i * 7, i);
       ai.placeAtStart();
       this.ais.push(ai);
-      if (crew) this.crews.push(new CrewAI(racer, crew, this.race, seed * 37 + i * 11));
+      if (b.crew) this.crews.push(new CrewAI(racer, b.crew, this.race, seed * 37 + i * 11));
     });
   }
 
@@ -162,4 +144,11 @@ export class RaceSession {
       }
     }
   }
+}
+
+/** A boat of the class placed at its starting spot on the course. */
+function boatAt(cls: BoatClass, course: Course, start: StartSpot): BoatSim {
+  const d = start.downwind;
+  const p = { x: -dirX(course.windDir) * d, z: -dirZ(course.windDir) * d };
+  return new BoatSim(cls, createBoat(p.x + start.across, p.z, course.windDir + start.heading));
 }

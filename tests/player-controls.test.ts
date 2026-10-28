@@ -6,12 +6,13 @@ import { describe, expect, it } from "vitest";
 import { PlayerControls, type Assists, type PlayerInput } from "../src/game/PlayerControls";
 import { t } from "../src/i18n";
 import { CREW, FULL_BOAT, HELM, type PlayerChoice } from "../src/race/PlayerChoice";
+import { makeFleet } from "../src/race/Fleet";
 import { RaceSession } from "../src/race/RaceSession";
 import { I420, OPTIMIST, type BoatClass } from "../src/sailing/BoatClass";
 import { AUTOPILOT_HELM } from "../src/sailors/Sailors";
 
 function setup(choice: PlayerChoice, boatClass: BoatClass = I420, autoTrim = false) {
-  const session = new RaceSession({ seed: 7, boatClass, choice });
+  const session = new RaceSession({ seed: 7, fleet: makeFleet({ boatClass, choice }) });
   session.step(1 / 60); // fills the telemetry
   const input: PlayerInput = { role: choice.role, rudder: 0.4, sheet: 0.3, crewOut: 0.8 };
   const assists: Assists = { autoTrim };

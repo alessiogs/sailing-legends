@@ -4,15 +4,16 @@
  */
 import { describe, expect, it } from "vitest";
 import { CREW, FULL_BOAT, HELM } from "../src/race/PlayerChoice";
-import { RaceSession, type SessionOptions } from "../src/race/RaceSession";
+import { makeFleet, type FleetOptions } from "../src/race/Fleet";
+import { RaceSession } from "../src/race/RaceSession";
 import { I420, OPTIMIST } from "../src/sailing/BoatClass";
 import { boatColors, boatDot } from "../src/ui/boatColors";
 
-const ids = (opts: SessionOptions) => new RaceSession(opts).race.racers.map(r => r.id);
+const ids = (opts: FleetOptions) => new RaceSession({ fleet: makeFleet(opts) }).race.racers.map(r => r.id);
 
 describe("boat colours", () => {
   it("has its own colours for every boat of every session setup", () => {
-    const setups: SessionOptions[] = [
+    const setups: FleetOptions[] = [
       { boatClass: OPTIMIST },
       { boatClass: I420, choice: HELM },
       { boatClass: I420, choice: CREW },

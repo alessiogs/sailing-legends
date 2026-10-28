@@ -5,12 +5,13 @@
  */
 import { describe, expect, it } from "vitest";
 import { CREW, FULL_BOAT, HELM, type PlayerChoice } from "../src/race/PlayerChoice";
+import { makeFleet } from "../src/race/Fleet";
 import { RaceSession } from "../src/race/RaceSession";
 import { I420, isTwoPerson, OPTIMIST, type BoatClass } from "../src/sailing/BoatClass";
 import { buildPanel } from "../src/ui/hudPanel";
 
 function setup(choice: PlayerChoice, boatClass: BoatClass = I420) {
-  const session = new RaceSession({ seed: 7, boatClass, choice });
+  const session = new RaceSession({ seed: 7, fleet: makeFleet({ boatClass, choice }) });
   session.step(1 / 60); // fills the telemetry
   const p = session.player!;
   const role = isTwoPerson(boatClass) ? choice.role : "helm";

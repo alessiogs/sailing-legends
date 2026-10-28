@@ -3,6 +3,7 @@
  * and every penalty given must be served. Run with `npm test`.
  */
 import { describe, expect, it } from "vitest";
+import { makeFleet } from "../src/race/Fleet";
 import { RaceSession } from "../src/race/RaceSession";
 import { I420, OPTIMIST } from "../src/sailing/BoatClass";
 
@@ -17,7 +18,7 @@ describe("AI-only races", () => {
   for (const cls of [OPTIMIST, I420]) {
     for (const [seed, windKn] of RACES) {
       it(`${cls.name} seed ${seed} ${windKn} kn: every boat finishes and serves every penalty`, () => {
-        const s = new RaceSession({ seed, windKn, boatClass: cls, withPlayer: false });
+        const s = new RaceSession({ seed, windKn, fleet: makeFleet({ boatClass: cls, withPlayer: false }) });
         let t = 0, given = 0, served = 0;
         while (s.race.phase !== "done" && t < MAX_RACE_S) {
           s.step(DT);
