@@ -2,6 +2,13 @@
  * All sound is synthesized with WebAudio (no audio files): wind, water rushing past the hull,
  * the sail flapping when it luffs, and race signals. Starts on the first user gesture.
  */
+declare global {
+  interface Window {
+    /** Older Safari's prefixed AudioContext. */
+    webkitAudioContext?: typeof AudioContext;
+  }
+}
+
 export class Sound {
   private ctx: AudioContext | null = null;
   private master!: GainNode;
@@ -17,7 +24,7 @@ export class Sound {
   /** Call from a user gesture (click / key press). Safe to call more than once. */
   init() {
     if (this.ctx) { void this.ctx.resume(); return; }
-    const Ctx = window.AudioContext || (window as any).webkitAudioContext;
+    const Ctx = window.AudioContext || window.webkitAudioContext;
     if (!Ctx) return;
     const ctx = new Ctx();
     this.ctx = ctx;

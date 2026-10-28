@@ -3,10 +3,10 @@ import {
 } from "@babylonjs/core";
 import { Input } from "./core/Input";
 import { Sound } from "./core/Sound";
-import { angleDiff } from "./core/math";
 import { GameController } from "./game/GameController";
 import { CameraRig } from "./game/CameraRig";
 import { loadPrefs, savePrefs } from "./game/Preferences";
+import { installTestHook } from "./game/testHook";
 import { Hud } from "./ui/Hud";
 import { Menus } from "./ui/Menus";
 import { fillPageText } from "./ui/pageText";
@@ -59,10 +59,4 @@ window.addEventListener("resize", () => engine.resize());
 setTimeout(() => document.getElementById("loading")!.classList.add("hidden"), 300);
 
 // Debug/testing hook (used by automated browser tests).
-(window as any).__game = {
-  get session() { return game.session; }, input, get mode() { return game.mode; },
-  start: () => game.startFromMenu(), angleDiff,
-  get autopilot() { return game.controls.autopilotOn; },
-  set autopilot(on: boolean) { game.controls.autopilotOn = on; },
-  fastForward(seconds: number) { game.fastForward(seconds); },
-};
+installTestHook(game, input);
