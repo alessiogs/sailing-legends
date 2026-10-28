@@ -2,7 +2,7 @@ import { clamp, DEG, rng } from "../core/math";
 import { distanceTo, legTarget } from "../race/Course";
 import type { Race, Racer } from "../race/Race";
 import type { Controls } from "../sailing/BoatPhysics";
-import type { SailorProfile } from "./RacingAI";
+import { crewChemistry, type SailorProfile } from "../sailors/Sailors";
 
 /**
  * The crew of a two-person boat: trims the jib (or spinnaker), moves their weight in and out
@@ -13,12 +13,6 @@ import type { SailorProfile } from "./RacingAI";
  * "command" = they wait for the helm's call (full boat control).
  */
 export type SpiMode = "auto" | "command";
-
-/** Crew Chemistry 0..100 for a pair: shared history, technique and reliability. */
-export function chemistry(p: SailorProfile): number {
-  const bond = p.bond ?? 60;
-  return Math.round(0.5 * bond + 0.25 * p.technique * 100 + 0.25 * p.discipline * 100);
-}
 
 /** What the boat should be doing with the spinnaker right now (used by AI crews and to prompt players). */
 export function wantSpinnaker(race: Race, r: Racer): boolean {
@@ -48,7 +42,7 @@ export class CrewAI {
 
   constructor(public racer: Racer, public profile: SailorProfile, private race: Race, seed: number) {
     this.rand = rng(seed);
-    this.chem = chemistry(profile);
+    this.chem = crewChemistry(profile);
     // Better chemistry: faster reactions to the helm and steadier trimming.
     this.reaction = 1.9 - this.chem * 0.015 + (1 - profile.technique) * 0.3;
     this.precision = clamp(0.35 * profile.technique + 0.65 * (this.chem / 100), 0, 1);

@@ -1,11 +1,12 @@
 import { DEG, dirX, dirZ, segmentsCross } from "../core/math";
 import { CrewAI } from "../ai/CrewAI";
-import { CREWS, EXTRA_HELM, RacingAI, RIVALS, type SailorProfile } from "../ai/RacingAI";
+import { RacingAI } from "../ai/RacingAI";
 import { OPTIMIST, type BoatClass } from "../sailing/BoatClass";
 import { BoatSim, createBoat, type Controls } from "../sailing/BoatPhysics";
 import { WindField } from "../sailing/Wind";
 import { makeWindwardLeeward } from "./Course";
 import { Race, type Racer, type Sailor } from "./Race";
+import { opponentCrew, opponentHelms, RIVALS, type SailorProfile } from "../sailors/Sailors";
 
 /**
  * Everything that makes up one race, with no rendering: wind, course, boats, AI and rules.
@@ -20,7 +21,7 @@ export type SessionOptions = {
   seed?: number;
   windKn?: number;
   countdown?: number;
-  rivals?: SailorProfile[];
+  rivals?: readonly SailorProfile[];
   boatClass?: BoatClass;
   /** Include a player-controlled boat (false for AI-only test races). */
   withPlayer?: boolean;
@@ -62,14 +63,14 @@ export class RaceSession {
     const scale = two ? 1.4 : 1;
 
     const down = (d: number) => ({ x: -dirX(course.windDir) * d, z: -dirZ(course.windDir) * d });
-    let rivals = opts.rivals ?? RIVALS;
+    let rivals: readonly SailorProfile[] = opts.rivals ?? RIVALS;
     if (opts.withPlayer !== false) {
       const p = down(30 * scale);
       const sim = new BoatSim(cls, createBoat(p.x + 6 * scale, p.z, course.windDir - 70 * DEG));
       if (two) {
         this.role = opts.role ?? "skipper";
         this.partner = opts.partner ?? rivals[1];
-        const pn = this.partner.name, partner = aiSailor(this.partner);
+        const partner = aiSailor(this.partner);
         this.player = this.race.add("player", this.role === "crew" ? { helm: partner, crew: PLAYER } : { helm: PLAYER, crew: partner }, sim, true);
         if (this.role === "crew") {
           this.partnerHelm = new RacingAI(this.player, this.partner, this.race, seed * 17, 3);
@@ -78,7 +79,7 @@ export class RaceSession {
           this.partnerCrew.spiMode = this.role === "full" ? "command" : "auto";
         }
         // The partner is on our boat, so race against the others plus a new helm.
-        rivals = rivals.filter(r => r.name !== pn).concat([EXTRA_HELM]);
+        rivals = opponentHelms(rivals, this.partner);
       } else {
         this.player = this.race.add("player", { helm: PLAYER, crew: null }, sim, true);
       }
@@ -86,7 +87,7 @@ export class RaceSession {
     rivals.forEach((prof, i) => {
       const p = down((24 + i * 2) * scale);
       const sim = new BoatSim(cls, createBoat(p.x + (-16 + i * 14) * scale, p.z, course.windDir - 80 * DEG));
-      const crew = two ? CREWS[i % CREWS.length] : null;
+      const crew = two ? opponentCrew(i) : null;
       const racer = this.race.add(`ai${i}`, { helm: aiSailor(prof), crew: crew && aiSailor(crew) }, sim);
       const ai = new RacingAI(racer, prof, this.race, seed * 31 + i * 7, i);
       ai.placeAtStart();

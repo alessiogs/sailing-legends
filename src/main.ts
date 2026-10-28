@@ -1,8 +1,9 @@
 import {
   ArcRotateCamera, Color3, Color4, DirectionalLight, Engine, HemisphericLight, Matrix, Scene, Vector3,
 } from "@babylonjs/core";
-import { chemistry, wantSpinnaker } from "./ai/CrewAI";
-import { RacingAI, RIVALS, type SailorProfile } from "./ai/RacingAI";
+import { wantSpinnaker } from "./ai/CrewAI";
+import { RacingAI } from "./ai/RacingAI";
+import { AUTOPILOT_HELM, crewChemistry, RIVALS, rivalById, type SailorProfile } from "./sailors/Sailors";
 import { DEFAULT_CONTROLS, Input, type ControlSettings } from "./core/Input";
 import { Sound } from "./core/Sound";
 import { angleDiff, DEG, lerpAngle } from "./core/math";
@@ -208,13 +209,13 @@ function syncBoatMenu() {
   $("version-chip").textContent = t("menu.versionChip", { boatClass: boatClass.name.toUpperCase() });
   $("role-help").textContent = t(ROLE_HELP[role]);
   $("partner-opt").innerHTML = RIVALS.map(r => {
-    const c = chemistry(r);
-    return `<button data-v="${r.name}" class="partner${r.name === partner.name ? " on" : ""}">
+    const c = crewChemistry(r);
+    return `<button data-v="${r.id}" class="partner${r.id === partner.id ? " on" : ""}">
       <b>${r.name}</b><span class="meter"><i style="width:${c}%"></i></span>
       <small>${t("menu.partnerStats", { chemistry: c, technique: Math.round(r.technique * 100), discipline: Math.round(r.discipline * 100) })}</small></button>`;
   }).join("");
   for (const b of Array.from(document.querySelectorAll<HTMLButtonElement>("#partner-opt button"))) {
-    b.addEventListener("click", () => { partner = RIVALS.find(r => r.name === b.dataset.v) ?? partner; syncBoatMenu(); });
+    b.addEventListener("click", () => { partner = rivalById(b.dataset.v!) ?? partner; syncBoatMenu(); });
   }
 }
 for (const b of Array.from(document.querySelectorAll<HTMLButtonElement>("#class-opt button"))) {
@@ -373,7 +374,7 @@ function applyPlayerControls(dt: number, p: Racer) {
   const pc = session.playerControls;
   const tel = p.sim.telemetry;
   if ((window as any).__game?.autopilot) {
-    if (!autopilot || autopilot.racer !== p) autopilot = new RacingAI(p, { name: "Auto", technique: 0.95, tactics: 0.9, speed: 0.9, discipline: 0.9 }, session.race, 99, 3);
+    if (!autopilot || autopilot.racer !== p) autopilot = new RacingAI(p, AUTOPILOT_HELM, session.race, 99, 3);
     const c = autopilot.update(dt, session.wind);
     if (!session.partnerHelm) { pc.rudder = c.rudder; pc.sheet = c.sheet; }
     if (input.station === "crew") autoCrew(pc, p);
@@ -409,7 +410,7 @@ function buildPanel(p: Racer): Panel {
   const s = p.sim.state, tel = p.sim.telemetry;
   const two = !!boatClass.crew;
   const name = session.partner?.name ?? "";
-  const chem = two && session.partner ? { name, value: chemistry(session.partner) } : null;
+  const chem = two && session.partner ? { name, value: crewChemistry(session.partner) } : null;
   if (input.station === "crew") {
     const spiUp = s.spiHoist > 0.5;
     const sailTel = spiUp ? tel.spi! : tel.jib!;

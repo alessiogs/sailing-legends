@@ -4,38 +4,7 @@ import type { WindField } from "../sailing/Wind";
 import { distanceTo, legTarget, type Point } from "../race/Course";
 import type { Race, Racer } from "../race/Race";
 import { judge } from "../race/Rules";
-
-/**
- * Personality/skill profile for an AI sailor. These map onto the career attributes from the
- * concept (tactics, technique, speed, discipline) so recurring rivals sail differently.
- */
-export type SailorProfile = {
-  name: string;
-  /** 0..1 — how precisely the sail is trimmed. */
-  technique: number;
-  /** 0..1 — how quickly they react to shifts (smaller tack hysteresis). */
-  tactics: number;
-  /** 0..1 — steering smoothness / pointing. */
-  speed: number;
-  /** 0..1 — low discipline = aggressive start timing, risk of OCS. */
-  discipline: number;
-  /** 0..100 — shared history with the player (feeds Crew Chemistry). */
-  bond?: number;
-};
-
-export const RIVALS: SailorProfile[] = [
-  { name: "Luca", technique: 0.73, tactics: 0.9, speed: 0.78, discipline: 0.7, bond: 72 },
-  { name: "Giulia", technique: 0.94, tactics: 0.78, speed: 0.8, discipline: 0.91, bond: 84 },
-  { name: "Marco", technique: 0.81, tactics: 0.6, speed: 0.95, discipline: 0.62, bond: 58 },
-];
-
-/** Crews and an extra helm who only appear in two-person classes. */
-export const CREWS: SailorProfile[] = [
-  { name: "Sara", technique: 0.82, tactics: 0.7, speed: 0.75, discipline: 0.85, bond: 75 },
-  { name: "Tommaso", technique: 0.7, tactics: 0.65, speed: 0.85, discipline: 0.7, bond: 70 },
-  { name: "Pietro", technique: 0.78, tactics: 0.7, speed: 0.8, discipline: 0.8, bond: 78 },
-];
-export const EXTRA_HELM: SailorProfile = { name: "Elena", technique: 0.85, tactics: 0.82, speed: 0.82, discipline: 0.8 };
+import type { SailorProfile } from "../sailors/Sailors";
 
 const CLOSE_HAULED = 47 * DEG;
 const ORBIT_R = 9; // for an Optimist; scaled by boat length

@@ -68,7 +68,7 @@ class TestPlayer {
   constructor(private session: RaceSession, private role: PlayerSetup) {
     const p = session.player!;
     this.helm = role === "crew" ? null
-      : new RacingAI(p, { name: "Auto", technique: 0.95, tactics: 0.9, speed: 0.9, discipline: 0.9 }, session.race, 99, 3);
+      : new RacingAI(p, { id: "auto", name: "Auto", technique: 0.95, tactics: 0.9, speed: 0.9, discipline: 0.9 }, session.race, 99, 3);
   }
 
   /** Set the player's controls for the next fixed step. */

@@ -5,7 +5,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { t } from "../src/i18n";
-import { RIVALS } from "../src/ai/RacingAI";
+import { RIVALS } from "../src/sailors/Sailors";
 import { RaceSession, type SessionOptions } from "../src/race/RaceSession";
 import { I420, OPTIMIST } from "../src/sailing/BoatClass";
 import { legName, racerName } from "../src/ui/raceNames";
