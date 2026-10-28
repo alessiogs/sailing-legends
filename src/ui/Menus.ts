@@ -6,6 +6,7 @@ import type { Racer } from "../race/Race";
 import { CREW, FULL_BOAT, HELM, type PlayerChoice } from "../race/PlayerChoice";
 import { CLASSES, isClassId, isTwoPerson } from "../sailing/BoatClass";
 import { crewChemistry, RIVALS, rivalById } from "../sailors/Sailors";
+import { h } from "./dom";
 import { racerName } from "./raceNames";
 
 const $ = (id: string) => document.getElementById(id)!;
@@ -44,11 +45,11 @@ export class Menus implements Screens {
   }
 
   fillResults(standings: Racer[]) {
-    const rows = standings.map((r, i) => {
+    $("results-table").replaceChildren(...standings.map((r, i) => {
       const time = r.dsq ? t("results.dsq") : r.finishTime !== null ? `${Math.floor(r.finishTime / 60)}:${String(Math.floor(r.finishTime % 60)).padStart(2, "0")}` : "—";
-      return `<tr class="${r.isPlayer ? "me" : ""}"><td>${r.dsq ? "–" : t("results.place", { place: i + 1 })}</td><td>${racerName(r)}</td><td>${time}</td></tr>`;
-    }).join("");
-    $("results-table").innerHTML = rows;
+      return h("tr", { class: r.isPlayer ? "me" : "" },
+        h("td", {}, r.dsq ? "–" : t("results.place", { place: i + 1 })), h("td", {}, racerName(r)), h("td", {}, time));
+    }));
   }
 
   autoTrimChosen() { return this.el.autoTrim.checked; }
@@ -135,12 +136,12 @@ export class Menus implements Screens {
     $("lede-class").textContent = two ? t("menu.lede.twoPerson") : t("menu.lede.single");
     $("version-chip").textContent = t("menu.versionChip", { boatClass: boatClass.name.toUpperCase() });
     $("role-help").textContent = t(ROLE_OPTIONS[roleOption(choice)].help);
-    $("partner-opt").innerHTML = RIVALS.map(r => {
+    $("partner-opt").replaceChildren(...RIVALS.map(r => {
       const c = crewChemistry(r);
-      return `<button data-v="${r.id}" class="partner${r.id === partner.id ? " on" : ""}">
-      <b>${r.name}</b><span class="meter"><i style="width:${c}%"></i></span>
-      <small>${t("menu.partnerStats", { chemistry: c, technique: Math.round(r.technique * 100), discipline: Math.round(r.discipline * 100) })}</small></button>`;
-    }).join("");
+      return h("button", { "data-v": r.id, class: `partner${r.id === partner.id ? " on" : ""}` },
+        h("b", {}, r.name), h("span", { class: "meter" }, h("i", { style: `width:${c}%` })),
+        h("small", {}, t("menu.partnerStats", { chemistry: c, technique: Math.round(r.technique * 100), discipline: Math.round(r.discipline * 100) })));
+    }));
     for (const b of buttons("#partner-opt button")) {
       b.addEventListener("click", () => { game.partner = rivalById(b.dataset.v!) ?? game.partner; this.syncBoatMenu(); });
     }

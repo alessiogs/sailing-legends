@@ -6,6 +6,7 @@ import type { Telemetry } from "../sailing/BoatPhysics";
 import { WindField } from "../sailing/Wind";
 import { t } from "../i18n";
 import { boatDot } from "./boatColors";
+import { h } from "./dom";
 import type { Panel } from "./hudPanel";
 import { legName, racerName } from "./raceNames";
 
@@ -129,7 +130,7 @@ export class Hud {
     this.el.partnerLine.classList.toggle("hidden", !panel.partnerLine);
     if (panel.partnerLine) this.el.partnerLine.textContent = panel.partnerLine;
     this.el.chem.classList.toggle("hidden", !panel.chem);
-    if (panel.chem) this.el.chem.innerHTML = `${t("hud.chem.pair", { name: panel.chem.name })} <b>${t("hud.chem.value", { value: panel.chem.value })}</b>`;
+    if (panel.chem) this.el.chem.replaceChildren(`${t("hud.chem.pair", { name: panel.chem.name })} `, h("b", {}, t("hud.chem.value", { value: panel.chem.value })));
 
     // Penalty turns still owed.
     if (me.penalty) {
@@ -152,13 +153,14 @@ export class Hud {
 
   private renderStandings(race: Race, standings: Racer[], me: Racer) {
     const legs = race.course.legs.length;
-    this.el.standings.innerHTML = standings.map((r, i) => {
+    this.el.standings.replaceChildren(...standings.map((r, i) => {
       const status = r.dsq ? t("standings.dsq") : r.finishTime !== null ? fmtClock(r.finishTime)
         : r.penalty ? t("standings.penalty")
         : r.leg < 0 ? t(r.ocs && !r.clearedBack ? "standings.ocs" : race.phase === "prestart" ? "standings.prestart" : "standings.start")
         : t("standings.leg", { leg: r.leg + 1, legs });
-      return `<li class="${r === me ? "me" : ""}"><span class="n">${i + 1}</span><span><i class="dot" style="background:${boatDot(r.id)}"></i>${racerName(r)}</span><span class="s">${status}</span></li>`;
-    }).join("");
+      return h("li", { class: r === me ? "me" : "" }, h("span", { class: "n" }, String(i + 1)),
+        h("span", {}, h("i", { class: "dot", style: `background:${boatDot(r.id)}` }), racerName(r)), h("span", { class: "s" }, status));
+    }));
   }
 
   /** Boat-up wind dial: true wind arrow, no-go sector, bearing to the next mark. */
