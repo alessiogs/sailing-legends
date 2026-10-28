@@ -10,9 +10,10 @@ import { angleDiff, DEG, lerpAngle } from "./core/math";
 import { legTarget } from "./race/Course";
 import type { Racer } from "./race/Race";
 import type { Controls } from "./sailing/BoatPhysics";
-import { RaceSession, type PlayerRole } from "./race/RaceSession";
+import { RaceSession } from "./race/RaceSession";
+import { CREW, FULL_BOAT, HELM, type PlayerChoice } from "./race/PlayerChoice";
 import { CLASSES, type BoatClass } from "./sailing/BoatClass";
-import { t } from "./i18n";
+import { t, type MessageKey } from "./i18n";
 import { Hud, type Panel } from "./ui/Hud";
 import { fillPageText } from "./ui/pageText";
 import { eventText } from "./ui/raceEventText";
@@ -74,7 +75,7 @@ let time = 0;
 let windKn = 11;
 let autoTrim = false;
 let boatClass: BoatClass = CLASSES.optimist;
-let role: PlayerRole = "skipper";
+let choice: PlayerChoice = HELM;
 let partner: SailorProfile = RIVALS[1];
 let camMode: "chase" | "free" | "top" = "chase";
 let lastBoomSide = 1;
@@ -114,8 +115,8 @@ function newRace() {
   courseView?.dispose();
   hud.clearTags();
   const seed = Math.floor(Math.random() * 1e6);
-  session = new RaceSession({ seed, windKn, boatClass: boatClass, role, partner });
-  input.station = boatClass.crew && role === "crew" ? "crew" : "helm";
+  session = new RaceSession({ seed, windKn, boatClass: boatClass, choice, partner });
+  input.station = boatClass.crew && choice.role === "crew" ? "crew" : "helm";
   crewSheets = { jib: 0.5, spi: 0.5 };
   wasTacking = false;
   waves = makeWaves(session.wind.meanDir, windKn);
@@ -195,19 +196,22 @@ $("resume-btn").addEventListener("click", () => setMode("racing"));
 $("pause-menu").addEventListener("click", () => setMode("menu"));
 syncControls();
 // ---------- Boat, role and partner choice ----------
-const ROLE_HELP = {
-  skipper: "menu.roleHelp.helm",
-  crew: "menu.roleHelp.crew",
-  full: "menu.roleHelp.fullBoat",
-} as const satisfies Record<PlayerRole, string>;
+/** The three Role buttons (`data-v`), each a Role and Control mode, with its help text. */
+const ROLE_OPTIONS = {
+  helm: { choice: HELM, help: "menu.roleHelp.helm" },
+  crew: { choice: CREW, help: "menu.roleHelp.crew" },
+  fullBoat: { choice: FULL_BOAT, help: "menu.roleHelp.fullBoat" },
+} as const satisfies Record<string, { choice: PlayerChoice; help: MessageKey }>;
+type RoleOption = keyof typeof ROLE_OPTIONS;
+const roleOption = (c: PlayerChoice): RoleOption => c.role === "crew" ? "crew" : c.control === "fullBoat" ? "fullBoat" : "helm";
 function syncBoatMenu() {
   const two = !!boatClass.crew;
   for (const o of Array.from(document.querySelectorAll<HTMLButtonElement>("#class-opt button"))) o.classList.toggle("on", o.dataset.v === boatClass.id);
-  for (const o of Array.from(document.querySelectorAll<HTMLButtonElement>("#role-opt button"))) o.classList.toggle("on", o.dataset.v === role);
+  for (const o of Array.from(document.querySelectorAll<HTMLButtonElement>("#role-opt button"))) o.classList.toggle("on", o.dataset.v === roleOption(choice));
   $("crew-block").classList.toggle("hidden", !two);
   $("lede-class").textContent = two ? t("menu.lede.twoPerson") : t("menu.lede.single");
   $("version-chip").textContent = t("menu.versionChip", { boatClass: boatClass.name.toUpperCase() });
-  $("role-help").textContent = t(ROLE_HELP[role]);
+  $("role-help").textContent = t(ROLE_OPTIONS[roleOption(choice)].help);
   $("partner-opt").innerHTML = RIVALS.map(r => {
     const c = crewChemistry(r);
     return `<button data-v="${r.id}" class="partner${r.id === partner.id ? " on" : ""}">
@@ -222,7 +226,7 @@ for (const b of Array.from(document.querySelectorAll<HTMLButtonElement>("#class-
   b.addEventListener("click", () => { boatClass = CLASSES[b.dataset.v!] ?? CLASSES.optimist; syncBoatMenu(); });
 }
 for (const b of Array.from(document.querySelectorAll<HTMLButtonElement>("#role-opt button"))) {
-  b.addEventListener("click", () => { role = b.dataset.v as PlayerRole; syncBoatMenu(); });
+  b.addEventListener("click", () => { choice = ROLE_OPTIONS[b.dataset.v as RoleOption].choice; syncBoatMenu(); });
 }
 syncBoatMenu();
 
@@ -359,10 +363,10 @@ function activeCrewSheet() {
 function callSpinnaker() {
   if (!boatClass.spinnaker) return;
   const pc = session.playerControls;
-  if (role === "crew") {
+  if (choice.role === "crew") {
     pc.spi = !pc.spi;
     hud.toast(pc.spi ? t("toast.spi.hoist") : t("toast.spi.drop"));
-  } else if (role === "full" && session.partnerCrew) {
+  } else if (choice.control === "fullBoat" && session.partnerCrew) {
     session.partnerCrew.spiCommand = !session.partnerCrew.spiCommand;
     hud.toast(session.partnerCrew.spiCommand ? t("toast.spi.callHoist") : t("toast.spi.callDrop"));
   } else {
@@ -439,7 +443,7 @@ function buildPanel(p: Racer): Panel {
   if (two) {
     const weight = t(s.crewOut > 0.75 ? "hud.weight.trapeze" : s.crewOut > 0.3 ? "hud.weight.hiking" : "hud.weight.in");
     const spi = t(s.spiHoist > 0.9 ? "hud.spi.up" : s.spiHoist > 0.05 ? "hud.spi.moving" : "hud.spi.down");
-    crewLine = t(role === "full" ? "hud.crewLine.partnerCrewsOnCall" : "hud.crewLine.partnerCrews", { name, weight, spi });
+    crewLine = t(choice.control === "fullBoat" ? "hud.crewLine.partnerCrewsOnCall" : "hud.crewLine.partnerCrews", { name, weight, spi });
   }
   return { gauge: tillerGauge, sail, call: null, crewLine, chem };
 }
