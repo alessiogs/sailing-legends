@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "test": "tsx scripts/sim-test.ts",
+    "test": "vitest run --reporter=verbose",
     "polar": "tsx scripts/polar.ts"
   },
   "dependencies": {
@@ -16,6 +16,7 @@
   "devDependencies": {
     "typescript": "^6.0.0",
     "vite": "^6.0.0",
-    "tsx": "^4.19.0"
+    "tsx": "^4.19.0",
+    "vitest": "^3.2.0"
   }
 }
