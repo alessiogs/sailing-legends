@@ -64,7 +64,9 @@ src/
              screens. Implements the controller's `Screens`; `attach(game)` wires the buttons)
   game/      GameController.ts (owns the game state: race session, class, Role and Control mode, Partner, wind,
              Assists; the menu / racing / paused / results / controls modes; one `frame(dt)` per render; for now
-             also race feedback, player controls per Role and the HUD panel). Drives the page through `Screens`.
+             also race feedback and the HUD panel). Drives the page through `Screens`.
+             PlayerControls.ts (the player's input turned into the boat's controls per Role and Control mode:
+             steering, sheets, weight, side switch, spinnaker key, Auto-trim, the browser autopilot; DOM-free)
              CameraRig.ts (the orbit camera and its chase / free / top views), Preferences.ts (`loadPrefs`,
              `savePrefs`: controls and mute under `sl-prefs`; keep the stored format so saved preferences load)
   main.ts    startup wiring: scene, camera rig, preferences, `Menus`, render loop, `window.__game` hook
@@ -81,6 +83,7 @@ tests/       Vitest tests (npm test): smoke.test.ts (every AI-only race finishes
              boat-states.test.ts (Crew weight and spinnaker thresholds, and their HUD wording)
              boat-colors.test.ts (every boat has its colours; 3D and HUD colours as before)
              preferences.test.ts (saved preferences still load; saving keeps the `sl-prefs` format)
+             player-controls.test.ts (what the player's input does per Role and Control mode, Auto-trim, autopilot)
 scripts/     polar.ts (npm run polar), golden-update.ts (npm run golden:update)
 ```
 **Rule:** `sailing/`, `race/`, `ai/`, `sailors/` must not import Babylon. They run in Node (tests) and in the browser.

@@ -1,6 +1,5 @@
 import { Matrix, Vector3, type Engine, type Scene } from "@babylonjs/core";
 import { crewOnWrongSide, wantSpinnaker } from "../ai/CrewAI";
-import { RacingAI } from "../ai/RacingAI";
 import type { Input } from "../core/Input";
 import type { Sound } from "../core/Sound";
 import { DEG } from "../core/math";
@@ -10,9 +9,8 @@ import { HELM, type PlayerChoice } from "../race/PlayerChoice";
 import type { Racer } from "../race/Race";
 import { RaceSession } from "../race/RaceSession";
 import { CLASSES, isTwoPerson, type BoatClass } from "../sailing/BoatClass";
-import type { Controls } from "../sailing/BoatPhysics";
 import { crewWeight, spinnakerState } from "../sailing/BoatStates";
-import { AUTOPILOT_HELM, crewChemistry, RIVALS, type SailorProfile } from "../sailors/Sailors";
+import { crewChemistry, RIVALS, type SailorProfile } from "../sailors/Sailors";
 import { boatColors } from "../ui/boatColors";
 import { crewWeightText, spinnakerText } from "../ui/boatStateText";
 import type { Hud, Panel } from "../ui/Hud";
@@ -23,15 +21,10 @@ import { CourseView } from "../world/CourseView";
 import { Ocean } from "../world/Ocean";
 import { makeWaves, type Wave } from "../world/Waves";
 import type { CameraRig } from "./CameraRig";
+import { PlayerControls, type Assists } from "./PlayerControls";
 
 /** What the game is doing: each mode but racing shows its own screen. */
 export type Mode = "menu" | "racing" | "paused" | "results" | "controls";
-
-/** Help the game gives by doing a secondary task for the player; each can be switched off. */
-export type Assists = {
-  /** Auto-trim: the player's sail trim is set automatically. */
-  autoTrim: boolean;
-};
 
 /** The page screens the controller drives: one per mode, plus the Auto-trim option of the main menu. */
 export interface Screens {
@@ -93,12 +86,8 @@ export class GameController {
   private wasTacking = false;
 
   // ---------- Player on board ----------
-  private crewSheets = { jib: 0.5, spi: 0.5 };
-  private activeSail: "jib" | "spi" = "jib";
-  /** Debug autopilot for the player boat (window.__game.autopilot = true), used by automated tests. */
-  autopilotOn = false;
-  /** The autopilot's Helm, made when the autopilot first sails the player's boat. */
-  autopilot: RacingAI | null = null;
+  /** The player's input turned into the player boat's controls, per Role; also the browser autopilot. */
+  readonly controls: PlayerControls;
 
   // ---------- Frame scratch ----------
   private fpsAcc = 0;
@@ -126,6 +115,7 @@ export class GameController {
     this.sound = deps.sound;
     this.screens = deps.screens;
     this.savePrefs = deps.savePrefs;
+    this.controls = new PlayerControls(deps.input, this.assists);
   }
 
   get mode(): Mode { return this._mode; }
@@ -146,7 +136,7 @@ export class GameController {
     const seed = Math.floor(Math.random() * 1e6);
     const session = this.session = new RaceSession({ seed, windKn: this.windKn, boatClass: this.boatClass, choice: this.choice, partner: this.partner });
     input.role = isTwoPerson(this.boatClass) ? this.choice.role : "helm";
-    this.crewSheets = { jib: 0.5, spi: 0.5 };
+    this.controls.newRace();
     this.wasTacking = false;
     this.waves = makeWaves(session.wind.meanDir, this.windKn);
     if (!this.ocean) this.ocean = new Ocean(scene, this.waves);
@@ -216,14 +206,14 @@ export class GameController {
       if (a === "autoTrim" && this._mode === "racing") {
         this.assists.autoTrim = !this.assists.autoTrim;
         this.screens.showAutoTrim(this.assists.autoTrim);
-        if (!this.assists.autoTrim) input.sheet = input.role === "crew" ? this.activeCrewSheet() : this.session.player!.sim.state.sheet;
+        if (!this.assists.autoTrim) this.controls.autoTrimOff(this.session);
         hud.toast(this.assists.autoTrim ? t("toast.autoTrimOn") : t("toast.autoTrimOff"));
       }
-      if (a === "spi" && this._mode === "racing") this.callSpinnaker();
-      if (a === "switch" && this._mode === "racing" && input.role === "crew") {
-        this.session.playerControls.switchSide = true;
-        hud.toast(t("toast.switchSide"));
+      if (a === "spi" && this._mode === "racing") {
+        const text = this.controls.callSpinnaker(this.session);
+        if (text !== null) hud.toast(text);
       }
+      if (a === "switch" && this._mode === "racing" && this.controls.switchSide(this.session)) hud.toast(t("toast.switchSide"));
       if (a === "camera") {
         hud.toast(t(`toast.camera.${this.cameraRig.nextMode(isTwoPerson(this.boatClass))}`));
       }
@@ -248,8 +238,7 @@ export class GameController {
     const { camera } = this.cameraRig;
     if (this._mode === "racing") {
       this.time += dt;
-      const p = session.player!;
-      this.applyPlayerControls(dt, p);
+      this.controls.apply(dt, session);
       session.advance(dt);
       this.processEvents();
       this.playerCoaching();
@@ -283,10 +272,7 @@ export class GameController {
 
   /** Test hook: sails the race `seconds` ahead at the fixed step, the autopilot steering when it is on. */
   fastForward(seconds: number) {
-    for (let i = 0; i < seconds * 60; i++) {
-      if (this.autopilotOn && this.autopilot) Object.assign(this.session.playerControls, this.autopilot.update(1 / 60, this.session.wind));
-      this.session.step(1 / 60);
-    }
+    for (let i = 0; i < seconds * 60; i++) this.controls.fastForwardStep(this.session, 1 / 60);
   }
 
   // ---------- Race feedback ----------
@@ -335,64 +321,6 @@ export class GameController {
       this.ironsHintShown = true;
       hud.toast(this.input.steering === "tiller" ? t("coach.irons.tiller") : t("coach.irons.boat"), "bad");
     }
-  }
-
-  // ---------- Player on board ----------
-  private activeCrewSheet() {
-    return this.activeSail === "spi" ? this.crewSheets.spi : this.crewSheets.jib;
-  }
-
-  /** Space: hoist/drop the spinnaker (Crew), or call for it (Full Boat Control). */
-  private callSpinnaker() {
-    const { session, hud, choice } = this;
-    if (!this.boatClass.spinnaker) return;
-    const pc = session.playerControls;
-    if (choice.role === "crew") {
-      pc.spi = !pc.spi;
-      hud.toast(pc.spi ? t("toast.spi.hoist") : t("toast.spi.drop"));
-    } else if (choice.control === "fullBoat" && session.partnerCrew) {
-      session.partnerCrew.spiCommand = !session.partnerCrew.spiCommand;
-      hud.toast(session.partnerCrew.spiCommand ? t("toast.spi.callHoist") : t("toast.spi.callDrop"));
-    } else {
-      hud.toast(session.partner ? t("toast.spi.partnerDecides", { name: session.partner.name }) : t("toast.spi.crewDecides"));
-    }
-  }
-
-  private applyPlayerControls(dt: number, p: Racer) {
-    const { session, input, crewSheets } = this;
-    const pc = session.playerControls;
-    const tel = p.sim.telemetry;
-    if (this.autopilotOn) {
-      if (!this.autopilot || this.autopilot.racer !== p) this.autopilot = new RacingAI(p, AUTOPILOT_HELM, session.race, 99, 3);
-      const c = this.autopilot.update(dt, session.wind);
-      if (!session.partnerHelm) { pc.rudder = c.rudder; pc.sheet = c.sheet; }
-      if (input.role === "crew") this.autopilotCrew(pc, p);
-      return;
-    }
-    if (input.role === "crew") {
-      // The Partner is the Helm (RaceSession fills rudder and mainsheet). We trim and move.
-      const nowSail: "jib" | "spi" = p.sim.state.spiHoist > 0.5 ? "spi" : "jib";
-      if (nowSail !== this.activeSail) { this.activeSail = nowSail; input.sheet = this.activeCrewSheet(); }
-      if (this.assists.autoTrim) input.sheet = this.activeSail === "spi" ? tel.spi!.optimal : tel.jib!.optimal;
-      crewSheets[this.activeSail] = input.sheet;
-      pc.jibSheet = crewSheets.jib;
-      pc.spiSheet = crewSheets.spi;
-      pc.crewOut = input.crewOut;
-      return;
-    }
-    pc.rudder = input.rudder;
-    if (this.assists.autoTrim) {
-      input.sheet = tel.optimalSheet;
-    }
-    pc.sheet = input.sheet;
-  }
-
-  /** Test helper: perfect Crew work for the autopilot. */
-  private autopilotCrew(pc: Controls, p: Racer) {
-    const tel = p.sim.telemetry;
-    pc.jibSheet = tel.jib?.optimal; pc.spiSheet = tel.spi?.optimal; pc.crewOut = tel.crew?.ideal;
-    pc.spi = wantSpinnaker(this.session.race, p);
-    if (crewOnWrongSide(p.sim)) pc.switchSide = true;
   }
 
   // ---------- HUD panel ----------
