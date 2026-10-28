@@ -13,12 +13,16 @@ import { RaceSession, type PlayerRole } from "./race/RaceSession";
 import { CLASSES, type BoatClass } from "./sailing/BoatClass";
 import { t } from "./i18n";
 import { Hud, type Panel } from "./ui/Hud";
+import { fillPageText } from "./ui/pageText";
 import { Boat420View } from "./world/Boat420View";
 import { BoatView, type BoatLook } from "./world/BoatView";
 import { CourseView } from "./world/CourseView";
 import { Ocean } from "./world/Ocean";
 import { makeWaves, type Wave } from "./world/Waves";
 import "./style.css";
+
+// The page's static text first: the code below overwrites some of it, and the loading screen hides the menus until then.
+fillPageText();
 
 // ---------- Engine & scene ----------
 const canvas = document.querySelector<HTMLCanvasElement>("#game")!;
