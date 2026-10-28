@@ -14,7 +14,6 @@ export function boatLook(c: BoatColors): BoatLook {
   return { hull: new Color3(...c.hull), sail: new Color3(...c.sail), jacket: new Color3(...c.jacket), stripe: new Color3(...c.stripe) };
 }
 
-/** Visual of an Optimist: pram hull, sprit rig with a cambered sail that luffs, sailor, foils. */
 const mats = new Map<string, StandardMaterial>();
 function mat(scene: Scene, name: string, color: Color3, spec = 0.15, twoSided = false): StandardMaterial {
   const key = `${name}-${color.toHexString()}`;
@@ -36,6 +35,7 @@ const PEAK = new Vector3(0, 2.78, -1.72);
 const CLEW = new Vector3(0, 0.5, -1.98);
 const NU = 10, NV = 9;
 
+/** Visual of an Optimist: pram hull, sprit rig with a cambered sail that luffs, sailor, foils. */
 export class BoatView {
   root: TransformNode;
   private body: TransformNode; // takes heel and pitch
