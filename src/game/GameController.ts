@@ -16,6 +16,7 @@ import { buildPanel } from "../ui/hudPanel";
 import { Boat420View } from "../world/Boat420View";
 import { boatLook } from "../world/boatMaterials";
 import { BoatView } from "../world/BoatView";
+import type { BoatViewBase } from "../world/BoatViewBase";
 import { CourseView } from "../world/CourseView";
 import { Ocean } from "../world/Ocean";
 import { makeWaves, type Wave } from "../world/Waves";
@@ -73,7 +74,7 @@ export class GameController {
   // ---------- The race and its scene ----------
   /** The current race; the first one is created at startup, behind the menu. */
   session!: RaceSession;
-  private boats = new Map<string, BoatView | Boat420View>();
+  private boats = new Map<string, BoatViewBase>();
   private courseView: CourseView | null = null;
   private ocean: Ocean | null = null;
   private waves: Wave[] = [];

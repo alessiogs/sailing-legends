@@ -64,8 +64,10 @@ src/
              wrong-side check, shared by the Crew AI, the browser autopilot and the HUD). Both read sailor profiles
   sailors/   Sailors.ts (sailor profiles, the Rival roster, the opponents' Crews, the extra Helm, the autopilot
              Helm, the Crew Chemistry formula; sailors are matched by `id`, never by name)
-  world/     Ocean.ts (Gerstner waves in GLSL), Waves.ts (same waves on CPU), BoatView.ts (Optimist),
-             Boat420View.ts, boatMaterials.ts (`boatLook` from the colour table, `boatMaterial`: the one material
+  world/     Ocean.ts (Gerstner waves in GLSL), Waves.ts (same waves on CPU), BoatViewBase.ts (what both boat
+             visuals share: wave riding, heel, boom swing, rudder, burgee; each class gives its `BoatMotion` and
+             draws its own sails and sailors), BoatView.ts (Optimist), Boat420View.ts, SailorFigure.ts (the sailor
+             figure and its placement on the gunwale), boatMaterials.ts (`boatLook` from the colour table, `boatMaterial`: the one material
              cache of both boat views, per scene via sceneCache.ts), SailMesh.ts, CourseView.ts
   i18n/      index.ts (`t(key, params)`: typed lookup), it.ts (Italian catalog, the reference: it defines the
              keys), plural.ts (plural forms from Intl.PluralRules). All player-facing text lives in a catalog
