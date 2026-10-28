@@ -215,7 +215,7 @@ export class GameController {
   /** One rendered frame: input, the race (while racing), the 3D scene, the HUD and the sound. */
   frame(dt: number) {
     this.fpsAcc += dt; this.fpsFrames++;
-    if (this.fpsAcc > 1) { (window as any).__fps = Math.round(this.fpsFrames / this.fpsAcc); this.fpsAcc = 0; this.fpsFrames = 0; }
+    if (this.fpsAcc > 1) { window.__fps = Math.round(this.fpsFrames / this.fpsAcc); this.fpsAcc = 0; this.fpsFrames = 0; }
 
     this.input.update(dt);
     this.handleActions();
