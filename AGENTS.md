@@ -46,12 +46,14 @@ src/
              Boat420View.ts, SailMesh.ts, CourseView.ts
   i18n/      index.ts (`t(key, params)`: typed lookup), it.ts (Italian catalog, the reference: it defines the
              keys), plural.ts (plural forms from Intl.PluralRules). All player-facing text lives in a catalog
-  ui/        Hud.ts (role-driven panel, compass, minimap, standings, tags)
+  ui/        Hud.ts (role-driven panel, compass, minimap, standings, tags), pageText.ts (fills index.html's
+             data-i18n text from the catalog at startup)
   main.ts    scene, camera, menus, game loop, player controls per role
 tests/       Vitest tests (npm test): smoke.test.ts (every AI-only race finishes, every penalty served),
              golden.test.ts + golden/ (races.ts sails and records the golden races, races.json is the snapshot),
              rules.test.ts (rule 10/11/12/13 verdicts and penalty turns, two boats placed by hand)
              i18n.test.ts (lookup, parameters, plural rules; catalogs with missing or extra keys fail the type-check)
+             page-text.test.ts (index.html filled from the catalog reads as page-text/original.json)
 scripts/     polar.ts (npm run polar), golden-update.ts (npm run golden:update)
 ```
 **Rule:** `sailing/`, `race/`, `ai/` must not import Babylon. They run in Node (tests) and in the browser.
@@ -71,6 +73,9 @@ scripts/     polar.ts (npm run polar), golden-update.ts (npm run golden:update)
 - Player-facing text: never a string literal in code. Add a key to `src/i18n/it.ts` (and every other catalog),
   named `area.name` in camelCase (`toast.audioOn`, `hud.leg.sailing`), and show it with `t(key, params)`.
   Messages with parameters are functions of a typed object; counts use `plurals(locale)`, never `n === 1`.
+  Text in `index.html` is no exception: give the element `data-i18n="key"` (or `data-i18n-aria-label="key"`)
+  and leave it empty; `ui/pageText.ts` fills it at startup, before child elements such as key hints.
+  The only Italian kept in the page is `#loading` (shown before the scripts run; a test keeps it equal to `menu.loading`).
 
 ## Golden races
 `tests/golden.test.ts` sails six AI-only races (Optimist and 420 at 7/11/16 kn) and three 420 races with a
