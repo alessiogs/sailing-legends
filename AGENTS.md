@@ -22,7 +22,8 @@ same build works at the root and under `/dev/`.
 ```bash
 npm install
 npm run dev      # http://localhost:5173
-npm test         # headless AI-only races, Optimist + 420, 7/11/16 kn; fails if a race doesn't finish
+npm test         # Vitest: headless AI-only races, Optimist + 420, 7/11/16 kn; fails if a race doesn't finish
+                 # or a penalty goes unserved
 npm run polar    # speed table (polar) per class: use after any physics change
 npm run build    # type-check + production build into dist/
 ```
@@ -41,7 +42,8 @@ src/
              Boat420View.ts, SailMesh.ts, CourseView.ts
   ui/        Hud.ts (role-driven panel, compass, minimap, standings, tags)
   main.ts    scene, camera, menus, game loop, player controls per role
-scripts/     sim-test.ts (npm test), polar.ts (npm run polar)
+tests/       Vitest tests (npm test): smoke.test.ts (every AI-only race finishes, every penalty served)
+scripts/     polar.ts (npm run polar)
 ```
 **Rule:** `sailing/`, `race/`, `ai/` must not import Babylon. They run in Node (tests) and in the browser.
 
