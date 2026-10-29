@@ -57,6 +57,6 @@ describe("English catalog", () => {
     const { lookup } = await import("../src/i18n");
     expect(lookup("menu.start")).toBe("Start race");
     setLanguage("it");
-    expect(lookup("menu.start")).toBe("Inizia regata");
+    expect(lookup("menu.start")).toBe("Inizia prova");
   });
 });

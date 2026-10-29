@@ -14,6 +14,7 @@ describe("start a Career", () => {
     expect(state).toEqual({
       version: CAREER_VERSION, seed: 77, startingAge: 12, season: 1,
       classId: "optimist", regattaIndex: 0, results: [[]], pool: generatePool(77, 12),
+      partnerId: null, choice: { role: "helm", control: "playerCareer" }, chemistry: null, seasonsTogether: {},
     });
     expect(state.pool.length).toBe(30);
     expect(ageInSeason(state.startingAge, state.season)).toBe(12);

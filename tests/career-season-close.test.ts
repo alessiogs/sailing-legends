@@ -6,7 +6,8 @@ import { describe, expect, it } from "vitest";
 import { ageInSeason } from "../src/career/Ages";
 import { startCareer } from "../src/career/Career";
 import type { CareerState } from "../src/career/CareerSave";
-import { closeSeason } from "../src/career/SeasonClose";
+import { startingChemistry } from "../src/career/Chemistry";
+import { closeSeason, partnerCandidates, startNextSeason } from "../src/career/SeasonClose";
 
 describe("close a Season", () => {
   it("advances the Season and starts the next one at the first Regatta with nothing sailed", () => {
@@ -92,5 +93,63 @@ describe("Rival growth between Seasons", () => {
     expect(marco.map(m => m.tactics)).toEqual([0.6, 0.611, 0.619, 0.633]);
     expect(marco.map(m => m.discipline)).toEqual([0.62, 0.634, 0.639, 0.648]);
     expect(luca.map(l => l.tactics)).toEqual([0.9, 0.93, 0.966, 0.99]);
+  });
+});
+
+describe("the end-of-Season choice", () => {
+  const entry = (id: string, place: number) => ({ id, status: "finished" as const, place });
+  /** An Optimist Season over, raced against Luca and Ada only. */
+  const sailed = (): CareerState => {
+    const state = startCareer({ seed: 8 });
+    const race = [entry("player", 1), entry("luca", 2), entry("ada", 3)];
+    return { ...state, pool: [...state.pool.filter(s => s.id !== "ada"), { ...state.pool[3], id: "ada", name: "Ada" }], regattaIndex: 3, results: [[race], [race], [race], [race]] };
+  };
+  const helm = { role: "helm", control: "playerCareer" } as const;
+
+  it("offers as Partners only the sailors raced against", () => {
+    expect(partnerCandidates(sailed()).sort()).toEqual(["ada", "luca"]);
+  });
+  it("counts a Season raced together with each of them", () => {
+    expect(closeSeason(sailed()).seasonsTogether).toEqual({ luca: 1, ada: 1 });
+  });
+  it("stays in the Optimist: no Partner, no Chemistry", () => {
+    const next = startNextSeason(sailed(), { classId: "optimist" });
+    expect(next.classId).toBe("optimist");
+    expect(next.partnerId).toBeNull();
+    expect(next.chemistry).toBeNull();
+    expect(next.season).toBe(2);
+  });
+  it("moves to the 420 with the chosen Partner, Role and Control mode, Chemistry from the formula with the shared Season", () => {
+    const state = sailed();
+    const next = startNextSeason(state, { classId: "420", partnerId: "luca", choice: { role: "helm", control: "fullBoat" } });
+    const luca = next.pool.find(s => s.id === "luca")!;
+    expect(next.classId).toBe("420");
+    expect(next.partnerId).toBe("luca");
+    expect(next.choice).toEqual({ role: "helm", control: "fullBoat" });
+    expect(next.chemistry).toBe(startingChemistry(luca, 1));
+    expect(next.chemistry).toBeGreaterThan(startingChemistry(luca, 0));
+    expect(next.season).toBe(2);
+    expect(next.results).toEqual([[]]);
+  });
+  it("refuses a Partner not raced against, and the Optimist after the 420", () => {
+    expect(() => startNextSeason(sailed(), { classId: "420", partnerId: "marco", choice: helm })).toThrow();
+    const in420 = startNextSeason(sailed(), { classId: "420", partnerId: "luca", choice: helm });
+    expect(() => startNextSeason(in420, { classId: "optimist" })).toThrow();
+  });
+  it("keeps the Chemistry of a Partner kept, and restarts it from the formula for a new one", () => {
+    const in420 = { ...startNextSeason(sailed(), { classId: "420", partnerId: "luca", choice: helm }), chemistry: 41 };
+    const kept = startNextSeason(in420, { classId: "420", partnerId: "luca", choice: { role: "crew", control: "playerCareer" } });
+    expect(kept.chemistry).toBe(41);
+    expect(kept.choice.role).toBe("crew");
+    const raced = { ...in420, results: [[[entry("player", 1), entry("ada", 2)]]] };
+    const changed = startNextSeason(raced, { classId: "420", partnerId: "ada", choice: helm });
+    expect(changed.partnerId).toBe("ada");
+    expect(changed.chemistry).toBe(startingChemistry(changed.pool.find(s => s.id === "ada")!, changed.seasonsTogether.ada));
+  });
+  it("does not change the state it is given", () => {
+    const state = sailed();
+    const before = JSON.stringify(state);
+    startNextSeason(state, { classId: "420", partnerId: "ada", choice: helm });
+    expect(JSON.stringify(state)).toBe(before);
   });
 });

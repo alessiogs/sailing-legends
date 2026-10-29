@@ -10,6 +10,7 @@ const sailor = (id: string, startingAge: number) => ({ id, name: id[0].toUpperCa
 const POOL = [sailor("luca", 11), sailor("giulia", 10), sailor("marco", 9), sailor("ada", 10)];
 const POOL_TEXT = '[' + POOL.map(p => `{"id":"${p.id}","name":"${p.name}","technique":0.5,"tactics":0.6,"speed":0.7,"discipline":0.8,"startingAge":${p.startingAge}}`).join(',') + ']';
 
+const NO_PARTNER = { partnerId: null, choice: { role: "helm", control: "playerCareer" }, chemistry: null, seasonsTogether: {} };
 const STATE: CareerState = {
   version: 1, seed: 12345, startingAge: 10, season: 2, classId: "optimist", regattaIndex: 1,
   results: [
@@ -19,17 +20,20 @@ const STATE: CareerState = {
     [[{ id: "me", status: "dsq" }, { id: "luca", status: "finished", place: 1 }]],
   ],
   pool: POOL,
+  partnerId: null, choice: { role: "helm", control: "playerCareer" }, chemistry: null, seasonsTogether: { luca: 1 },
 };
 /** The same fields as text, written out by hand. */
 const STATE_TEXT = '{"version":1,"seed":12345,"startingAge":10,"season":2,"classId":"optimist","regattaIndex":1,"results":['
   + '[[{"id":"me","status":"finished","place":2},{"id":"luca","status":"finished","place":1}],'
   + '[{"id":"me","status":"dnf"},{"id":"luca","status":"finished","place":1}],'
   + '[{"id":"me","status":"ocs"},{"id":"luca","status":"finished","place":1}]],'
-  + '[[{"id":"me","status":"dsq"},{"id":"luca","status":"finished","place":1}]]],"pool":' + POOL_TEXT + '}';
+  + '[[{"id":"me","status":"dsq"},{"id":"luca","status":"finished","place":1}]]],"pool":' + POOL_TEXT
+  + ',"partnerId":null,"choice":{"role":"helm","control":"playerCareer"},"chemistry":null,"seasonsTogether":{"luca":1}}';
 /** A fresh Career's text, for the cases that vary one field. */
 const field = (name: string, value: string) => {
   const fields: Record<string, string> = {
     version: "1", seed: "12345", startingAge: "10", season: "1", classId: '"optimist"', regattaIndex: "0", results: "[[]]", pool: POOL_TEXT,
+    partnerId: "null", choice: '{"role":"helm","control":"playerCareer"}', chemistry: "null", seasonsTogether: "{}",
   };
   fields[name] = value;
   return "{" + Object.entries(fields).filter(([, v]) => v !== "").map(([k, v]) => `"${k}":${v}`).join(",") + "}";
@@ -63,6 +67,13 @@ describe("career save codec", () => {
       field("pool", POOL_TEXT.replace('"name":"Ada",', "")),
       field("pool", POOL_TEXT.replace('"startingAge":10}]', '"startingAge":"ten"}]')),
       field("pool", POOL_TEXT.replace('"startingAge":10}]', '"startingAge":10,"bond":120}]')),
+      // Partner, Role and Control mode, Chemistry and its history
+      field("partnerId", ""), field("partnerId", '"ada"'), field("chemistry", "70"),
+      field("choice", ""), field("choice", '{"role":"crew","control":"fullBoat"}'), field("choice", '{"role":"skipper","control":"playerCareer"}'),
+      field("seasonsTogether", ""), field("seasonsTogether", "[]"), field("seasonsTogether", '{"nobody":1}'), field("seasonsTogether", '{"ada":0}'),
+      field("classId", '"420"'), field("classId", '"420"').replace('"partnerId":null', '"partnerId":"zed"').replace('"chemistry":null', '"chemistry":60'),
+      field("classId", '"420"').replace('"partnerId":null', '"partnerId":"ada"').replace('"chemistry":null', '"chemistry":160'),
+      field("classId", '"420"').replace('"partnerId":null', '"partnerId":"ada"'),
       field("results", ""), field("results", "{}"), field("results", "[]"), field("results", "[[],[]]"),
       field("results", "[[1]]"),
       field("results", "[[[]]]"),
@@ -79,6 +90,14 @@ describe("career save codec", () => {
     ];
     for (const text of bad) expect(decodeCareer(text)).toEqual({ ok: false });
   });
+  it("reads a 420 Career with its Partner, Role, Control mode, Chemistry and history", () => {
+    const text = field("classId", '"420"').replace('"partnerId":null', '"partnerId":"ada"').replace('"chemistry":null', '"chemistry":64.5')
+      .replace('{"role":"helm","control":"playerCareer"}', '{"role":"helm","control":"fullBoat"}').replace('"seasonsTogether":{}', '"seasonsTogether":{"ada":2}');
+    expect(decodeCareer(text)).toEqual({ ok: true, state: {
+      version: 1, seed: 12345, startingAge: 10, season: 1, classId: "420", regattaIndex: 0, results: [[]], pool: POOL,
+      partnerId: "ada", choice: { role: "helm", control: "fullBoat" }, chemistry: 64.5, seasonsTogether: { ada: 2 },
+    } });
+  });
   it("is unreadable for a version it does not know, older than the first or newer than this game", () => {
     expect(decodeCareer(field("version", "0"))).toEqual({ ok: false });
     expect(decodeCareer(field("version", "99"))).toEqual({ ok: false });
@@ -89,13 +108,13 @@ describe("career save codec", () => {
     // A pretend history: version 1 stored `age`, version 2 calls it `startingAge`, version 3 added the rest.
     const migrations: Record<number, CareerMigration> = {
       1: ({ age, ...rest }) => ({ ...rest, startingAge: age }),
-      2: saved => ({ ...saved, season: 1, classId: "optimist", regattaIndex: 0, results: [[]], pool: POOL }),
+      2: saved => ({ ...saved, season: 1, classId: "optimist", regattaIndex: 0, results: [[]], pool: POOL, ...NO_PARTNER }),
     };
     it("runs every step from the saved version up to the current one", () => {
       const v1 = '{"version":1,"seed":7,"age":9}';
-      expect(decodeCareer(v1, migrations, 3)).toEqual({ ok: true, state: { version: 3, seed: 7, startingAge: 9, season: 1, classId: "optimist", regattaIndex: 0, results: [[]], pool: POOL } });
+      expect(decodeCareer(v1, migrations, 3)).toEqual({ ok: true, state: { version: 3, seed: 7, startingAge: 9, season: 1, classId: "optimist", regattaIndex: 0, results: [[]], pool: POOL, ...NO_PARTNER } });
       const v2 = '{"version":2,"seed":7,"startingAge":11}';
-      expect(decodeCareer(v2, migrations, 3)).toEqual({ ok: true, state: { version: 3, seed: 7, startingAge: 11, season: 1, classId: "optimist", regattaIndex: 0, results: [[]], pool: POOL } });
+      expect(decodeCareer(v2, migrations, 3)).toEqual({ ok: true, state: { version: 3, seed: 7, startingAge: 11, season: 1, classId: "optimist", regattaIndex: 0, results: [[]], pool: POOL, ...NO_PARTNER } });
     });
     it("is unreadable when a step is missing or throws", () => {
       expect(decodeCareer('{"version":1,"seed":7,"age":9}', { 2: migrations[2] }, 3)).toEqual({ ok: false });
