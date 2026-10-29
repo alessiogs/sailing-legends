@@ -34,7 +34,13 @@ jobs:
         run: npm install --no-audit --no-fund
       - name: Simulation tests
         run: npm test
+      # Pull requests only type-check: the production bundle takes most of the run time and the type-check
+      # is the part that catches errors. Pushes to main/develop still run the full build.
+      - name: Type-check
+        if: github.event_name == 'pull_request'
+        run: npx tsc -b
       - name: Type-check and build
+        if: github.event_name != 'pull_request'
         run: npm run build
 
   # Builds main at the site root and develop under /dev/.

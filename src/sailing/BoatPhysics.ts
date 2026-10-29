@@ -9,13 +9,13 @@ import type { WindField } from "./Wind";
  *  - true wind + boat velocity -> apparent wind (speed and angle)
  *  - each sail is a wing: sheet length limits its angle, the angle of attack gives lift/drag
  *    (luffs when eased too far, stalls when over-trimmed, no drive inside the no-go zone)
- *  - two-person boats: a jib and a spinnaker that must be on the leeward side (the crew moves them
- *    across after a tack or gybe), a spinnaker that only works off the wind, and crew weight
+ *  - two-person boats: a jib and a spinnaker that must be on the leeward side (the Crew moves them
+ *    across after a tack or gybe), a spinnaker that only works off the wind, and Crew weight
  *    (sitting in, hiking, trapeze) that must be on the windward side
  *  - drive vs. hull resistance (with a "hull speed" wall) -> acceleration and inertia
  *  - side force vs. centreboard grip -> leeway (sideways drift), worse at low speed
  *  - rudder authority proportional to boat speed; turning costs speed (tacks/gybes lose momentum)
- *  - righting limit: when the crew can't hold the boat flat it heels and spills power;
+ *  - righting limit: when the sailors can't hold the boat flat it heels and spills power;
  *    too much weight out in light air heels it to windward and slows it down
  *
  * Frame: bearing 0 = +Z, clockwise toward +X. "Starboard" is +X when heading 0.
@@ -32,7 +32,7 @@ export type Controls = {
   spi?: boolean;
   /** Crew weight target: 0 = sitting in, 0.5 = hiking, 1 = on the trapeze. */
   crewOut?: number;
-  /** One-shot: the crew moves jib, spinnaker and their weight to the new side (after a tack/gybe). */
+  /** One-shot: the Crew moves jib, spinnaker and their weight to the new side (after a tack/gybe). */
   switchSide?: boolean;
 };
 
@@ -50,7 +50,7 @@ export type BoatState = {
   boomSide: number;
   jibSheet: number;
   spiSheet: number;
-  /** Side the jib / spinnaker is set on and the side the crew sits on (+1 starboard, -1 port). */
+  /** Side the jib / spinnaker is set on and the side the Crew sits on (+1 starboard, -1 port). */
   jibSide: number;
   spiSide: number;
   crewSide: number;
@@ -85,7 +85,7 @@ export type Telemetry = {
   jib?: { angle: number; aoa: number; optimal: number; trimState: TrimState; backed: boolean };
   spi?: { hoist: number; angle: number; optimal: number; trimState: TrimState; collapsed: boolean; wrongSide: boolean };
   crew?: {
-    /** Where the crew weight should be (0..1) to keep the boat flat. */
+    /** Where the Crew's weight should be (0..1) to keep the boat flat. */
     ideal: number;
     onWindward: boolean;
     /** Unbalanced side force (N): + = heeling to leeward (overpowered), - = to windward (too much weight out). */
@@ -155,7 +155,7 @@ function spiEffect(awa: number) {
   return clamp((a - 55) / 30, 0, 1);
 }
 
-/** Best sheet (0..1) for one sail, maximising drive; `cap` limits side force as the crew would. */
+/** Best sheet (0..1) for one sail, maximising drive; `cap` limits side force as the sailors would. */
 export function optimalSheetFor(spec: SailSpec, awa: number, aws: number, cap: number, isSpi = false): number {
   const side = awa >= 0 ? -1 : 1;
   let best = 0, bestDrive = -Infinity;
@@ -176,14 +176,14 @@ export function optimalSheet(cls: BoatClass, awa: number, aws: number): number {
 }
 
 function mainCap(cls: BoatClass) {
-  if (!cls.crew) return cls.hikeForce;
+  if (!cls.crewRighting) return cls.hikeForce;
   const total = cls.main.area + (cls.jib?.area ?? 0);
-  return (cls.hikeForce + cls.crew.trapezeForce) * (cls.main.area / total);
+  return (cls.hikeForce + cls.crewRighting.trapezeForce) * (cls.main.area / total);
 }
 
 /** Crew righting force for a weight position 0 (in) .. 0.5 (hiking) .. 1 (trapeze). */
 export function crewForce(cls: BoatClass, out: number): number {
-  const c = cls.crew;
+  const c = cls.crewRighting;
   if (!c) return 0;
   const o = clamp(out, 0, 1);
   return o <= 0.5 ? c.inForce + (c.hikeForce - c.inForce) * (o / 0.5) : c.hikeForce + (c.trapezeForce - c.hikeForce) * ((o - 0.5) / 0.5);
@@ -191,7 +191,7 @@ export function crewForce(cls: BoatClass, out: number): number {
 
 /** Inverse of crewForce: the weight position that gives `force` (clamped). */
 export function crewOutFor(cls: BoatClass, force: number): number {
-  const c = cls.crew;
+  const c = cls.crewRighting;
   if (!c) return 0;
   if (force <= c.inForce) return 0;
   if (force <= c.hikeForce) return 0.5 * (force - c.inForce) / (c.hikeForce - c.inForce);
@@ -219,7 +219,7 @@ export class BoatSim {
   step(dt: number, controls: Controls, wind: WindField) {
     const s = this.state, cls = this.cls;
 
-    // Actuators: the helm, sheets, crew and spinnaker can't move instantly.
+    // Actuators: the rudder, sheets, Crew weight and spinnaker can't move instantly.
     s.rudder += clamp(controls.rudder - s.rudder, -dt * 4.5, dt * 4.5);
     s.sheet += clamp(controls.sheet - s.sheet, -dt * 0.9, dt * 1.6);
     if (cls.jib && controls.jibSheet !== undefined) s.jibSheet += clamp(controls.jibSheet - s.jibSheet, -dt * 1.2, dt * 2);
@@ -229,7 +229,7 @@ export class BoatSim {
       const rate = want > s.spiHoist ? 1 / cls.spinnaker.hoistTime : 1 / cls.spinnaker.dropTime;
       s.spiHoist += clamp(want - s.spiHoist, -dt * rate, dt * rate);
     }
-    if (cls.crew && controls.crewOut !== undefined) s.crewOut += clamp(controls.crewOut - s.crewOut, -dt * 0.9, dt * 0.7);
+    if (cls.crewRighting && controls.crewOut !== undefined) s.crewOut += clamp(controls.crewOut - s.crewOut, -dt * 0.9, dt * 0.7);
 
     const fx = Math.sin(s.heading), fz = Math.cos(s.heading); // forward
     const sx = Math.cos(s.heading), sz = -Math.sin(s.heading); // starboard
@@ -279,22 +279,22 @@ export class BoatSim {
     drive += windage * -Math.cos(awa);
     side += windage * -Math.sin(awa);
 
-    // Righting: crew weight (if any) plus the helm hiking as much as needed.
+    // Righting: Crew weight (if any) plus the Helm hiking as much as needed.
     const rawSide = side;
     const need = Math.abs(side);
     const crewOnWindward = s.crewSide === -leeward;
-    const crewF = cls.crew ? crewForce(cls, s.crewOut) * (crewOnWindward ? 1 : -1) : 0;
+    const crewF = cls.crewRighting ? crewForce(cls, s.crewOut) * (crewOnWindward ? 1 : -1) : 0;
     const helmF = clamp(need - crewF, 0, cls.hikeForce);
     const balance = need - crewF - helmF; // > 0 overpowered, < 0 too much weight to windward
     let overpowered = false;
     if (balance > 0 && need > 0) {
-      // The crew can't hold the boat flat: it heels and spills power.
+      // The sailors can't hold the boat flat: it heels and spills power.
       const k = Math.max(need - balance, 1) / need;
       drive *= Math.sqrt(k); // drive drops less than side force (sails twist off)
       side *= k;
       overpowered = true;
     } else if (balance < 0) {
-      // Heeled to windward: the boat sails badly and the helm fights it.
+      // Heeled to windward: the boat sails badly and the Helm fights it.
       drive *= 1 - Math.min(0.4, -balance / 600);
     }
 
@@ -346,7 +346,7 @@ export class BoatSim {
     t.tws = w.speed; t.twa = twa; t.aws = aws; t.awa = awa; t.puff = w.puff;
     t.boomAngle = main.angle; t.aoa = main.aoa;
     t.drive = drive; t.sideForce = side; t.overpowered = overpowered;
-    if (cls.crew) {
+    if (cls.crewRighting) {
       const heel = clamp(balance * cls.heelPerN * 1.4 + (need > 20 ? 4 : need * 0.2), -25, 40);
       t.heelDeg = heel * -Math.sign(awa || 1);
     } else {
@@ -358,7 +358,7 @@ export class BoatSim {
 
     if (cls.jib && jib) {
       const total = cls.main.area + cls.jib.area;
-      const cap = (cls.hikeForce + (cls.crew?.trapezeForce ?? 0)) * (cls.jib.area / total);
+      const cap = (cls.hikeForce + (cls.crewRighting?.trapezeForce ?? 0)) * (cls.jib.area / total);
       const opt = optimalSheetFor(cls.jib, awa, aws, cap);
       const backed = s.jibSide !== leeward && Math.abs(awa) < 150 * DEG;
       t.jib = { angle: jib.angle, aoa: jib.aoa, optimal: opt, backed, trimState: irons ? "irons" : trimStateFor(s.jibSheet, opt, awa) };
@@ -372,8 +372,8 @@ export class BoatSim {
         trimState: trimStateFor(s.spiSheet, opt, awa),
       };
     }
-    if (cls.crew) {
-      // Ideal: the helm hikes at ~80%, the crew provides the rest.
+    if (cls.crewRighting) {
+      // Ideal: the Helm hikes at ~80%, the Crew provides the rest.
       t.crew = { ideal: crewOutFor(cls, need - cls.hikeForce * 0.8), onWindward: crewOnWindward, balance };
     }
   }

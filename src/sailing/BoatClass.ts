@@ -16,10 +16,13 @@ export type SailSpec = {
   cd0: number;
 };
 
+/** The closed set of class ids: a misspelt id is a compile error. A new class adds its id here. */
+export type ClassId = "optimist" | "420";
+
 export type BoatClass = {
-  id: string;
+  id: ClassId;
   name: string;
-  /** Boat + crew mass incl. added mass of water, kg. */
+  /** Boat + sailors mass incl. added mass of water, kg. */
   mass: number;
   length: number; // m (LOA)
   beam: number; // m
@@ -39,10 +42,10 @@ export type BoatClass = {
   /** Max rudder deflection (deg) and effective turning length (m). */
   rudderMaxDeg: number;
   turnLength: number;
-  /** Max sideways sail force the helm can hold by hiking (N). Above this the boat heels and spills power. */
+  /** Max sideways sail force the Helm can hold by hiking (N). Above this the boat heels and spills power. */
   hikeForce: number;
-  /** Righting force from the crew sitting in, hiking, and on the trapeze (N). */
-  crew?: { inForce: number; hikeForce: number; trapezeForce: number };
+  /** Two-person classes: righting force from the Crew sitting in, hiking, and on the trapeze (N). */
+  crewRighting?: { inForce: number; hikeForce: number; trapezeForce: number };
   /** Visual heel angle per Newton of unbalanced side force (deg/N). */
   heelPerN: number;
 };
@@ -83,8 +86,19 @@ export const I420: BoatClass = {
   rudderMaxDeg: 32,
   turnLength: 2.2,
   hikeForce: 190,
-  crew: { inForce: 40, hikeForce: 220, trapezeForce: 420 },
+  crewRighting: { inForce: 40, hikeForce: 220, trapezeForce: 420 },
   heelPerN: 0.06,
 };
 
-export const CLASSES: Record<string, BoatClass> = { optimist: OPTIMIST, "420": I420 };
+/** True for classes sailed by a Pair (a Helm and a Crew), false for single-handers. */
+export function isTwoPerson(cls: BoatClass): boolean {
+  return cls.crewRighting !== undefined;
+}
+
+/** Every class, keyed by its id. */
+export const CLASSES: Record<ClassId, BoatClass> = { optimist: OPTIMIST, "420": I420 };
+
+/** True when `id` names a class, e.g. a value read back from the page. */
+export function isClassId(id: string | undefined): id is ClassId {
+  return id !== undefined && Object.hasOwn(CLASSES, id);
+}

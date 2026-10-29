@@ -1,11 +1,17 @@
 import { angleDiff, bearingTo, dirX, dirZ, segmentsCross } from "../core/math";
 import type { BoatSim } from "../sailing/BoatPhysics";
-import { distanceTo, legTarget, type Course, type Line } from "./Course";
-import { judge, newPenalty, trackPenalty, type Penalty } from "./Rules";
+import { distanceTo, legTarget, type Course, type Leg, type Line } from "./Course";
+import { judge, newPenalty, trackPenalty, type Penalty, type RightOfWayRule, type Rule, type VerdictReason } from "./Rules";
+
+/** A sailor on board: the player, or an AI sailor by their own name. The UI words them (`racerName`). */
+export type Sailor = { kind: "player" } | { kind: "ai"; name: string };
+
+/** Who sails a boat: its Helm, and its Crew on two-person classes. */
+export type Sailors = { helm: Sailor; crew: Sailor | null };
 
 export type Racer = {
   id: string;
-  name: string;
+  sailors: Sailors;
   isPlayer: boolean;
   sim: BoatSim;
   /** -1 before starting, then index into course.legs; equals legs.length once finished. */
@@ -25,13 +31,25 @@ export type Racer = {
   dsq: boolean;
 };
 
-export type RaceEvent = {
-  racer: Racer;
-  kind: "start" | "ocs" | "ocs-cleared" | "rounded" | "finish" | "gun" | "warning" | "penalty" | "penalty-done" | "contact";
-  text: string;
-  /** For contacts: the other boat involved. */
-  other?: Racer;
-};
+/**
+ * Something that happened in the race, as data (ADR 0001): the UI words it. `racer` is the boat it concerns;
+ * signals meant for the player (`warning`, `gun`) concern the player's boat.
+ */
+export type RaceEvent =
+  | { kind: "warning"; racer: Racer; /** Seconds left to the gun. */ seconds: number }
+  | { kind: "gun"; racer: Racer }
+  | { kind: "ocs"; racer: Racer }
+  | { kind: "ocs-cleared"; racer: Racer }
+  | { kind: "start"; racer: Racer; /** The leg now being sailed. */ next: Leg }
+  | { kind: "rounded"; racer: Racer; /** The leg just completed. */ rounded: Leg; next: Leg }
+  | { kind: "finish"; racer: Racer; /** Finishing place, or null if disqualified (penalty not served). */ place: number | null }
+  | { kind: "penalty"; racer: Racer; turns: number; rule: Rule }
+  | { kind: "penalty-done"; racer: Racer }
+  /**
+   * Two boats touched and one was at fault. Each boat gets its own event: `other` is the boat it touched,
+   * `atFault` the boat that had to keep clear (`racer` or `other`), under `rule` because of `reason`.
+   */
+  | { kind: "contact"; racer: Racer; other: Racer; atFault: Racer; rule: RightOfWayRule; reason: VerdictReason };
 
 export type Phase = "prestart" | "racing" | "done";
 
@@ -52,9 +70,9 @@ export class Race {
     this.clock = -countdown;
   }
 
-  add(id: string, name: string, sim: BoatSim, isPlayer = false): Racer {
+  add(id: string, sailors: Sailors, sim: BoatSim, isPlayer = false): Racer {
     const r: Racer = {
-      id, name, isPlayer, sim, leg: -1, ocs: false, clearedBack: true, finishTime: null,
+      id, sailors, isPlayer, sim, leg: -1, ocs: false, clearedBack: true, finishTime: null,
       sweep: 0, lastBearing: null, prevX: sim.state.x, prevZ: sim.state.z, penalty: null, dsq: false,
     };
     this.racers.push(r);
@@ -74,8 +92,8 @@ export class Race {
     return mx * dirX(this.course.windDir) + mz * dirZ(this.course.windDir) > 0;
   }
 
-  private emit(racer: Racer, kind: RaceEvent["kind"], text: string, other?: Racer) {
-    this.events.push({ racer, kind, text, other });
+  private emit(event: RaceEvent) {
+    this.events.push(event);
   }
 
   private cooled(key: string) {
@@ -85,12 +103,11 @@ export class Race {
     return true;
   }
 
-  private givePenalty(r: Racer, turns: number, reason: string) {
+  private givePenalty(r: Racer, turns: number, rule: Rule) {
     // One incident, one penalty: while turns are still owed, further bumps don't stack up.
     if (r.finishTime !== null || r.penalty) return;
-    r.penalty = newPenalty(turns, r.sim.state.heading, reason);
-    const total = Math.round(r.penalty.needed / (2 * Math.PI));
-    this.emit(r, "penalty", `Penalità: ${total === 1 ? "un giro" : `${total} giri`} (${reason})`);
+    r.penalty = newPenalty(turns, r.sim.state.heading);
+    this.emit({ kind: "penalty", racer: r, turns, rule });
   }
 
   /** Two boats touched: apply the right-of-way rules. */
@@ -100,16 +117,17 @@ export class Race {
     const v = judge(a.sim, b.sim, this.course.windDir);
     if (!v) return;
     const fault = v.atFault === 0 ? a : b, right = v.atFault === 0 ? b : a;
-    this.emit(fault, "contact", `Contatto con ${right.name}: regola ${v.rule}, ${v.why}`, right);
-    this.emit(right, "contact", `${fault.name} ti ha toccato (regola ${v.rule}): penalità a ${fault.name}`, fault);
-    this.givePenalty(fault, 2, `regola ${v.rule}`);
+    const { rule, reason } = v;
+    this.emit({ kind: "contact", racer: fault, other: right, atFault: fault, rule, reason });
+    this.emit({ kind: "contact", racer: right, other: fault, atFault: fault, rule, reason });
+    this.givePenalty(fault, 2, rule);
   }
 
   /** A boat touched a mark or the committee boat (rule 31). */
   markTouch(r: Racer, markKey: string) {
     if (r.finishTime !== null) return;
     if (!this.cooled(`${r.id}|${markKey}`)) return;
-    this.givePenalty(r, 1, "boa toccata, regola 31");
+    this.givePenalty(r, 1, "31");
   }
 
   update(dt: number) {
@@ -121,7 +139,7 @@ export class Race {
       if (before < t && this.clock >= t && !this.warned.has(t)) {
         this.warned.add(t);
         const p = this.racers.find(r => r.isPlayer);
-        if (p) this.emit(p, "warning", `${-t} secondi alla partenza`);
+        if (p) this.emit({ kind: "warning", racer: p, seconds: -t });
       }
     }
 
@@ -131,18 +149,18 @@ export class Race {
         if (this.aboveStart(r.sim.state.x, r.sim.state.z) > 0) {
           r.ocs = true;
           r.clearedBack = false;
-          this.emit(r, "ocs", "OCS! Partenza anticipata: torna sotto la linea");
+          this.emit({ kind: "ocs", racer: r });
         }
       }
       const p = this.racers.find(r => r.isPlayer);
-      if (p) this.emit(p, "gun", "PARTENZA!");
+      if (p) this.emit({ kind: "gun", racer: p });
     }
 
     for (const r of this.racers) {
       const s = r.sim.state;
       if (r.penalty && trackPenalty(r.penalty, s.heading)) {
         r.penalty = null;
-        this.emit(r, "penalty-done", "Penalità scontata");
+        this.emit({ kind: "penalty-done", racer: r });
       }
       if (this.phase === "racing" && r.finishTime === null) this.updateRacer(r);
       r.prevX = s.x;
@@ -160,14 +178,14 @@ export class Race {
       if (r.ocs && !r.clearedBack) {
         if (this.aboveStart(s.x, s.z) < -2) {
           r.clearedBack = true;
-          this.emit(r, "ocs-cleared", "Rientrato: ora puoi ripartire");
+          this.emit({ kind: "ocs-cleared", racer: r });
         }
         return;
       }
       if (this.crossedUp(r, this.course.start)) {
         r.leg = 0;
         r.ocs = false;
-        this.emit(r, "start", `Partito · ${legs[0].name}`);
+        this.emit({ kind: "start", racer: r, next: legs[0] });
       }
       return;
     }
@@ -180,10 +198,10 @@ export class Race {
         if (r.penalty) {
           r.dsq = true;
           r.penalty = null;
-          this.emit(r, "finish", "ARRIVO, ma penalità non scontata: squalificato (DSQ)");
+          this.emit({ kind: "finish", racer: r, place: null });
         } else {
           const pos = this.racers.filter(o => o.finishTime !== null && !o.dsq).length;
-          this.emit(r, "finish", `ARRIVO! ${pos}° posto`);
+          this.emit({ kind: "finish", racer: r, place: pos });
         }
       }
       return;
@@ -200,8 +218,7 @@ export class Race {
         r.leg++;
         r.sweep = 0;
         r.lastBearing = null;
-        const next = legs[r.leg];
-        this.emit(r, "rounded", `${leg.name} girata · ora: ${next.name}`);
+        this.emit({ kind: "rounded", racer: r, rounded: leg, next: legs[r.leg] });
       }
     } else if (d > ROUND_RADIUS * 2) {
       r.sweep = 0;
