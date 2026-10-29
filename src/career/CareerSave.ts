@@ -2,6 +2,11 @@
  * The Career's saved state and its codec: pure functions between the state and versioned JSON text. No text for the
  * player here (ADR 0001): a save that cannot be read is data (`{ ok: false }`) and the menu words it.
  */
+import { isClassId, type ClassId } from "../sailing/BoatClass";
+import { seasonCalendar } from "./Calendar";
+import { MAX_STARTING_AGE, MIN_STARTING_AGE } from "./Ages";
+import type { RaceEntry } from "./Scoring";
+
 export type CareerState = {
   /** The save format version; `CAREER_VERSION` for anything produced by this code. */
   version: number;
@@ -11,6 +16,15 @@ export type CareerState = {
   startingAge: number;
   /** The current Season, from 1. */
   season: number;
+  /** The class sailed this Season; it picks the Season's calendar. */
+  classId: ClassId;
+  /** The Regatta in progress, as an index into the calendar. */
+  regattaIndex: number;
+  /**
+   * The Races sailed so far this Season, by Regatta: `results[i]` holds the Races of calendar Regatta `i`, so there
+   * are `regattaIndex + 1` lists, every earlier Regatta complete and the current one possibly empty.
+   */
+  results: RaceEntry[][][];
 };
 
 export const CAREER_VERSION = 1;
@@ -30,10 +44,27 @@ export type CareerMigration = (saved: Record<string, unknown>) => Record<string,
  */
 export const CAREER_MIGRATIONS: Readonly<Record<number, CareerMigration>> = {};
 
+const STATUSES: readonly string[] = ["finished", "ocs", "dsq", "dnf"];
+
 const isInt = (v: unknown, min: number): v is number => typeof v === "number" && Number.isInteger(v) && v >= min;
 
 function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === "object" && v !== null && !Array.isArray(v);
+}
+
+function isEntry(v: unknown): v is RaceEntry {
+  if (!isRecord(v) || typeof v.id !== "string" || v.id === "" || typeof v.status !== "string" || !STATUSES.includes(v.status)) return false;
+  return v.status === "finished" ? isInt(v.place, 1) : v.place === undefined;
+}
+
+/** The Races of the Regattas begun so far: one list per Regatta up to `regattaIndex`, earlier ones complete. */
+function isResults(v: unknown, classId: ClassId, regattaIndex: number): v is RaceEntry[][][] {
+  const calendar = seasonCalendar(classId);
+  if (regattaIndex >= calendar.length || !Array.isArray(v) || v.length !== regattaIndex + 1) return false;
+  return v.every((races: unknown, i) =>
+    Array.isArray(races)
+    && (i < regattaIndex ? races.length === calendar[i].races : races.length <= calendar[i].races)
+    && races.every(race => Array.isArray(race) && race.length > 0 && race.every(isEntry)));
 }
 
 /**
@@ -55,9 +86,12 @@ export function decodeCareer(
       saved = step(saved);
       version++;
     }
-    const { seed, startingAge, season } = saved;
-    if (!isInt(seed, 0) || !isInt(startingAge, 1) || !isInt(season, 1)) return { ok: false };
-    return { ok: true, state: { version: current, seed, startingAge, season } };
+    const { seed, startingAge, season, classId, regattaIndex, results } = saved;
+    if (!isInt(seed, 0) || !isInt(season, 1)) return { ok: false };
+    if (!isInt(startingAge, MIN_STARTING_AGE) || startingAge > MAX_STARTING_AGE) return { ok: false };
+    if (typeof classId !== "string" || !isClassId(classId)) return { ok: false };
+    if (!isInt(regattaIndex, 0) || !isResults(results, classId, regattaIndex)) return { ok: false };
+    return { ok: true, state: { version: current, seed, startingAge, season, classId, regattaIndex, results } };
   } catch {
     return { ok: false };
   }

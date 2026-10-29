@@ -37,7 +37,12 @@ src/
   career/    Scoring.ts (low-point Race Points, Regatta ranking with the Discard and sailing tie-breaks, Season
              ranking; pure data in and out, ids and numbers, no text)
              CareerSave.ts (`CareerState`, the versioned save codec `encodeCareer`/`decodeCareer` with migrations by
-             version, `{ ok: false }` for anything unreadable; `loadCareer`/`saveCareer` on the `sl-career` key)
+             version, `{ ok: false }` for anything unreadable; `loadCareer`/`saveCareer` on the `sl-career` key; the state
+             holds starting age, Season, class, Regatta index and the Races sailed so far)
+             Calendar.ts (`Regatta` and the 0.5 Season calendar constants per class: 4 Regattas x 3 Races, Discard from
+             the third, entry rule `open`)
+             Ages.ts (`ageInSeason`, `canRace` against a class's Age limit, the starting-age range)
+             Career.ts (`startCareer`: a pure operation giving Season 1)
   world/     Ocean.ts (Gerstner waves in GLSL), Waves.ts (same waves on CPU), BoatViewBase.ts (what both boat
              visuals share: wave riding, heel, boom swing, rudder, burgee; each class gives its `BoatMotion` and
              draws its own sails and sailors), BoatView.ts (Optimist), Boat420View.ts, SailorFigure.ts (the sailor
@@ -79,6 +84,8 @@ tests/       Vitest tests (npm test): smoke.test.ts (every AI-only race finishes
              race-names.test.ts (leg and boat names of every session setup read as before)
              career-scoring.test.ts (low point, OCS/DSQ, Discard, tie-breaks incl. after the Discard, Season ranking)
              career-save.test.ts (save round trip, migrations, unreadable saves never throw, the storage adapter)
+             career-calendar.test.ts (the 0.5 calendars), career-ages.test.ts (ages, `canRace` at 14/15/16)
+             career-start.test.ts (starting a Career: Season 1 at the chosen age)
              sailors.test.ts (rosters, Partner swap, Crew Chemistry values as the menu shows them)
              player-choice.test.ts (Crew with Full Boat Control is a type error; the Partner set up per choice)
              crew-side.test.ts (the shared Crew wrong-side check)
