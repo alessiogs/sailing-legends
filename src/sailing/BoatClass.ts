@@ -22,6 +22,8 @@ export type ClassId = "optimist" | "420";
 export type BoatClass = {
   id: ClassId;
   name: string;
+  /** The oldest age at which a sailor may race this class (the Age limit); absent when there is none. */
+  ageLimit?: number;
   /** Boat + sailors mass incl. added mass of water, kg. */
   mass: number;
   length: number; // m (LOA)
@@ -53,6 +55,7 @@ export type BoatClass = {
 export const OPTIMIST: BoatClass = {
   id: "optimist",
   name: "Optimist",
+  ageLimit: 15,
   mass: 88,
   length: 2.31,
   beam: 1.13,

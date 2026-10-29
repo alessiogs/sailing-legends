@@ -5,11 +5,33 @@
 import { describe, expect, it } from "vitest";
 import { CAREER_KEY, decodeCareer, encodeCareer, loadCareer, saveCareer, type CareerStorage, type CareerMigration, type CareerState } from "../src/career/CareerSave";
 
-const STATE: CareerState = { version: 1, seed: 12345, startingAge: 10, season: 1 };
+const STATE: CareerState = {
+  version: 1, seed: 12345, startingAge: 10, season: 2, classId: "optimist", regattaIndex: 1,
+  results: [
+    [[{ id: "me", status: "finished", place: 2 }, { id: "luca", status: "finished", place: 1 }],
+     [{ id: "me", status: "dnf" }, { id: "luca", status: "finished", place: 1 }],
+     [{ id: "me", status: "ocs" }, { id: "luca", status: "finished", place: 1 }]],
+    [[{ id: "me", status: "dsq" }, { id: "luca", status: "finished", place: 1 }]],
+  ],
+};
+/** The same fields as text, written out by hand. */
+const STATE_TEXT = '{"version":1,"seed":12345,"startingAge":10,"season":2,"classId":"optimist","regattaIndex":1,"results":['
+  + '[[{"id":"me","status":"finished","place":2},{"id":"luca","status":"finished","place":1}],'
+  + '[{"id":"me","status":"dnf"},{"id":"luca","status":"finished","place":1}],'
+  + '[{"id":"me","status":"ocs"},{"id":"luca","status":"finished","place":1}]],'
+  + '[[{"id":"me","status":"dsq"},{"id":"luca","status":"finished","place":1}]]]}';
+/** A fresh Career's text, for the cases that vary one field. */
+const field = (name: string, value: string) => {
+  const fields: Record<string, string> = {
+    version: "1", seed: "12345", startingAge: "10", season: "1", classId: '"optimist"', regattaIndex: "0", results: "[[]]",
+  };
+  fields[name] = value;
+  return "{" + Object.entries(fields).filter(([, v]) => v !== "").map(([k, v]) => `"${k}":${v}`).join(",") + "}";
+};
 
 describe("career save codec", () => {
   it("saves in the stored format", () => {
-    expect(encodeCareer(STATE)).toBe('{"version":1,"seed":12345,"startingAge":10,"season":1}');
+    expect(encodeCareer(STATE)).toBe(STATE_TEXT);
   });
   it("loads what it saved", () => {
     expect(decodeCareer(encodeCareer(STATE))).toEqual({ ok: true, state: STATE });
@@ -22,31 +44,44 @@ describe("career save codec", () => {
   });
   it("is unreadable when a field has the wrong type or is out of range", () => {
     const bad = [
-      '{"version":1,"seed":"12345","startingAge":10,"season":1}',
-      '{"version":1,"seed":12345,"startingAge":10}',
-      '{"version":1,"seed":1.5,"startingAge":10,"season":1}',
-      '{"version":1,"seed":12345,"startingAge":10,"season":0}',
-      '{"version":1,"seed":12345,"startingAge":null,"season":1}',
+      field("seed", '"12345"'), field("seed", "1.5"), field("seed", "-1"),
+      field("startingAge", "null"), field("startingAge", "7"), field("startingAge", "13"), field("startingAge", "10.5"),
+      field("season", ""), field("season", "0"),
+      field("classId", ""), field("classId", '"ilca"'), field("classId", "420"),
+      field("regattaIndex", ""), field("regattaIndex", "-1"), field("regattaIndex", "4"), field("regattaIndex", "1"),
+      field("results", ""), field("results", "{}"), field("results", "[]"), field("results", "[[],[]]"),
+      field("results", "[[1]]"),
+      field("results", "[[[]]]"),
+      // Regatta 2 of the Season begun while Regatta 1 has no Races
+      `{"version":1,"seed":1,"startingAge":10,"season":1,"classId":"optimist","regattaIndex":1,"results":[[],[]]}`,
+      field("results", "[[[1]]]"),
+      field("results", '[[[{"id":"me","status":"finished"}]]]'),
+      field("results", '[[[{"id":"me","status":"finished","place":0}]]]'),
+      field("results", '[[[{"id":"me","status":"won","place":1}]]]'),
+      field("results", '[[[{"id":7,"status":"finished","place":1}]]]'),
+      field("results", '[[[{"id":"me","status":"ocs","place":1}]]]'),
+      // four Races in a Regatta of three
+      field("results", "[[[{\"id\":\"me\",\"status\":\"dnf\"}],[{\"id\":\"me\",\"status\":\"dnf\"}],[{\"id\":\"me\",\"status\":\"dnf\"}],[{\"id\":\"me\",\"status\":\"dnf\"}]]]"),
     ];
     for (const text of bad) expect(decodeCareer(text)).toEqual({ ok: false });
   });
   it("is unreadable for a version it does not know, older than the first or newer than this game", () => {
-    expect(decodeCareer('{"version":0,"seed":1,"startingAge":10,"season":1}')).toEqual({ ok: false });
-    expect(decodeCareer('{"version":99,"seed":1,"startingAge":10,"season":1}')).toEqual({ ok: false });
-    expect(decodeCareer('{"seed":1,"startingAge":10,"season":1}')).toEqual({ ok: false });
+    expect(decodeCareer(field("version", "0"))).toEqual({ ok: false });
+    expect(decodeCareer(field("version", "99"))).toEqual({ ok: false });
+    expect(decodeCareer(field("version", ""))).toEqual({ ok: false });
   });
 
   describe("migrations", () => {
-    // A pretend history: version 1 stored `age`, version 2 calls it `startingAge`, version 3 added `season`.
+    // A pretend history: version 1 stored `age`, version 2 calls it `startingAge`, version 3 added the rest.
     const migrations: Record<number, CareerMigration> = {
       1: ({ age, ...rest }) => ({ ...rest, startingAge: age }),
-      2: saved => ({ ...saved, season: 1 }),
+      2: saved => ({ ...saved, season: 1, classId: "optimist", regattaIndex: 0, results: [[]] }),
     };
     it("runs every step from the saved version up to the current one", () => {
       const v1 = '{"version":1,"seed":7,"age":9}';
-      expect(decodeCareer(v1, migrations, 3)).toEqual({ ok: true, state: { version: 3, seed: 7, startingAge: 9, season: 1 } });
+      expect(decodeCareer(v1, migrations, 3)).toEqual({ ok: true, state: { version: 3, seed: 7, startingAge: 9, season: 1, classId: "optimist", regattaIndex: 0, results: [[]] } });
       const v2 = '{"version":2,"seed":7,"startingAge":11}';
-      expect(decodeCareer(v2, migrations, 3)).toEqual({ ok: true, state: { version: 3, seed: 7, startingAge: 11, season: 1 } });
+      expect(decodeCareer(v2, migrations, 3)).toEqual({ ok: true, state: { version: 3, seed: 7, startingAge: 11, season: 1, classId: "optimist", regattaIndex: 0, results: [[]] } });
     });
     it("is unreadable when a step is missing or throws", () => {
       expect(decodeCareer('{"version":1,"seed":7,"age":9}', { 2: migrations[2] }, 3)).toEqual({ ok: false });
@@ -71,7 +106,7 @@ describe("career save storage", () => {
     saveCareer(storage, STATE);
     expect(Object.keys(store)).toEqual([CAREER_KEY]);
     expect(CAREER_KEY).toBe("sl-career");
-    expect(store["sl-career"]).toBe('{"version":1,"seed":12345,"startingAge":10,"season":1}');
+    expect(store["sl-career"]).toBe(STATE_TEXT);
     expect(loadCareer(storage)).toEqual({ ok: true, state: STATE });
   });
   it("finds no save (null) when nothing is stored or the storage is unavailable", () => {
