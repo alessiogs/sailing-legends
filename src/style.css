@@ -164,3 +164,4 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .regattas .n { color: var(--muted); text-align: center; font-weight: 700; }
 .regattas .s { font-size: 12px; color: var(--muted); }
 .regattas .current .s { color: var(--accent); }
+#results .ghost { margin-top: 8px; }
