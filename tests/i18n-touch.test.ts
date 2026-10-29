@@ -26,7 +26,7 @@ describe("touch wording", () => {
 
   it("names no key in any touch variant", () => {
     setTouchWording(true);
-    const text = [t("results.hint"), t("pause.restartHint"), t("hud.hint"), t("hud.sheet.in"), t("hud.gauge.out"), t("trim.luffing"), t("call.spiHoist", { name: "X" })];
+    const text = [t("results.hint"), t("pause.restartHint"), t("hud.hint"), t("hud.slider.in"), t("hud.gauge.out"), t("trim.luffing"), t("trim.stalled"), t("call.spiHoist", { name: "X" })];
     for (const line of text) expect(line).not.toMatch(/\((W|S|A|D|E)\)|premi E|Spazio|\bR per\b/);
   });
 });

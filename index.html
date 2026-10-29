@@ -10,66 +10,87 @@
       <canvas id="game"></canvas>
       <div id="tags"></div>
 
-      <section id="hud" class="hidden">
-        <div class="top-left">
-          <div class="brand">SAILING <b>LEGENDS</b><span id="version-chip"></span></div>
-          <div class="race-card panel">
-            <div class="race-row">
-              <div><small id="phase" data-i18n="hud.phase.prestart"></small><strong id="clock" class="big">-0:45</strong></div>
-              <div class="pos"><small data-i18n="hud.label.position"></small><strong id="position" class="big">–</strong></div>
-            </div>
-            <div id="leg" class="leg"></div>
-            <div id="target" class="target">—</div>
-            <div id="chem" class="chem hidden"></div>
-            <div id="penalty" class="penalty hidden">
-              <div id="penalty-text"></div>
-              <div class="penalty-track"><i id="penalty-bar"></i></div>
-            </div>
+      <section id="hud" class="off">
+        <header id="strip" data-hud>
+          <i class="strip-bar"></i>
+          <div class="strip-place" id="position" role="group" data-i18n-aria-label="hud.label.position"><strong id="place">–</strong><span id="boats"></span></div>
+          <div class="strip-main">
+            <strong id="clock">-0:45</strong>
+            <span class="strip-line"><span id="leg"></span> · <span id="target"></span></span>
+          </div>
+          <button id="touch-pause" class="strip-pause" type="button" data-action="pause" data-i18n-aria-label="touch.pause">
+            <svg width="18" height="18" viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3v10M11 3v10" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round"/></svg>
+          </button>
+        </header>
+
+        <div id="pill" data-hud>
+          <canvas id="compass" width="216" height="216" data-i18n-aria-label="hud.compass"></canvas>
+          <div class="pill-text">
+            <div class="pill-speed"><strong id="speed">0.0</strong><em>kn</em></div>
+            <div id="pill-line" class="pill-line"></div>
           </div>
         </div>
 
-        <ol id="standings" class="panel"></ol>
-
-        <div class="bottom-left">
-          <canvas id="compass" width="300" height="300" data-i18n-aria-label="hud.compass"></canvas>
-          <div class="instruments">
-            <div class="panel stat"><small data-i18n="hud.label.speed"></small><strong id="speed">0.0</strong><em>kn</em></div>
-            <div class="panel stat"><small data-i18n="hud.label.vmg"></small><strong id="vmg">0.0</strong><em>kn</em></div>
-            <div class="panel stat"><small data-i18n="hud.label.trueWind"></small><strong id="twa">0°</strong><em id="tws">11 kn</em></div>
-            <div class="panel stat"><small data-i18n="hud.label.heel"></small><strong id="heel">0°</strong><em id="leeway"></em></div>
-          </div>
-          <div id="shift" class="shift"></div>
+        <div id="round-buttons">
+          <button id="touch-camera" class="round" type="button" data-hud data-action="camera" data-i18n-aria-label="touch.camera">
+            <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><rect x="2" y="6" width="16" height="11" rx="2" stroke="currentColor" stroke-width="1.8" fill="none"/><circle cx="10" cy="11.5" r="3" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M7 6l1.5-2.5h3L13 6" stroke="currentColor" stroke-width="1.8" fill="none"/></svg>
+          </button>
+          <button id="panel-toggle" class="round" type="button" data-hud aria-pressed="false" data-i18n-aria-label="hud.panelToggle">
+            <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 15V9M10 15V4M16 15v-4" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round"/></svg>
+          </button>
         </div>
 
-        <div class="trim panel">
-          <div id="call" class="call hidden"></div>
-          <div class="tiller" id="gauge-zone">
-            <small id="gauge-label" data-i18n="hud.gauge.tiller"></small>
-            <div class="tiller-bar"><i id="tiller-pos"></i><b id="gauge-center"></b><u id="gauge-ideal"></u></div>
-            <div class="trim-ends"><span id="gauge-left" data-i18n="hud.gauge.left"></span><span id="gauge-right" data-i18n="hud.gauge.right"></span></div>
-          </div>
-          <div class="trim-head"><small id="sail-label" data-i18n="hud.sail.single"></small><span id="auto-trim-chip" class="chip" data-i18n="hud.autoTrimChip"></span></div>
-          <div id="trim-zone" class="trim-zone">
-            <div class="trim-bar">
-              <div id="trim-opt" class="trim-opt"></div>
-              <div id="trim-cur" class="trim-cur"></div>
+        <div id="flow">
+          <div id="toast"></div>
+          <div id="stack">
+            <div id="status">
+              <div id="trim-pill" class="status-pill" data-hud><span id="sail-label"></span> · <span id="trim-state">—</span></div>
+              <div id="shift" class="status-pill" data-hud></div>
+              <div id="call" class="status-pill warn hidden" data-hud></div>
+              <div id="penalty" class="status-pill bad hidden" data-hud>
+                <span id="penalty-text"></span>
+                <span class="penalty-track"><i id="penalty-bar"></i></span>
+              </div>
             </div>
-            <div class="trim-ends"><span data-i18n="hud.sheet.in"></span><span data-i18n="hud.sheet.out"></span></div>
+            <section id="panel" class="hidden" data-hud>
+              <div class="panel-stats">
+                <div class="stat"><small data-i18n="hud.label.trueWind"></small><strong id="twa">0°</strong><em id="tws">11 kn</em></div>
+                <div class="stat"><small data-i18n="hud.label.heel"></small><strong id="heel">0°</strong><em id="leeway"></em></div>
+              </div>
+              <div class="panel-body">
+                <ol id="standings"></ol>
+                <canvas id="minimap" width="400" height="460" data-i18n-aria-label="hud.minimap.label"></canvas>
+              </div>
+              <div id="chem" class="panel-line hidden"></div>
+              <div id="partner-line" class="panel-line hidden"></div>
+              <div id="hint" class="panel-line" data-i18n="hud.hint"></div>
+            </section>
           </div>
-          <div id="trim-state" class="trim-state">—</div>
-          <div id="partner-line" class="partner-line hidden"></div>
         </div>
 
-        <canvas id="minimap" width="400" height="460" class="panel" data-i18n-aria-label="hud.minimap.label"></canvas>
-        <div id="hint" class="hint" data-i18n="hud.hint"></div>
-        <div id="touch-actions" class="touch-actions"></div>
+        <div class="tiller" id="gauge-zone" data-hud>
+          <div class="tiller-ends"><span id="gauge-left" data-i18n="hud.gauge.left"></span><small id="gauge-label" data-i18n="hud.gauge.tiller"></small><span id="gauge-right" data-i18n="hud.gauge.right"></span></div>
+          <div class="tiller-bar"><div class="tiller-track" id="tiller-track"><b id="gauge-center"></b><u id="gauge-ideal"></u><i id="tiller-pos"></i></div></div>
+        </div>
+
+        <div id="deck-right">
+          <div id="context-buttons">
+            <button id="touch-auto-trim" class="ctx" type="button" data-hud data-action="autoTrim" data-i18n="touch.autoTrim"></button>
+            <button id="touch-spi" class="ctx only-two" type="button" data-hud data-action="spi" data-i18n="touch.spinnaker"></button>
+            <button id="touch-switch" class="ctx only-crew" type="button" data-hud data-action="switch" data-i18n="touch.switchSide"></button>
+          </div>
+        </div>
+
+        <div class="slider" id="trim-zone" data-hud>
+          <span class="slider-end" data-i18n="hud.slider.in"></span>
+          <div class="slider-bar"><div class="slider-track" id="trim-track"><div id="trim-opt" class="trim-opt"></div><div id="trim-cur" class="trim-cur"></div></div></div>
+          <span class="slider-end" data-i18n="hud.slider.ease"></span>
+        </div>
       </section>
-
-      <div id="toast"></div>
 
       <section id="menu" class="overlay">
         <div class="sheet">
-          <div class="brand lg">SAILING <b>LEGENDS</b></div>
+          <div class="brand lg">SAILING <b>LEGENDS</b><span id="version-chip"></span></div>
           <p class="lede"><span id="lede-class" data-i18n="menu.lede.single"></span> · <span data-i18n="menu.lede.course"></span></p>
           <div class="controls">
             <div><kbd>A</kbd><kbd>D</kbd> / <kbd>←</kbd><kbd>→</kbd><span data-i18n="menu.keys.tiller"></span></div>

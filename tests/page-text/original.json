@@ -1,19 +1,18 @@
 {
   "lines": [
-    "SAILING LEGENDS",
-    "PRE-PARTENZA-0:45",
-    "POSIZIONE–",
-    "—",
-    "VELOCITÀ0.0kn",
-    "VMG BOA0.0kn",
+    "–",
+    "-0:45  ·",
+    "0.0kn",
+    "· —",
     "VENTO REALE0°11 kn",
     "SBANDAMENTO0°",
-    "BARRA DEL TIMONE",
-    "◀ SINISTRADESTRA ▶",
-    "REGOLAZIONE VELAAUTO",
-    "◀ CAZZA (W)LASCA (S) ▶",
-    "—",
     "H: aiuto · C: camera · T: auto-vela · V: audio · P: pausa",
+    "◀ SXTIMONEDX ▶",
+    "Auto-vela",
+    "Spi",
+    "Cambio lato",
+    "CAZZA",
+    "LASCA",
     "SAILING LEGENDS",
     "Prova Optimist · Bastone (bolina – poppa – bolina). Partenza con 45 secondi di procedura. Leggi il vento: le zone d'acqua più scure sono raffiche.",
     "AD / ←→Barra (Shift = fine)",
@@ -116,7 +115,11 @@
     "Caricamento regata…"
   ],
   "ariaLabels": [
+    "POSIZIONE",
+    "Pausa",
     "Bussola del vento",
+    "Camera",
+    "Classifica e mappa",
     "Mappa del campo di regata"
   ]
 }

@@ -25,7 +25,7 @@ describe("HUD panel as Helm", () => {
     const { s, tel, panel } = setup(HELM);
     s.crewOut = 0.5; s.spiHoist = 0;
     expect(panel(-0.4, true)).toEqual({
-      gauge: { label: "BARRA DEL TIMONE", value: -0.4, centered: true, ends: ["◀ SINISTRA", "DESTRA ▶"] },
+      gauge: { label: "TIMONE", value: -0.4, centered: true, ends: ["◀ SX", "DX ▶"] },
       sail: { label: "RANDA", sheet: s.sheet, optimal: tel.optimalSheet, state: tel.trimState, autoTrim: true },
       call: null,
       partnerLine: "Giulia: in cinghia · spi giù",
@@ -48,7 +48,7 @@ describe("HUD panel in Full Boat Control", () => {
     s.crewOut = 0.5; s.spiHoist = 0;
     const p = panel();
     expect(p.partnerLine).toBe("Giulia: in cinghia · spi giù · Spazio = issa/ammaina");
-    expect(p.gauge.label).toBe("BARRA DEL TIMONE");
+    expect(p.gauge.label).toBe("TIMONE");
     expect(p.call).toBe(null);
   });
 });
@@ -57,7 +57,7 @@ describe("HUD panel in a single-hander", () => {
   it("shows the tiller and the one sail, with no Partner and no Crew Chemistry", () => {
     const { s, tel, panel } = setup(HELM, OPTIMIST);
     expect(panel(0.25)).toEqual({
-      gauge: { label: "BARRA DEL TIMONE", value: 0.25, centered: true, ends: ["◀ SINISTRA", "DESTRA ▶"] },
+      gauge: { label: "TIMONE", value: 0.25, centered: true, ends: ["◀ SX", "DX ▶"] },
       sail: { label: "REGOLAZIONE VELA", sheet: s.sheet, optimal: tel.optimalSheet, state: tel.trimState, autoTrim: false },
       call: null,
       partnerLine: null,
@@ -84,7 +84,7 @@ describe("HUD panel as Crew", () => {
   it("shows the Crew's own weight against the ideal, the jib, the Helm line and Crew Chemistry", () => {
     const { s, tel, panel } = quiet();
     expect(panel(0.9, true)).toEqual({
-      gauge: { label: "IL TUO PESO · IN CINGHIA", value: 0.5, centered: false, ideal: 0.4, ends: ["◀ DENTRO (A)", "FUORI / TRAPEZIO (D) ▶"] },
+      gauge: { label: "IN CINGHIA", value: 0.5, centered: false, ideal: 0.4, ends: ["◀ DENTRO", "FUORI ▶"] },
       sail: { label: "FIOCCO", sheet: s.jibSheet, optimal: tel.jib!.optimal, state: tel.jib!.trimState, autoTrim: true },
       call: null,
       partnerLine: "Giulia al timone e alla randa · spi: giù",
@@ -95,9 +95,9 @@ describe("HUD panel as Crew", () => {
   it("words the Crew's own weight", () => {
     const { s, panel } = quiet();
     s.crewOut = 0.1;
-    expect(panel().gauge.label).toBe("IL TUO PESO · SEDUTO DENTRO");
+    expect(panel().gauge.label).toBe("SEDUTO DENTRO");
     s.crewOut = 1;
-    expect(panel().gauge.label).toBe("IL TUO PESO · AL TRAPEZIO");
+    expect(panel().gauge.label).toBe("AL TRAPEZIO");
   });
 
   it("trims the spinnaker once it is drawing", () => {
