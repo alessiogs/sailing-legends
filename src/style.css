@@ -57,14 +57,15 @@ strong { font-weight: 650; font-variant-numeric: tabular-nums; }
 
 /* One column under the compass pill: the message pill (its slot is kept, so what is below never jumps), then the status
    pills (shift, Partner's call, penalty) and the Standings/map panel. */
-#flow { position: absolute; top: 150px; left: 8px; right: 8px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+#flow { position: absolute; top: 122px; left: 56px; right: 56px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
 #toast { width: 100%; min-height: 28px; display: flex; justify-content: center; align-items: flex-start; pointer-events: none; }
 #toast div { max-width: 100%; padding: 4px 10px; border-radius: 6px; background: var(--glass); color: #fff; font-family: var(--cond); font-weight: 700; font-size: 13px; line-height: 1.15; letter-spacing: .03em; text-align: center; text-transform: uppercase; animation: toast 3.2s ease forwards; }
 #toast div.big { font-size: 17px; color: var(--boat); }
 #toast div.good { color: var(--lift); box-shadow: inset 3px 0 0 var(--lift); }
 #toast div.bad { color: var(--alert); box-shadow: inset 3px 0 0 var(--alert); }
 @keyframes toast { 0% { opacity: 0; transform: translateY(8px); } 8% { opacity: 1; transform: none; } 80% { opacity: 1; } 100% { opacity: 0; } }
-#stack { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+#stack { display: contents; }
+#status { order: 0; } #toast { order: 1; } #panel { order: 2; }
 #hud.off > :not(#flow), #hud.off #stack { display: none; }
 #status { display: flex; flex-direction: column; align-items: center; gap: 6px; max-width: 100%; }
 .status-pill { max-width: 100%; padding: 3px 9px; border-radius: 6px; background: var(--glass); font-family: var(--cond); font-weight: 700; font-size: 12px; line-height: 1.15; letter-spacing: .03em; text-transform: uppercase; text-align: center; }
@@ -151,8 +152,8 @@ strong { font-weight: 650; font-variant-numeric: tabular-nums; }
 .controls .pad { grid-column: 1 / -1; color: var(--muted); }
 kbd { display: inline-block; min-width: 22px; text-align: center; padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(255,255,255,.2); background: rgba(255,255,255,.06); font: 600 11px ui-monospace, SFMono-Regular, Menlo, monospace; }
 .options { display: flex; flex-wrap: wrap; gap: 14px 24px; align-items: flex-end; margin: 18px 0 6px; }
-.seg { display: inline-flex; border: 1px solid rgba(255,255,255,.18); border-radius: 7px; overflow: hidden; }
-.seg button { background: transparent; color: var(--ink); border: 0; padding: 7px 11px; font: inherit; font-size: 12px; cursor: pointer; }
+.seg { display: inline-grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); border: 1px solid rgba(255,255,255,.18); border-radius: 7px; overflow: hidden; }
+.seg button { min-width: 0; text-align: center; background: transparent; color: var(--ink); border: 0; padding: 7px 11px; font: inherit; font-size: 12px; cursor: pointer; }
 .seg button + button { border-left: 1px solid rgba(255,255,255,.18); }
 .seg button.on { background: var(--boat); color: #081622; font-weight: 700; }
 .check { display: flex; gap: 8px; align-items: center; font-size: 13px; cursor: pointer; }
@@ -223,8 +224,7 @@ html, body { touch-action: none; -webkit-user-select: none; user-select: none; -
   .overlay { padding: 10px; }
   .sheet { padding: 18px 16px; border-radius: 12px; }
   .options { flex-direction: column; align-items: stretch; gap: 12px; }
-  .seg { display: flex; flex-wrap: wrap; }
-  .seg button { flex: 1 1 auto; }
+  .seg { display: grid; }
   .row-btns, .career-btns { flex-wrap: wrap; }
   .row-btns > *, .career-btns > * { flex: 1 1 140px; }
   .brand.lg { font-size: 19px; white-space: normal; }
