@@ -155,17 +155,70 @@ function spiEffect(awa: number) {
   return clamp((a - 55) / 30, 0, 1);
 }
 
-/** Best sheet (0..1) for one sail, maximising drive; `cap` limits side force as the sailors would. */
+/** Sheet steps sampled by `optimalSheetFor`: 0, 1/40, ..., 1. */
+const SHEET_STEPS = 40;
+
+/** Per sail: the sheet angle at each sampled sheet, with its cosine and sine (pure functions of the spec). */
+type SheetTable = { angle: Float64Array; cos: Float64Array; sin: Float64Array };
+const sheetTables = new WeakMap<SailSpec, SheetTable>();
+
+function sheetTable(spec: SailSpec): SheetTable {
+  let t = sheetTables.get(spec);
+  if (t) return t;
+  const n = SHEET_STEPS + 1;
+  t = { angle: new Float64Array(n), cos: new Float64Array(n), sin: new Float64Array(n) };
+  for (let i = 0; i < n; i++) {
+    // Same expression as sailForce, so the angles are bit-identical.
+    const a = (spec.minSheetDeg + clamp(i / SHEET_STEPS, 0, 1) * (spec.maxSheetDeg - spec.minSheetDeg)) * DEG;
+    t.angle[i] = a; t.cos[i] = Math.cos(a); t.sin[i] = Math.sin(a);
+  }
+  sheetTables.set(spec, t);
+  return t;
+}
+
+/**
+ * Best sheet (0..1) for one sail, maximising drive; `cap` limits side force as the sailors would.
+ *
+ * Samples the sheet in 41 steps and keeps the first best one. It gives exactly the result of calling
+ * `sailForce` at every step on the leeward side, only cheaper:
+ * - the sail is on the leeward side, so once the sheet angle reaches the apparent wind the sail luffs at the
+ *   wind and every further step gives the same drive, which can't beat the best: the search stops there;
+ * - a spinnaker with no effect (wind forward of the beam) gives zero drive at every step, so the answer is 0;
+ * - the sheet angles and their sines and cosines come from a per-sail table, and nothing is allocated.
+ */
 export function optimalSheetFor(spec: SailSpec, awa: number, aws: number, cap: number, isSpi = false): number {
+  const effect = isSpi ? spiEffect(awa) : 1;
+  if (effect === 0) return 0;
   const side = awa >= 0 ? -1 : 1;
+  const absAwa = Math.abs(awa);
+  const w = Math.max(aws, 0.5);
+  const q = 0.5 * AIR * w * w * spec.area;
+  const flowF = -Math.cos(awa);
+  const flowS = -Math.sin(awa);
+  const absCos = Math.cos(absAwa), absSin = Math.sin(absAwa);
+  const tab = sheetTable(spec);
   let best = 0, bestDrive = -Infinity;
-  for (let i = 0; i <= 40; i++) {
-    const s = i / 40;
-    const f = sailForce(spec, awa, Math.max(aws, 0.5), s, side);
-    let d = f.drive;
-    if (Math.abs(f.side) > cap) d *= Math.sqrt(cap / Math.abs(f.side));
-    if (isSpi) d *= spiEffect(awa);
-    if (d > bestDrive + 1e-6) { bestDrive = d; best = s; }
+  for (let i = 0; i <= SHEET_STEPS; i++) {
+    // Leeward side: the sail weathervanes once eased past the wind (as in sailForce).
+    const luffing = tab.angle[i] >= absAwa;
+    const angle = luffing ? absAwa : tab.angle[i];
+    let aoa = Math.abs(wrapPi(awa + side * angle));
+    if (aoa > Math.PI / 2) aoa = Math.PI - aoa;
+    const aDeg = aoa / DEG;
+    const cl = liftCoeff(spec, aDeg);
+    const cd = dragCoeff(spec, aDeg, cl);
+    const chordF = -(luffing ? absCos : tab.cos[i]), chordS = side * (luffing ? absSin : tab.sin[i]);
+    let leeF = -chordS, leeS = chordF;
+    if (leeF * flowF + leeS * flowS < 0) { leeF = -leeF; leeS = -leeS; }
+    let liftF = -flowS, liftS = flowF;
+    if (liftF * leeF + liftS * leeS < 0) { liftF = -liftF; liftS = -liftS; }
+    const fSide = q * (cl * liftS + cd * flowS);
+    let d = q * (cl * liftF + cd * flowF);
+    if (Math.abs(fSide) > cap) d *= Math.sqrt(cap / Math.abs(fSide));
+    if (isSpi) d *= effect;
+    if (d > bestDrive + 1e-6) { bestDrive = d; best = i / SHEET_STEPS; }
+    // Every further step luffs at the wind too and gives this same drive, which can't beat the best.
+    if (luffing) break;
   }
   return best;
 }
