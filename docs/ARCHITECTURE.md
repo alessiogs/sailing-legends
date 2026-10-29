@@ -89,6 +89,7 @@ tests/       Vitest tests (npm test): smoke.test.ts (every AI-only race finishes
              fleet.test.ts (who races per class and choice, starting spots, the session racing the fleet it is given)
              scene-cache.test.ts (boat materials made once per scene, again for a recreated scene)
              sail-shape.test.ts (the shared sail grid draws the Optimist and 420 sails exactly as before)
+             optimal-sheet.test.ts (the fast optimal-sheet search gives exactly the sheet that sampling every step gives)
 scripts/     polar.ts (npm run polar), golden-update.ts (npm run golden:update)
 ```
 **Rule:** `core/math.ts`, `sailing/`, `race/`, `ai/`, `sailors/`, `i18n/` and every other file a test imports
