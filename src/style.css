@@ -57,7 +57,7 @@ strong { font-weight: 650; font-variant-numeric: tabular-nums; }
 
 /* One column under the compass pill: the message pill (its slot is kept, so what is below never jumps), then the status
    pills (shift, Partner's call, penalty) and the Standings/map panel. */
-#flow { position: absolute; top: 126px; left: 8px; right: 56px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+#flow { position: absolute; top: 150px; left: 8px; right: 8px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
 #toast { width: 100%; min-height: 28px; display: flex; justify-content: center; align-items: flex-start; pointer-events: none; }
 #toast div { max-width: 100%; padding: 4px 10px; border-radius: 6px; background: var(--glass); color: #fff; font-family: var(--cond); font-weight: 700; font-size: 13px; line-height: 1.15; letter-spacing: .03em; text-align: center; text-transform: uppercase; animation: toast 3.2s ease forwards; }
 #toast div.big { font-size: 17px; color: var(--boat); }
@@ -77,7 +77,7 @@ strong { font-weight: 650; font-variant-numeric: tabular-nums; }
 .penalty-track i { display: block; height: 100%; width: 0; background: #fff; }
 
 /* In portrait the panel stays in the left column, clear of the sheet slider and the context buttons (the tiller's width), with the map under the list. */
-#panel { align-self: flex-start; width: min(340px, calc(100vw - 130px)); display: flex; flex-direction: column; gap: 4px; padding: 6px 8px; background: var(--glass); border-radius: 10px; font-size: 12px; }
+#panel { align-self: center; width: min(340px, calc(100vw - 130px)); display: flex; flex-direction: column; gap: 4px; padding: 6px 8px; background: var(--glass); border-radius: 10px; font-size: 12px; }
 .panel-stats { display: flex; gap: 16px; }
 .stat small { display: block; font-size: 9.5px; letter-spacing: .1em; color: var(--muted); }
 .stat strong { font-family: var(--cond); font-weight: 800; font-size: 18px; }
@@ -97,7 +97,7 @@ strong { font-weight: 650; font-variant-numeric: tabular-nums; }
 .panel-line b { color: #fff; }
 
 /* The thumb deck: the tiller bar bottom-left, the sheet slider along the right edge, the context buttons beside it. */
-.tiller { position: absolute; left: 8px; bottom: 14px; width: min(58vw, calc(100vw - 128px), 440px); pointer-events: auto; touch-action: none; cursor: ew-resize; }
+.tiller { position: absolute; left: 50%; transform: translateX(-50%); bottom: 14px; width: min(62vw, calc(100vw - 128px), 440px); pointer-events: auto; touch-action: none; cursor: ew-resize; }
 .tiller-ends { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 3px; font-family: var(--cond); font-weight: 700; font-size: 11px; white-space: nowrap; }
 .tiller-ends small { display: inline; font-size: inherit; letter-spacing: 0; color: inherit; opacity: .7; }
 .tiller-bar { position: relative; height: 36px; background: var(--glass); border-radius: 12px; }
@@ -114,12 +114,15 @@ strong { font-weight: 650; font-variant-numeric: tabular-nums; }
 .trim-cur { position: absolute; left: 4px; right: 4px; height: 28px; margin-top: -14px; border-radius: 8px; background: var(--boat); }
 .trim-cur::after { content: ""; position: absolute; left: 50%; top: 50%; width: 16px; height: 3px; margin: -1.5px 0 0 -10px; border-radius: 2px; background: #081622; }
 
-#deck-right { position: absolute; right: 58px; bottom: 14px; display: flex; flex-direction: column-reverse; align-items: flex-end; gap: 6px; }
-#context-buttons { display: flex; flex-direction: column-reverse; gap: 6px; }
+#deck-right { position: absolute; right: 7px; bottom: 14px; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+#context-buttons { display: flex; flex-direction: column; gap: 6px; }
+.slider { bottom: 66px; }
+#hud:has(#context-buttons.two) .slider { bottom: 118px; }
+#hud:has(#context-buttons.two.crew) .slider { bottom: 170px; }
 .ctx { width: 46px; height: 46px; border-radius: 50%; border: 1.5px solid var(--boat); background: rgba(8, 22, 34, .72); font-size: 11px; line-height: 1; padding: 0; }
 .ctx.on { background: var(--boat); color: #081622; }
 #context-buttons:not(.two) .only-two, #context-buttons:not(.crew) .only-crew { display: none; }
-#trim-pill { max-width: calc(100vw - 70px); }
+#trim-pill { position: fixed; left: 50%; transform: translateX(-50%); bottom: 72px; white-space: nowrap; max-width: calc(100vw - 128px); overflow: hidden; text-overflow: ellipsis; }
 .pair-block { display: grid; gap: 14px; margin: 12px 0 4px; padding: 14px; border: 1px solid var(--line); border-radius: 10px; background: rgba(255,255,255,.03); }
 .pair-block .steer-help { max-width: 60ch; line-height: 1.45; }
 .partners { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
@@ -177,8 +180,10 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 #results-table td { padding: 7px 8px; border-bottom: 1px solid var(--line); text-align: left; font-variant-numeric: tabular-nums; }
 #results-table tr.me td { color: var(--accent); font-weight: 700; }
 
-#loading { position: absolute; inset: 0; display: grid; place-items: center; background: #071827; color: #d8eaf2; letter-spacing: .1em; font-size: 12px; transition: opacity .4s; pointer-events: none; }
-#loading.hidden { opacity: 0; display: grid !important; }
+#loading { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; background: #081622; color: var(--ink); font-family: var(--cond); font-weight: 800; font-size: 15px; letter-spacing: .16em; text-transform: uppercase; transition: opacity .4s; pointer-events: none; }
+#loading::after { content: ""; width: 120px; height: 3px; border-radius: 2px; background: linear-gradient(90deg, transparent, var(--boat), transparent) 0 0 / 60px 100% no-repeat, rgba(255,255,255,.12); animation: loadbar 1.2s linear infinite; }
+@keyframes loadbar { from { background-position: -60px 0, 0 0; } to { background-position: 120px 0, 0 0; } }
+#loading.hidden { opacity: 0; display: flex !important; }
 
 /* Career: the Season calendar, the Career buttons of the main menu and the results screen's next-Race buttons. */
 .career-btns { display: flex; gap: 10px; margin-top: 18px; }
@@ -235,7 +240,10 @@ html, body { touch-action: none; -webkit-user-select: none; user-select: none; -
   #toast div { font-size: 13px; }
   #toast div.big { font-size: 16px; }
   .tiller { width: min(34vw, 420px); }
+  #deck-right { right: 58px; flex-direction: row; }
   #context-buttons { flex-direction: row-reverse; }
+  .slider, #hud:has(#context-buttons.two) .slider, #hud:has(#context-buttons.two.crew) .slider { bottom: 14px; }
+  .tiller { left: 8px; transform: none; }
   #trim-pill { max-width: 220px; }
 }
 /* A small landscape screen (a phone): the status pills and the panel share one narrow column, clear of the tiller and the buttons. */
