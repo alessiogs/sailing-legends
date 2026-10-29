@@ -16,7 +16,9 @@ src/
              Race.ts (start/OCS, rounding, finish, penalties), Rules.ts (RRS 10/11/12/13/31),
              RaceSession.ts (one race from a `Fleet`: wind, course, boats, AIs, contacts; fixed 60 Hz; no rendering)
              Fleet.ts (`makeFleet`: the player's boat with the Partner, the opponents with their Crews, and every
-             boat's starting spot, from the class, the player's choices and the Rivals; plain data)
+             boat's starting spot, from the class, the player's choices and the Rivals, or from the opponent boats a
+             Career gives; a fleet over 4 boats gets a start-spot grid, a longer line (`lineHalf`) and spread start
+             slots (`startSlot`); plain data)
              Collisions.ts (hull capsules, mark discs and the committee capsule; closest points; pushing
              overlaps apart. Geometry only: the session tells the race about contacts and mark touches)
              PlayerChoice.ts (the player's Role, helm | crew, plus Control mode, playerCareer | fullBoat;
@@ -42,7 +44,12 @@ src/
              Calendar.ts (`Regatta` and the 0.5 Season calendar constants per class: 4 Regattas x 3 Races, Discard from
              the third, entry rule `open`)
              Ages.ts (`ageInSeason`, `canRace` against a class's Age limit, the starting-age range)
-             Career.ts (`startCareer`: a pure operation giving Season 1)
+             Career.ts (`startCareer`: a pure operation giving Season 1; `nextRaceSetup`: the next Race's fleet,
+             wind and seed)
+             Pool.ts (the sailor pool: the Rivals plus 27 generated sailors with Italian names, drawn once from the
+             Career seed and stored in the save; `sailorRating`)
+             Fleets.ts (`regattaFleet`: a Regatta's fleet from the pool by level, 6 to 12 boats, Rivals always in)
+             Weather.ts (the wind and seed of each Race of a Regatta), Seeds.ts (`mixSeed`)
   world/     Ocean.ts (Gerstner waves in GLSL), Waves.ts (same waves on CPU), BoatViewBase.ts (what both boat
              visuals share: wave riding, heel, boom swing, rudder, burgee; each class gives its `BoatMotion` and
              draws its own sails and sailors), BoatView.ts (Optimist), Boat420View.ts, SailorFigure.ts (the sailor
@@ -86,6 +93,8 @@ tests/       Vitest tests (npm test): smoke.test.ts (every AI-only race finishes
              career-save.test.ts (save round trip, migrations, unreadable saves never throw, the storage adapter)
              career-calendar.test.ts (the 0.5 calendars), career-ages.test.ts (ages, `canRace` at 14/15/16)
              career-start.test.ts (starting a Career: Season 1 at the chosen age)
+             career-pool.test.ts (the pool: same seed, same sailors; names, ages, levels)
+             career-fleets.test.ts (fleets by level, Rivals always in, the Races' wind and seed, 420 fleets)
              sailors.test.ts (rosters, Partner swap, Crew Chemistry values as the menu shows them)
              player-choice.test.ts (Crew with Full Boat Control is a type error; the Partner set up per choice)
              crew-side.test.ts (the shared Crew wrong-side check)
@@ -99,7 +108,8 @@ tests/       Vitest tests (npm test): smoke.test.ts (every AI-only race finishes
              start-planning.test.ts (the AI's holding spot, line point, RNG draws and start decisions)
              racing-ai-parts.test.ts (the AI's avoidance, beat tactics and tack state machine on their own)
              collisions.test.ts (hull capsules, closest points, hulls pushed apart and out of marks)
-             fleet.test.ts (who races per class and choice, starting spots, the session racing the fleet it is given)
+             fleet.test.ts (who races per class and choice, starting spots, 12 boats starting clear of each other, the session
+             racing the fleet it is given)
              scene-cache.test.ts (boat materials made once per scene, again for a recreated scene)
              sail-shape.test.ts (the shared sail grid draws the Optimist and 420 sails exactly as before)
              optimal-sheet.test.ts (the fast optimal-sheet search gives exactly the sheet that sampling every step gives)
