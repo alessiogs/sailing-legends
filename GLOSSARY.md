@@ -63,11 +63,40 @@ The Assist that sets the player's sail trim automatically.
 _it_: Regolazione vela automatica
 _Avoid_: Auto-sail, auto-sheet
 
+## Career
+
+**Career**:
+The player's sailing life, played as a sequence of Seasons from a starting age they choose.
+_it_: Carriera
+
+**Season**:
+One year of a Career: a sequence of Regattas, after which every sailor is a year older.
+_it_: Stagione
+_Avoid_: Year, campaign
+
+**Regatta**:
+A set of Races at one venue, scored together into one ranking.
+_it_: Regata
+_Avoid_: Event, series, regatta for a single race (see Race)
+
+**Points**:
+A sailor's Regatta score under low-point scoring: a Race place is worth that many points, and OCS or DSQ is
+worth the fleet size plus one. Lowest total wins.
+_it_: Punti
+
+**Discard**:
+A sailor's worst Race score in a Regatta, left out of their total once enough Races are sailed.
+_it_: Scarto
+
+**Age limit**:
+The oldest age at which a sailor may race a class; after it they must change class (Optimist: 15).
+_it_: Limite di età
+
 ## Race
 
 **Race**:
 One start-to-finish contest on a course, from the countdown to the last boat finishing.
-_it_: Regata
+_it_: Prova
 _Avoid_: Match, heat
 
 **Course**:
