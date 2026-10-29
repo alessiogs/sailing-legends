@@ -194,9 +194,9 @@ export const italian = {
   "hud.chem.value": ({ value }: { value: number }) => `${value}/100`,
   "hud.penalty": ({ turns, done, total }: { turns: number; done: number; total: number }) =>
     `Penalità: ${plural(turns, { one: `${turns} giro`, other: `${turns} giri` })} da fare (${done}° / ${total}°) · gira sempre nello stesso verso`,
-  "hud.gauge.tiller": "BARRA DEL TIMONE",
-  "hud.gauge.left": "◀ SINISTRA",
-  "hud.gauge.right": "DESTRA ▶",
+  "hud.gauge.tiller": "TIMONE",
+  "hud.gauge.left": "◀ SX",
+  "hud.gauge.right": "DX ▶",
   "hud.gauge.weight": ({ position }: { position: string }) => `${position.toUpperCase()}`,
   "hud.gauge.in": "◀ DENTRO",
   "hud.gauge.out": "FUORI ▶",

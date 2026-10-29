@@ -200,7 +200,7 @@ export const english: Catalog = {
     `Penalty: ${plural(turns, { one: `${turns} turn`, other: `${turns} turns` })} to do (${done}° / ${total}°) · always turn the same way`,
   "hud.gauge.tiller": "TILLER",
   "hud.gauge.left": "◀ PORT",
-  "hud.gauge.right": "STARBOARD ▶",
+  "hud.gauge.right": "STBD ▶",
   "hud.gauge.weight": ({ position }) => `${position.toUpperCase()}`,
   "hud.gauge.in": "◀ IN",
   "hud.gauge.out": "OUT ▶",
