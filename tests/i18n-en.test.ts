@@ -20,7 +20,7 @@ describe("English catalog", () => {
 
   it("uses no empty message and keeps the message parameters", () => {
     expect(t("call.switchSide", { name: "Giulia" })).toBe("Giulia: “Switch sides!” → press E");
-    expect(t("menu.versionChip", { boatClass: "420" })).toBe("PROTOTYPE 0.4 · 420");
+    expect(t("menu.versionChip", { boatClass: "420" })).toBe("PROTOTYPE 0.6 · 420");
     for (const [key, message] of Object.entries(english)) {
       if (typeof message === "string") expect(message.trim() !== "", key).toBe(true);
     }

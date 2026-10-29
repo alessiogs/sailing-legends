@@ -11,7 +11,7 @@ export const italian = {
   // Main menu.
   "menu.lede.twoPerson": "Prova 420, in due con fiocco, spinnaker e trapezio",
   "menu.lede.single": "Prova Optimist",
-  "menu.versionChip": ({ boatClass }: { boatClass: string }) => `PROTOTIPO 0.4 · ${boatClass}`,
+  "menu.versionChip": ({ boatClass }: { boatClass: string }) => `PROTOTIPO 0.6 · ${boatClass}`,
   "menu.roleHelp.helm": "Timone e randa. Il tuo prodiere regola fiocco e spi, esce al trapezio e decide quando issare lo spi.",
   "menu.roleHelp.crew": "Il partner timona. Tu: W/S fiocco (o spi), A/D peso dentro/fuori fino al trapezio, E cambio lato dopo virate e strambate, Spazio issa/ammaina lo spi. Ascolta le sue chiamate.",
   "menu.roleHelp.fullBoat": "Timone e randa, e chiami tu le manovre: Spazio = issa/ammaina lo spi. Il prodiere esegue (più in fretta se l'intesa è alta).",
