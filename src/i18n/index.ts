@@ -13,7 +13,11 @@
  * Static text in `index.html` names its key in a `data-i18n` (text) or `data-i18n-aria-label` attribute and is filled
  * at startup by `ui/pageText.ts`.
  */
+import { english } from "./en";
 import { italian } from "./it";
+import type { Language } from "./language";
+
+export { chooseLanguage, isLanguage, LANGUAGES, type Language } from "./language";
 
 /** The messages of one language. */
 export type Catalog = { readonly [K in MessageKey]: (typeof italian)[K] };
@@ -23,8 +27,21 @@ export type MessageKey = keyof typeof italian;
 /** The parameters a message takes, as a rest tuple: empty for a plain string. */
 export type MessageParams<K extends MessageKey> = (typeof italian)[K] extends (params: infer P) => string ? [params: P] : [];
 
-/** Italian is the only language for now. */
-const active: Catalog = italian;
+const catalogs: Readonly<Record<Language, Catalog>> = { it: italian, en: english };
+
+/** Italian until `setLanguage` says otherwise, so code and tests that never choose a language read Italian. */
+let language: Language = "it";
+let active: Catalog = catalogs[language];
+
+/** Makes `language` the one `t` and `lookup` read. The page text and any text already shown are not redone. */
+export function setLanguage(next: Language) {
+  language = next;
+  active = catalogs[next];
+}
+
+export function currentLanguage(): Language {
+  return language;
+}
 
 /** The text of a message in the active language. */
 export function t<K extends MessageKey>(key: K, ...params: MessageParams<K>): string {
