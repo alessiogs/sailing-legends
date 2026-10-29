@@ -5,6 +5,11 @@
 import { describe, expect, it } from "vitest";
 import { CAREER_KEY, decodeCareer, encodeCareer, loadCareer, saveCareer, type CareerStorage, type CareerMigration, type CareerState } from "../src/career/CareerSave";
 
+/** A small pool: the three Rivals (a save needs them) and one more sailor, as stored. */
+const sailor = (id: string, startingAge: number) => ({ id, name: id[0].toUpperCase() + id.slice(1), technique: 0.5, tactics: 0.6, speed: 0.7, discipline: 0.8, startingAge });
+const POOL = [sailor("luca", 11), sailor("giulia", 10), sailor("marco", 9), sailor("ada", 10)];
+const POOL_TEXT = '[' + POOL.map(p => `{"id":"${p.id}","name":"${p.name}","technique":0.5,"tactics":0.6,"speed":0.7,"discipline":0.8,"startingAge":${p.startingAge}}`).join(',') + ']';
+
 const STATE: CareerState = {
   version: 1, seed: 12345, startingAge: 10, season: 2, classId: "optimist", regattaIndex: 1,
   results: [
@@ -13,17 +18,18 @@ const STATE: CareerState = {
      [{ id: "me", status: "ocs" }, { id: "luca", status: "finished", place: 1 }]],
     [[{ id: "me", status: "dsq" }, { id: "luca", status: "finished", place: 1 }]],
   ],
+  pool: POOL,
 };
 /** The same fields as text, written out by hand. */
 const STATE_TEXT = '{"version":1,"seed":12345,"startingAge":10,"season":2,"classId":"optimist","regattaIndex":1,"results":['
   + '[[{"id":"me","status":"finished","place":2},{"id":"luca","status":"finished","place":1}],'
   + '[{"id":"me","status":"dnf"},{"id":"luca","status":"finished","place":1}],'
   + '[{"id":"me","status":"ocs"},{"id":"luca","status":"finished","place":1}]],'
-  + '[[{"id":"me","status":"dsq"},{"id":"luca","status":"finished","place":1}]]]}';
+  + '[[{"id":"me","status":"dsq"},{"id":"luca","status":"finished","place":1}]]],"pool":' + POOL_TEXT + '}';
 /** A fresh Career's text, for the cases that vary one field. */
 const field = (name: string, value: string) => {
   const fields: Record<string, string> = {
-    version: "1", seed: "12345", startingAge: "10", season: "1", classId: '"optimist"', regattaIndex: "0", results: "[[]]",
+    version: "1", seed: "12345", startingAge: "10", season: "1", classId: '"optimist"', regattaIndex: "0", results: "[[]]", pool: POOL_TEXT,
   };
   fields[name] = value;
   return "{" + Object.entries(fields).filter(([, v]) => v !== "").map(([k, v]) => `"${k}":${v}`).join(",") + "}";
@@ -49,6 +55,14 @@ describe("career save codec", () => {
       field("season", ""), field("season", "0"),
       field("classId", ""), field("classId", '"ilca"'), field("classId", "420"),
       field("regattaIndex", ""), field("regattaIndex", "-1"), field("regattaIndex", "4"), field("regattaIndex", "1"),
+      field("pool", ""), field("pool", "{}"), field("pool", "[]"), field("pool", "null"),
+      // no Rivals, a repeated id, a profile value over 1, a missing name, a bad age, a bad bond
+      field("pool", POOL_TEXT.replace('"id":"marco"', '"id":"nico"')),
+      field("pool", POOL_TEXT.replace('"id":"ada"', '"id":"luca"')),
+      field("pool", POOL_TEXT.replace('"speed":0.7', '"speed":1.5')),
+      field("pool", POOL_TEXT.replace('"name":"Ada",', "")),
+      field("pool", POOL_TEXT.replace('"startingAge":10}]', '"startingAge":"ten"}]')),
+      field("pool", POOL_TEXT.replace('"startingAge":10}]', '"startingAge":10,"bond":120}]')),
       field("results", ""), field("results", "{}"), field("results", "[]"), field("results", "[[],[]]"),
       field("results", "[[1]]"),
       field("results", "[[[]]]"),
@@ -75,13 +89,13 @@ describe("career save codec", () => {
     // A pretend history: version 1 stored `age`, version 2 calls it `startingAge`, version 3 added the rest.
     const migrations: Record<number, CareerMigration> = {
       1: ({ age, ...rest }) => ({ ...rest, startingAge: age }),
-      2: saved => ({ ...saved, season: 1, classId: "optimist", regattaIndex: 0, results: [[]] }),
+      2: saved => ({ ...saved, season: 1, classId: "optimist", regattaIndex: 0, results: [[]], pool: POOL }),
     };
     it("runs every step from the saved version up to the current one", () => {
       const v1 = '{"version":1,"seed":7,"age":9}';
-      expect(decodeCareer(v1, migrations, 3)).toEqual({ ok: true, state: { version: 3, seed: 7, startingAge: 9, season: 1, classId: "optimist", regattaIndex: 0, results: [[]] } });
+      expect(decodeCareer(v1, migrations, 3)).toEqual({ ok: true, state: { version: 3, seed: 7, startingAge: 9, season: 1, classId: "optimist", regattaIndex: 0, results: [[]], pool: POOL } });
       const v2 = '{"version":2,"seed":7,"startingAge":11}';
-      expect(decodeCareer(v2, migrations, 3)).toEqual({ ok: true, state: { version: 3, seed: 7, startingAge: 11, season: 1, classId: "optimist", regattaIndex: 0, results: [[]] } });
+      expect(decodeCareer(v2, migrations, 3)).toEqual({ ok: true, state: { version: 3, seed: 7, startingAge: 11, season: 1, classId: "optimist", regattaIndex: 0, results: [[]], pool: POOL } });
     });
     it("is unreadable when a step is missing or throws", () => {
       expect(decodeCareer('{"version":1,"seed":7,"age":9}', { 2: migrations[2] }, 3)).toEqual({ ok: false });

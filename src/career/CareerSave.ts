@@ -5,6 +5,8 @@
 import { isClassId, type ClassId } from "../sailing/BoatClass";
 import { seasonCalendar } from "./Calendar";
 import { MAX_STARTING_AGE, MIN_STARTING_AGE } from "./Ages";
+import { RIVALS } from "../sailors/Sailors";
+import type { PoolSailor } from "./Pool";
 import type { RaceEntry } from "./Scoring";
 
 export type CareerState = {
@@ -25,6 +27,8 @@ export type CareerState = {
    * are `regattaIndex + 1` lists, every earlier Regatta complete and the current one possibly empty.
    */
   results: RaceEntry[][][];
+  /** The sailor pool: the Rivals and the generated sailors, with the profiles they have now. Matched by `id`. */
+  pool: PoolSailor[];
 };
 
 export const CAREER_VERSION = 1;
@@ -57,6 +61,22 @@ function isEntry(v: unknown): v is RaceEntry {
   return v.status === "finished" ? isInt(v.place, 1) : v.place === undefined;
 }
 
+const ATTRIBUTES = ["technique", "tactics", "speed", "discipline"] as const;
+
+function isPoolSailor(v: unknown): v is PoolSailor {
+  if (!isRecord(v) || typeof v.id !== "string" || v.id === "" || typeof v.name !== "string" || v.name === "") return false;
+  if (!isInt(v.startingAge, 5) || v.startingAge > 20) return false;
+  if (v.bond !== undefined && !(typeof v.bond === "number" && v.bond >= 0 && v.bond <= 100)) return false;
+  return ATTRIBUTES.every(a => typeof v[a] === "number" && v[a] >= 0 && v[a] <= 1);
+}
+
+/** The pool: sailors with distinct ids, the Rivals among them. */
+function isPool(v: unknown): v is PoolSailor[] {
+  return Array.isArray(v) && v.every(isPoolSailor)
+    && new Set(v.map(s => s.id)).size === v.length
+    && RIVALS.every(r => v.some(s => s.id === r.id));
+}
+
 /** The Races of the Regattas begun so far: one list per Regatta up to `regattaIndex`, earlier ones complete. */
 function isResults(v: unknown, classId: ClassId, regattaIndex: number): v is RaceEntry[][][] {
   const calendar = seasonCalendar(classId);
@@ -86,12 +106,13 @@ export function decodeCareer(
       saved = step(saved);
       version++;
     }
-    const { seed, startingAge, season, classId, regattaIndex, results } = saved;
+    const { seed, startingAge, season, classId, regattaIndex, results, pool } = saved;
     if (!isInt(seed, 0) || !isInt(season, 1)) return { ok: false };
     if (!isInt(startingAge, MIN_STARTING_AGE) || startingAge > MAX_STARTING_AGE) return { ok: false };
     if (typeof classId !== "string" || !isClassId(classId)) return { ok: false };
     if (!isInt(regattaIndex, 0) || !isResults(results, classId, regattaIndex)) return { ok: false };
-    return { ok: true, state: { version: current, seed, startingAge, season, classId, regattaIndex, results } };
+    if (!isPool(pool)) return { ok: false };
+    return { ok: true, state: { version: current, seed, startingAge, season, classId, regattaIndex, results, pool } };
   } catch {
     return { ok: false };
   }
