@@ -35,6 +35,12 @@ A recurring AI sailor with a name, a personality and a shared history with the p
 _it_: Rivale
 _Avoid_: Bot, opponent (for the recurring characters)
 
+**Sailor pool**:
+The sailors of one Career: the Rivals and the generated sailors, drawn from the Career seed and kept in the save.
+Each Regatta's fleet is drawn from it by level.
+_it_: Gruppo di velisti
+_Avoid_: Roster (the Rival roster is the three named Rivals)
+
 ## Playing
 
 **Role**:

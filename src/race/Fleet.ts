@@ -41,7 +41,18 @@ export type Fleet = {
   partner: SailorProfile | null;
   player: PlayerBoat | null;
   opponents: OpponentBoat[];
+  /**
+   * Half the start line's length in metres, when the fleet is too big for the class's usual line (more than
+   * `SMALL_FLEET` boats); unset means the usual line.
+   */
+  lineHalf?: number;
 };
+
+/** Who sails an opponent's boat: a Helm and, in two-person classes, a Crew. */
+export type OpponentSeats = { helm: SailorProfile; crew: SailorProfile | null };
+
+/** Up to this many boats keep the quick race's start spots and line; bigger fleets (a Career's) get a grid and a longer line. */
+export const SMALL_FLEET = 4;
 
 export type FleetOptions = {
   boatClass?: BoatClass;
@@ -53,7 +64,31 @@ export type FleetOptions = {
   /** The Rivals to race against (default: the Rival roster). In two-person classes the Partner leaves them for the
    *  player's boat and the extra Helm takes their place; each opponent Helm gets a Crew from the Crew roster. */
   rivals?: readonly SailorProfile[];
+  /** Instead of `rivals`: exactly these opponent boats, in order (a Career's fleet). The Partner still sails with the player. */
+  opponents?: readonly OpponentSeats[];
 };
+
+/**
+ * The slot (0..3) along the start line that the AI of boat `index` of `boats` aims for: the boat's own index in a small
+ * fleet, spread over the same 0..3 range in a bigger one. The player's boat has index `opponents.length`.
+ */
+export function startSlot(index: number, boats: number): number {
+  return boats <= SMALL_FLEET ? index : index * 3 / (boats - 1);
+}
+
+const PER_ROW = 6;
+/** The boats the usual start line holds; a bigger fleet's line grows in proportion. */
+const LINE_BOATS = 5;
+
+/** The start spot of boat `index` of a big fleet: rows of `PER_ROW` boats, each row below the last, staggered. */
+function gridSpot(index: number, scale: number): StartSpot {
+  const row = Math.floor(index / PER_ROW), col = index % PER_ROW;
+  return {
+    downwind: (24 + row * 12 + col * 2) * scale,
+    across: ((col - (PER_ROW - 1) / 2) * 14 + (row % 2) * 7) * scale,
+    heading: -80 * DEG,
+  };
+}
 
 /** The quick race's fleet: the player (if any) and three opponents, spread out below the start line. */
 export function makeFleet(opts: FleetOptions = {}): Fleet {
@@ -62,11 +97,15 @@ export function makeFleet(opts: FleetOptions = {}): Fleet {
   // Two-person boats are bigger, and so is their course: spread them further apart.
   const scale = two ? 1.4 : 1;
   let rivals: readonly SailorProfile[] = opts.rivals ?? RIVALS;
+  const given = opts.opponents;
+  const withPlayer = opts.withPlayer !== false;
+  const boats = given ? given.length + (withPlayer ? 1 : 0) : 0;
+  const big = boats > SMALL_FLEET;
   let choice = HELM;
   let partner: SailorProfile | null = null;
   let player: PlayerBoat | null = null;
-  if (opts.withPlayer !== false) {
-    const start = { downwind: 30 * scale, across: 6 * scale, heading: -70 * DEG };
+  if (withPlayer) {
+    const start = big ? { ...gridSpot(given!.length, scale), heading: -70 * DEG } : { downwind: 30 * scale, across: 6 * scale, heading: -70 * DEG };
     if (two) {
       choice = opts.choice ?? HELM;
       partner = opts.partner ?? rivals[1];
@@ -74,16 +113,19 @@ export function makeFleet(opts: FleetOptions = {}): Fleet {
         ? { id: "player", helm: partner, crew: "player", start }
         : { id: "player", helm: "player", crew: partner, start };
       // The Partner is on the player's boat, so race against the other Rivals plus the extra Helm.
-      rivals = opponentHelms(rivals, partner);
+      if (!given) rivals = opponentHelms(rivals, partner);
     } else {
       player = { id: "player", helm: "player", crew: null, start };
     }
   }
-  const opponents = rivals.map((helm, i): OpponentBoat => ({
+  const seats: readonly OpponentSeats[] = given ?? rivals.map((helm, i) => ({ helm, crew: two ? opponentCrew(i) : null }));
+  const opponents = seats.map(({ helm, crew }, i): OpponentBoat => ({
     id: `ai${i}`,
     helm,
-    crew: two ? opponentCrew(i) : null,
-    start: { downwind: (24 + i * 2) * scale, across: (-16 + i * 14) * scale, heading: -80 * DEG },
+    crew,
+    start: big ? gridSpot(i, scale) : { downwind: (24 + i * 2) * scale, across: (-16 + i * 14) * scale, heading: -80 * DEG },
   }));
-  return { boatClass: cls, choice, partner, player, opponents };
+  // A bigger fleet needs a longer line: the usual half-length (24 m, 34 m in two-person classes) per five boats.
+  const lineHalf = big ? (two ? 34 : 24) * Math.max(1, boats / LINE_BOATS) : undefined;
+  return { boatClass: cls, choice, partner, player, opponents, ...(lineHalf === undefined ? {} : { lineHalf }) };
 }

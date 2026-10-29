@@ -6,7 +6,7 @@ import { BoatSim, createBoat, type Controls } from "../sailing/BoatPhysics";
 import { WindField } from "../sailing/Wind";
 import { courseObstacles, hullRadius, hullSegment, overlapObstacle, pushOut, separateHulls } from "./Collisions";
 import { makeWindwardLeeward, type Course } from "./Course";
-import { makeFleet, type Aboard, type Fleet, type StartSpot } from "./Fleet";
+import { makeFleet, startSlot, type Aboard, type Fleet, type StartSpot } from "./Fleet";
 import { Race, type Racer, type Sailor } from "./Race";
 import type { SailorProfile } from "../sailors/Sailors";
 import type { PlayerChoice } from "./PlayerChoice";
@@ -49,8 +49,9 @@ export class RaceSession {
     this.partner = fleet.partner;
     this.wind = new WindField({ seed, meanDirDeg: 0, meanSpeedKn: opts.windKn ?? 11 });
     const course = isTwoPerson(cls)
-      ? makeWindwardLeeward(this.wind.meanDir, { beat: 125, lineHalf: 34, run: 50 })
-      : makeWindwardLeeward(this.wind.meanDir);
+      ? makeWindwardLeeward(this.wind.meanDir, { beat: 125, lineHalf: fleet.lineHalf ?? 34, run: 50 })
+      : makeWindwardLeeward(this.wind.meanDir, { lineHalf: fleet.lineHalf });
+    const boats = fleet.opponents.length + (fleet.player ? 1 : 0);
     this.race = new Race(course, opts.countdown ?? 45);
 
     // Every AI is seeded from the session's seed and its place in the fleet, so a seed always sails the same race.
@@ -58,7 +59,7 @@ export class RaceSession {
     if (p) {
       this.player = this.race.add(p.id, { helm: sailor(p.helm), crew: p.crew && sailor(p.crew) }, boatAt(cls, course, p.start), true);
       if (p.helm !== "player") {
-        this.partnerHelm = new RacingAI(this.player, p.helm, this.race, seed * 17, 3);
+        this.partnerHelm = new RacingAI(this.player, p.helm, this.race, seed * 17, startSlot(fleet.opponents.length, boats));
       } else if (p.crew && p.crew !== "player") {
         this.partnerCrew = new CrewAI(this.player, p.crew, this.race, seed * 19);
         this.partnerCrew.spiMode = this.choice.control === "fullBoat" ? "command" : "auto";
@@ -66,7 +67,7 @@ export class RaceSession {
     }
     fleet.opponents.forEach((b, i) => {
       const racer = this.race.add(b.id, { helm: sailor(b.helm), crew: b.crew && sailor(b.crew) }, boatAt(cls, course, b.start));
-      const ai = new RacingAI(racer, b.helm, this.race, seed * 31 + i * 7, i);
+      const ai = new RacingAI(racer, b.helm, this.race, seed * 31 + i * 7, startSlot(i, boats));
       ai.placeAtStart();
       this.ais.push(ai);
       if (b.crew) this.crews.push(new CrewAI(racer, b.crew, this.race, seed * 37 + i * 11));

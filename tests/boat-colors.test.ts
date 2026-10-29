@@ -7,6 +7,7 @@ import { CREW, FULL_BOAT, HELM } from "../src/race/PlayerChoice";
 import { makeFleet, type FleetOptions } from "../src/race/Fleet";
 import { RaceSession } from "../src/race/RaceSession";
 import { I420, OPTIMIST } from "../src/sailing/BoatClass";
+import { RIVALS } from "../src/sailors/Sailors";
 import { boatColors, boatDot } from "../src/ui/boatColors";
 
 const ids = (opts: FleetOptions) => new RaceSession({ fleet: makeFleet(opts) }).race.racers.map(r => r.id);
@@ -23,6 +24,14 @@ describe("boat colours", () => {
     for (const opts of setups) {
       for (const id of ids(opts)) expect(boatDot(id), id).not.toBe("#ccc");
     }
+  });
+
+  it("has its own, different colours for the 12 boats of the biggest Career fleet", () => {
+    const seats = Array.from({ length: 11 }, () => ({ helm: RIVALS[0], crew: null }));
+    const boats = new RaceSession({ fleet: makeFleet({ opponents: seats }) }).race.racers.map(r => r.id);
+    expect(boats.length).toBe(12);
+    expect(new Set(boats.map(boatDot)).size).toBe(12);
+    expect(boats.every(id => boatDot(id) !== "#ccc")).toBe(true);
   });
 
   it("gives the 3D boats their colours as before", () => {
@@ -45,7 +54,7 @@ describe("boat colours", () => {
   });
 
   it("draws a boat missing from the table like ai0, with a grey dot", () => {
-    expect(boatColors("ai9")).toBe(boatColors("ai0"));
-    expect(boatDot("ai9")).toBe("#ccc");
+    expect(boatColors("ai11")).toBe(boatColors("ai0"));
+    expect(boatDot("ai11")).toBe("#ccc");
   });
 });

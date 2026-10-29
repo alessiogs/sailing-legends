@@ -5,15 +5,17 @@
 import { describe, expect, it } from "vitest";
 import { ageInSeason } from "../src/career/Ages";
 import { startCareer } from "../src/career/Career";
-import { CAREER_VERSION } from "../src/career/CareerSave";
+import { CAREER_VERSION, decodeCareer, encodeCareer } from "../src/career/CareerSave";
+import { generatePool } from "../src/career/Pool";
 
 describe("start a Career", () => {
   it("yields Season 1 at the chosen age, in the Optimist, before the first Race", () => {
     const state = startCareer({ seed: 77, startingAge: 12 });
     expect(state).toEqual({
       version: CAREER_VERSION, seed: 77, startingAge: 12, season: 1,
-      classId: "optimist", regattaIndex: 0, results: [[]],
+      classId: "optimist", regattaIndex: 0, results: [[]], pool: generatePool(77, 12),
     });
+    expect(state.pool.length).toBe(30);
     expect(ageInSeason(state.startingAge, state.season)).toBe(12);
   });
   it("starts at age 10 when no age is chosen", () => {
@@ -35,5 +37,10 @@ describe("start a Career", () => {
     expect(a).toEqual(b);
     a.results[0].push([]);
     expect(b.results).toEqual([[]]);
+  });
+  it("draws the same sailor pool for the same seed, and survives the save", () => {
+    expect(startCareer({ seed: 5, startingAge: 9 }).pool).toEqual(startCareer({ seed: 5, startingAge: 9 }).pool);
+    const state = startCareer({ seed: 5, startingAge: 9 });
+    expect(decodeCareer(encodeCareer(state))).toEqual({ ok: true, state });
   });
 });
