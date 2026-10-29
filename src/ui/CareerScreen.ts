@@ -4,14 +4,18 @@ import { seasonCalendar } from "../career/Calendar";
 import type { CareerState } from "../career/CareerSave";
 import { FLEET_SIZE } from "../career/Fleets";
 import { isSeasonOver } from "../career/RecordRace";
+import { lastCompleteRegatta, type RegattaReport, type SeasonSummary } from "../career/Standings";
 import { CLASSES } from "../sailing/BoatClass";
 import { h } from "./dom";
+import { standingsSheet, summarySheet } from "./StandingsView";
 
 /** What the Career overlay shows: the starting-age choice, the unreadable-save prompt, or the Season calendar. */
 export type CareerView =
   | { kind: "age"; /** A saved Career exists and will be replaced. */ replaces: boolean }
   | { kind: "unreadable" }
-  | { kind: "calendar"; state: CareerState };
+  | { kind: "calendar"; state: CareerState }
+  | { kind: "standings"; state: CareerState; report: RegattaReport; /** Whether it was the Season's last Regatta, which the summary follows. */ last: boolean }
+  | { kind: "summary"; state: CareerState; summary: SeasonSummary };
 
 /** What the Career overlay's buttons do; the game implements them. */
 export interface CareerActions {
@@ -19,6 +23,12 @@ export interface CareerActions {
   start(age: number): void;
   /** Starts the next Race of the Season. */
   startRace(): void;
+  /** Shows the calendar of the Career in progress. */
+  showCalendar(): void;
+  /** Shows the standings after Regatta `index` (a number from 0). */
+  showStandings(index: number): void;
+  /** Shows the Season summary. */
+  showSummary(): void;
   /** Asks for the starting age (after the unreadable-save prompt). */
   askAge(): void;
   /** Goes back to the main menu. */
@@ -42,6 +52,8 @@ export class CareerScreen {
       case "age": return this.age(view.replaces);
       case "unreadable": return this.unreadable();
       case "calendar": return this.calendar(view.state);
+      case "standings": return this.standings(view.state, view.report, view.last);
+      case "summary": return this.summary(view.state, view.summary);
     }
   }
 
@@ -80,10 +92,29 @@ export class CareerScreen {
     ];
   }
 
+  private standings(state: CareerState, report: RegattaReport, last: boolean) {
+    return [
+      ...standingsSheet(state, report),
+      h("div", { class: "row-btns" },
+        this.button("ghost", t("career.results.calendar"), () => this.actions.showCalendar(), "career-calendar-btn"),
+        this.button("primary", t("career.standings.continue"), () => last ? this.actions.showSummary() : this.actions.showCalendar(), "career-continue-btn")),
+    ];
+  }
+
+  private summary(state: CareerState, summary: SeasonSummary) {
+    return [
+      ...summarySheet(state, summary),
+      h("div", { class: "row-btns" },
+        this.button("ghost", t("career.mainMenu"), () => this.actions.mainMenu(), "career-summary-menu"),
+        this.button("primary", t("career.results.calendar"), () => this.actions.showCalendar(), "career-summary-calendar")),
+    ];
+  }
+
   private calendar(state: CareerState) {
     const calendar = seasonCalendar(state.classId);
     const over = isSeasonOver(state);
     const sailed = state.results[state.regattaIndex].length;
+    const latest = lastCompleteRegatta(state);
     const rows = calendar.map((r, i) => {
       const done = i < state.regattaIndex || (over && i === state.regattaIndex);
       const current = i === state.regattaIndex && !over;
@@ -101,6 +132,7 @@ export class CareerScreen {
       ...(over ? [h("p", { class: "muted", id: "career-over" }, t("career.seasonOver"))] : []),
       h("div", { class: "row-btns" },
         this.button("ghost", t("career.mainMenu"), () => this.actions.mainMenu(), "career-menu"),
+        ...(latest !== null ? [this.button("ghost", t("career.standings.last"), () => this.actions.showStandings(latest), "career-standings")] : []),
         ...(over ? [] : [this.button("primary", t("career.race.start", { race: sailed + 1 }), () => this.actions.startRace(), "career-race")])),
     ];
   }

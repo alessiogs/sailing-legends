@@ -36,12 +36,18 @@ export class Menus implements Screens {
   private readonly career = new CareerScreen({
     start: age => this.game.newCareer(age),
     startRace: () => this.game.startCareerRace(),
+    showCalendar: () => this.game.showCalendar(),
+    showStandings: index => this.game.showStandings(index),
+    showSummary: () => this.game.showSummary(),
     askAge: () => this.game.askCareerAge(),
     mainMenu: () => this.game.setMode("menu"),
   });
   private continueButton!: HTMLButtonElement;
   private resultsNext!: HTMLButtonElement;
   private resultsCalendar!: HTMLButtonElement;
+  private resultsStandings!: HTMLButtonElement;
+  /** The Regatta whose standings the results screen offers, or null. */
+  private standingsRegatta: number | null = null;
 
   /**
    * `savePrefs` saves the player's preferences after a change in the Commands menu. `language` is the active
@@ -69,6 +75,8 @@ export class Menus implements Screens {
   fillResults(standings: Racer[], career: CareerResults | null) {
     this.resultsNext.classList.toggle("hidden", !career?.nextRace);
     this.resultsCalendar.classList.toggle("hidden", !career);
+    this.standingsRegatta = career?.standings ?? null;
+    this.resultsStandings.classList.toggle("hidden", this.standingsRegatta === null);
     this.el.results.querySelector(".muted")!.classList.toggle("hidden", !!career);
     $("results-table").replaceChildren(...standings.map((r, i) => {
       const time = r.dsq ? t("results.dsq") : r.finishTime !== null ? `${Math.floor(r.finishTime / 60)}:${String(Math.floor(r.finishTime % 60)).padStart(2, "0")}` : "—";
@@ -114,14 +122,17 @@ export class Menus implements Screens {
       $("start-btn"));
     this.el.menu.after(this.career.root);
 
-    const button = (id: string, kind: string, key: "career.results.next" | "career.results.calendar", run: () => void) => {
+    const button = (id: string, kind: string, key: "career.results.next" | "career.results.calendar" | "career.results.standings", run: () => void) => {
       const b = h("button", { id, class: `${kind} hidden` }, t(key));
       b.addEventListener("click", run);
       return b;
     };
     this.resultsNext = button("results-next", "primary", "career.results.next", () => game.startCareerRace());
+    this.resultsStandings = button("results-standings", "primary", "career.results.standings", () => {
+      if (this.standingsRegatta !== null) game.showStandings(this.standingsRegatta);
+    });
     this.resultsCalendar = button("results-calendar", "ghost", "career.results.calendar", () => game.showCalendar());
-    this.el.results.querySelector(".sheet")!.append(this.resultsNext, this.resultsCalendar);
+    this.el.results.querySelector(".sheet")!.append(this.resultsNext, this.resultsStandings, this.resultsCalendar);
   }
 
   // ---------- Language ----------

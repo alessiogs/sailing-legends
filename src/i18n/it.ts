@@ -276,4 +276,23 @@ export const italian = {
   "career.seasonOver": "Tutte le regate della stagione sono concluse.",
   "career.results.next": "Prossima prova",
   "career.results.calendar": "Calendario",
+  "career.results.standings": "Classifica",
+  "career.standings.title": ({ number, venue }: { number: number; venue: string }) => `Classifica · Regata ${number} · ${venue}`,
+  "career.standings.regatta": "Classifica della regata",
+  "career.standings.season": "Classifica di stagione",
+  "career.standings.you": "Tu",
+  "career.standings.points": ({ points }: { points: number }) => plural(points, { one: `${points} punto`, other: `${points} punti` }),
+  "career.standings.last": "Ultima classifica",
+  "career.standings.continue": "Avanti",
+  "career.rival.beatYou": ({ name, gap }: { name: string; gap: number }) =>
+    `${name} ti ha battuto di ${plural(gap, { one: `${gap} punto`, other: `${gap} punti` })}`,
+  "career.rival.youBeat": ({ name, gap }: { name: string; gap: number }) =>
+    `Hai battuto ${name} di ${plural(gap, { one: `${gap} punto`, other: `${gap} punti` })}`,
+  "career.rival.tieBeatYou": ({ name }: { name: string }) => `${name} ti ha preceduto a pari punti`,
+  "career.rival.youTie": ({ name }: { name: string }) => `Hai preceduto ${name} a pari punti`,
+  "career.summary.title": ({ season }: { season: number }) => `Stagione ${season} conclusa`,
+  "career.summary.result": ({ place, points }: { place: number; points: number }) =>
+    `Chiudi la stagione al ${place}° posto con ${plural(points, { one: `${points} punto`, other: `${points} punti` })}.`,
+  "career.summary.places": "Posizioni nelle regate",
+  "career.summary.rivals": "Contro i tuoi rivali",
 };

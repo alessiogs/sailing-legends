@@ -3,9 +3,11 @@ import type { Input } from "../core/Input";
 import type { Sound } from "../core/Sound";
 import { DEG } from "../core/math";
 import { t } from "../i18n";
+import { seasonCalendar } from "../career/Calendar";
 import { nextRaceSetup, startCareer, type RaceSetup } from "../career/Career";
 import { loadCareer, saveCareer, type CareerLoad, type CareerState, type CareerStorage } from "../career/CareerSave";
 import { raceEntries, recordRace } from "../career/RecordRace";
+import { isRegattaComplete, regattaReport, seasonSummary } from "../career/Standings";
 import { legTarget } from "../race/Course";
 import { HELM, type PlayerChoice } from "../race/PlayerChoice";
 import type { Racer } from "../race/Race";
@@ -31,8 +33,8 @@ import { RaceFeedback, type Cue } from "./RaceFeedback";
 /** What the game is doing: each mode but racing shows its own screen. */
 export type Mode = "menu" | "racing" | "paused" | "results" | "controls" | "career";
 
-/** What the results screen offers after a Career Race: the next Race when the Regatta has one, else the calendar. */
-export type CareerResults = { nextRace: boolean };
+/** What the results screen offers after a Career Race: the next Race when the Regatta has one, the standings of the Regatta this Race completed, and the calendar. */
+export type CareerResults = { nextRace: boolean; standings: number | null };
 
 /** The page screens the controller drives: one per mode, plus the Auto-trim option of the main menu. */
 export interface Screens {
@@ -84,7 +86,7 @@ export class GameController {
   /** The Career being played, or `null` in Quick race and before one is started or continued. */
   career: CareerState | null = null;
   /** The Career Race the current session is, or `null` for a Quick race; `recorded` once its result is in the Career. */
-  private careerRace: { setup: RaceSetup; recorded: boolean } | null = null;
+  private careerRace: { setup: RaceSetup; recorded: boolean; completed: number | null } | null = null;
 
   // ---------- Modes ----------
   private _mode: Mode = "menu";
@@ -157,7 +159,7 @@ export class GameController {
     this.boats.clear();
     this.courseView?.dispose();
     hud.clearTags();
-    this.careerRace = setup ? { setup, recorded: false } : null;
+    this.careerRace = setup ? { setup, recorded: false, completed: null } : null;
     const seed = setup ? setup.seed : Math.floor(Math.random() * 1e6);
     const windKn = setup ? setup.windKn : this.windKn;
     const fleet = setup ? setup.fleet : makeFleet({ boatClass: this.boatClass, choice: this.choice, partner: this.partner });
@@ -229,6 +231,22 @@ export class GameController {
     this.setMode("career");
   }
 
+  /** The standings after Regatta `index` of the Career in progress (the Season summary follows the last one). */
+  showStandings(index: number) {
+    const report = this.career && regattaReport(this.career, index);
+    if (!this.career || !report) return;
+    this.screens.showCareer({ kind: "standings", state: this.career, report, last: index === seasonCalendar(this.career.classId).length - 1 });
+    this.setMode("career");
+  }
+
+  /** The Season summary of the Career in progress, once its last Regatta is sailed. */
+  showSummary() {
+    const summary = this.career && seasonSummary(this.career);
+    if (!this.career || !summary) return;
+    this.screens.showCareer({ kind: "summary", state: this.career, summary });
+    this.setMode("career");
+  }
+
   /** Starts the next Race of the Career's Regatta (nothing when the Season's Regattas are all sailed). */
   startCareerRace() {
     const setup = this.career && nextRaceSetup(this.career, { choice: this.choice, partner: this.partner });
@@ -240,11 +258,13 @@ export class GameController {
   }
 
   /** Records the Career Race once the player has finished: sails the rest of the fleet home, adds the result, saves. */
-  private recordCareerRace(race: { setup: RaceSetup; recorded: boolean }) {
+  private recordCareerRace(race: { setup: RaceSetup; recorded: boolean; completed: number | null }) {
     if (race.recorded || !this.career) return;
     const { race: r } = this.session;
     for (let i = 0; i < FINISH_FLEET_S / FIXED_DT && r.phase !== "done"; i++) this.session.step(FIXED_DT);
+    const regattaIndex = this.career.regattaIndex;
     this.career = recordRace(this.career, raceEntries(race.setup.fleet, r.racers));
+    race.completed = isRegattaComplete(this.career, regattaIndex) ? regattaIndex : null;
     saveCareer(this.careerStorage, this.career);
     race.recorded = true;
   }
@@ -260,7 +280,7 @@ export class GameController {
   private showResults() {
     const career = this.careerRace;
     if (career) this.recordCareerRace(career);
-    this.screens.fillResults(this.session.race.standings(), career && this.career ? { nextRace: nextRaceSetup(this.career) !== null } : null);
+    this.screens.fillResults(this.session.race.standings(), career && this.career ? { nextRace: career.completed === null && nextRaceSetup(this.career) !== null, standings: career.completed } : null);
     this.setMode("results");
   }
 

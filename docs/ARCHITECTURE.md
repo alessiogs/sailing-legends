@@ -45,6 +45,8 @@ src/
              the third, entry rule `open`)
              SeasonClose.ts (`closeSeason`: next Season, index and results reset, the pool grown; the end-of-Season class
              choice is applied afterwards to its result), Growth.ts (`growSailor`: seeded age curve shaped by personality)
+             Standings.ts (`regattaReport`: Regatta and Season rankings after a Regatta, `seasonSummary`, and
+             `compareWithRivals`: ids, places and point gaps for the Rival lines; the Discard comes from the calendar)
              Ages.ts (`ageInSeason`, `canRace` against a class's Age limit, the starting-age range)
              Career.ts (`startCareer`: a pure operation giving Season 1; `nextRaceSetup`: the next Race's fleet,
              wind and seed)
@@ -74,7 +76,9 @@ src/
              Menus.ts (main menu: class, wind, Role, Partner, Auto-trim; Commands menu; pause and results
              screens, and the Career entries and next-Race buttons. Implements the controller's `Screens`; `attach(game)`
              wires the buttons), CareerScreen.ts (the Career overlay: starting age, unreadable-save prompt, Season
-             calendar; built with `h()`, so `index.html` holds no text for it)
+             calendar, Regatta standings, Season summary; built with `h()`, so `index.html` holds no text for it),
+             StandingsView.ts (the standings and summary sheets; rankings with Rivals highlighted), rivalText.ts
+             (words a Rival comparison: "Luca beat you by 2 points")
   game/      GameController.ts (owns the game state: race session, class, Role and Control mode, Partner, wind,
              Assists; the menu / racing / paused / results / controls / career modes; the Career in progress: new, continue, start a Race,
              record it and save after every Race; one `frame(dt)` per render; plays the
@@ -102,6 +106,8 @@ tests/       Vitest tests (npm test): smoke.test.ts (every AI-only race finishes
              career-save.test.ts (save round trip, migrations, unreadable saves never throw, the storage adapter)
              career-calendar.test.ts (the 0.5 calendars), career-ages.test.ts (ages, `canRace` at 14/15/16)
              career-season-close.test.ts (closing a Season: ages, reset, Rival growth by personality, pinned over 3 Seasons)
+             career-standings.test.ts (Regatta/Season standings, the Discard, Rival comparison, Season summary),
+             rival-text.test.ts (Rival lines in Italian and English)
              career-start.test.ts (starting a Career: Season 1 at the chosen age)
              career-pool.test.ts (the pool: same seed, same sailors; names, ages, levels)
              career-fleets.test.ts (fleets by level, Rivals always in, the Races' wind and seed, 420 fleets)
