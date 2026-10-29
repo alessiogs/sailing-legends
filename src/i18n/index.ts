@@ -43,10 +43,24 @@ export function currentLanguage(): Language {
   return language;
 }
 
+/** Whether the player is on a touch screen: messages that name a key are then read from their `.touch` variant. */
+let touch = false;
+
+/** Words the messages for a touch screen (or back for a keyboard). Set once at startup, before any text is shown. */
+export function setTouchWording(on: boolean) {
+  touch = on;
+}
+
+/** The message under `key`, or under `key.touch` when the player is on a touch screen and the catalog has one. */
+function message(key: string): unknown {
+  const catalog = active as Readonly<Record<string, unknown>>;
+  return (touch ? catalog[`${key}.touch`] : undefined) ?? catalog[key];
+}
+
 /** The text of a message in the active language. */
 export function t<K extends MessageKey>(key: K, ...params: MessageParams<K>): string {
-  const message: string | ((params: never) => string) = active[key];
-  return typeof message === "string" ? message : (message as (p: unknown) => string)(params[0]);
+  const found = message(key) as string | ((params: never) => string);
+  return typeof found === "string" ? found : (found as (p: unknown) => string)(params[0]);
 }
 
 /**
@@ -54,6 +68,6 @@ export function t<K extends MessageKey>(key: K, ...params: MessageParams<K>): st
  * `undefined` when there is no such key or the message takes parameters.
  */
 export function lookup(key: string): string | undefined {
-  const message: unknown = (active as Readonly<Record<string, unknown>>)[key];
-  return typeof message === "string" ? message : undefined;
+  const text = message(key);
+  return typeof text === "string" ? text : undefined;
 }

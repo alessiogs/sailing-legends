@@ -179,6 +179,7 @@ export class GameController {
       this.boats.set(r.id, isTwoPerson(r.sim.cls) ? new Boat420View(scene, r.id, look) : new BoatView(scene, r.id, look));
     }
     input.reset();
+    hud.setBoat(isTwoPerson(this.activeClass), this.activeChoice.role === "crew");
     this.cameraRig.placeBehind(session.player!.sim.state, isTwoPerson(this.activeClass));
     hud.show(true);
     hud.toast(t("toast.startSequence"), "big");
@@ -285,6 +286,16 @@ export class GameController {
     race.recorded = true;
   }
 
+  /** Whether the current session is a Career Race (which cannot be restarted). */
+  get inCareerRace() { return this.careerRace !== null; }
+
+  /** Sails a new Quick race with the menu's choices; nothing in a Career Race. */
+  restart() {
+    if (this.careerRace) return;
+    this.newRace();
+    this.setMode("racing");
+  }
+
   openControls() {
     if (this._mode === "controls") return;
     this.controlsReturn = this._mode === "racing" ? "paused" : this._mode;
@@ -325,7 +336,7 @@ export class GameController {
       }
       const mode = this._mode;
       if (a === "pause") this.setMode(mode === "paused" ? "racing" : mode === "racing" ? "paused" : mode);
-      if (a === "restart" && !this.careerRace) { this.newRace(); this.setMode("racing"); }
+      if (a === "restart") this.restart();
       if (a === "menu" || a === "help") { this.setMode("menu"); }
       if (a === "autoTrim" && this._mode === "racing") {
         this.assists.autoTrim = !this.assists.autoTrim;

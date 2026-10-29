@@ -9,6 +9,7 @@ import { boatDot } from "./boatColors";
 import { h } from "./dom";
 import type { Panel } from "./hudPanel";
 import { legName, racerName } from "./raceNames";
+import { showTouchAutoTrim, showTouchButtons } from "./TouchButtons";
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 
@@ -36,6 +37,11 @@ export class Hud {
   show(v: boolean) {
     this.el.hud.classList.toggle("hidden", !v);
     this.el.tags.classList.toggle("hidden", !v);
+  }
+
+  /** The boat of a new race: its touch buttons (the spinnaker in a 420, the side switch for its Crew). */
+  setBoat(twoPerson: boolean, crew: boolean) {
+    showTouchButtons(twoPerson, crew);
   }
 
   toast(text: string, kind: "" | "big" | "bad" | "good" = "") {
@@ -109,6 +115,7 @@ export class Hud {
     this.el.trimState.textContent = sail.text ?? t(`trim.${sail.state}`);
     this.el.trimState.className = `trim-state ${sail.state}`;
     this.el.autoTrim.classList.toggle("hidden", !sail.autoTrim);
+    showTouchAutoTrim(sail.autoTrim);
     // Top gauge: the tiller (centred, left = port) or the Crew's weight (0 in .. 1 trapeze).
     const g = panel.gauge;
     this.el.gaugeLabel.textContent = g.label;

@@ -2,7 +2,7 @@ import {
   Color3, Color4, DirectionalLight, Engine, HemisphericLight, Scene, Vector3,
 } from "@babylonjs/core";
 import { Input } from "./core/Input";
-import { chooseLanguage, setLanguage, type Language } from "./i18n";
+import { chooseLanguage, setLanguage, setTouchWording, type Language } from "./i18n";
 import { Sound } from "./core/Sound";
 import { GameController } from "./game/GameController";
 import { CameraRig } from "./game/CameraRig";
@@ -11,6 +11,8 @@ import { installTestHook } from "./game/testHook";
 import { Hud } from "./ui/Hud";
 import { Menus } from "./ui/Menus";
 import { fillPageText } from "./ui/pageText";
+import { attachTouchButtons } from "./ui/TouchButtons";
+import { attachGaugeDrag } from "./ui/touchDrag";
 import "./style.css";
 
 // ---------- Preferences and language ----------
@@ -20,6 +22,8 @@ const prefs = loadPrefs(storage);
 const language = chooseLanguage(prefs.language, navigator.language);
 setLanguage(language);
 document.documentElement.lang = language;
+// On a touch screen the messages that name a key read differently (their ".touch" variants).
+setTouchWording(window.matchMedia("(pointer: coarse)").matches);
 
 // The page's static text first: the code below overwrites some of it, and the loading screen hides the menus until then.
 fillPageText();
@@ -45,6 +49,8 @@ sun.diffuse = new Color3(1, 0.96, 0.88);
 const input = new Input();
 const hud = new Hud();
 const sound = new Sound();
+attachGaugeDrag(input);
+attachTouchButtons(input);
 
 // ---------- Preferences ----------
 let savedLanguage = prefs.language;

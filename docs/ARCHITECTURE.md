@@ -5,8 +5,8 @@ Every source file and test, one line each. AGENTS.md has the short version; upda
 ## Source tree
 ```
 src/
-  core/      math.ts (angles, RNG, segment tests), Input.ts (keyboard/gamepad, tiller vs boat-direction
-             steering, what the keys move per Role), ControlSettings.ts (the Commands menu settings and their
+  core/      math.ts (angles, RNG, segment tests), Input.ts (keyboard/gamepad/drag, tiller vs boat-direction
+             steering, what the keys move per Role; DOM-free: `dragGauge`, `dragSheet`, `press` are called by the UI), ControlSettings.ts (the Commands menu settings and their
              defaults; DOM-free), Sound.ts (WebAudio synthesis, no assets)
   sailing/   BoatClass.ts (class data: Optimist, I420, keyed by the closed `ClassId` union; `isTwoPerson` =
              sailed by a Pair, which has `crewRighting`),
@@ -69,7 +69,9 @@ src/
   i18n/      index.ts (`t(key, params)`: typed lookup in the active catalog; `setLanguage`), it.ts (Italian catalog,
              the reference: it defines the keys), en.ts (English catalog, typed against it), language.ts (`Language`,
              `chooseLanguage`: saved choice, else the browser's language, else Italian), plural.ts (plural forms from Intl.PluralRules). All player-facing text lives in a catalog
-  ui/        Hud.ts (draws the panel, compass, minimap, standings, tags), hudPanel.ts (`buildPanel`: the
+  ui/        touchDrag.ts (pointer drag of the tiller/weight and trim bars into Input), TouchButtons.ts (tap buttons for
+             pause, camera, Auto-trim, spinnaker, side switch; shown only for `pointer: coarse`),
+             Hud.ts (draws the panel, compass, minimap, standings, tags), hudPanel.ts (`buildPanel`: the
              Role-driven bottom panel built from the race and the player's choices; pure, DOM-free),
              pageText.ts (fills index.html's data-i18n text from the catalog at startup), raceEventText.ts (words race events from their data),
              raceNames.ts (names legs by `LegId` and boats by the sailors on board),
@@ -99,6 +101,8 @@ tests/       Vitest tests (npm test): smoke.test.ts (every AI-only race finishes
              career-record.test.ts (entries of a race, recording a Race, Regatta rollover, Season end)
              golden.test.ts + golden/ (races.ts sails and records the golden races, races.json is the snapshot),
              rules.test.ts (rule 10/11/12/13 verdicts and penalty turns, two boats placed by hand)
+             input-drag.test.ts (the drag source of Input: tiller, weight, sheet, taps)
+             i18n-touch.test.ts (`.touch` message variants on touch screens)
              i18n.test.ts (lookup, parameters, plural rules; catalogs with missing or extra keys fail the type-check)
              i18n-en.test.ts (English catalog: same keys, glossary terms, plural and ordinal forms)
              language.test.ts (language selection: saved, browser, default; switching the active catalog)

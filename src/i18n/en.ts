@@ -304,4 +304,41 @@ export const english: Catalog = {
   "career.next.partner": "Pick your Partner among the sailors you raced against. Chemistry grows with the Seasons raced together.",
   "career.next.chemistry": ({ chemistry }) => `Chemistry ${chemistry}/100`,
   "career.next.start": "Start the Season",
+
+  // Touch wording: on a touch screen `t` and `lookup` read "<key>.touch" instead of "<key>" when it exists
+  // (see index.ts), for the messages that name a key. A variant takes the same parameters as its message.
+  "menu.roleHelp.crew.touch": "Your Partner steers. You: drag the sail trim bar for the jib (or spinnaker) sheet and the top bar for your weight, in/out up to the trapeze; tap Switch sides after tacks and gybes and Spi to hoist/drop the spinnaker. Listen for their calls.",
+  "menu.roleHelp.fullBoat.touch": "Helm and mainsail, and you call the manoeuvres: tap Spi to hoist/drop the spinnaker. The Crew carries them out (faster when Crew Chemistry is high).",
+  "pause.restartHint.touch": "Tap Restart to sail the race again",
+  "results.hint.touch": "Tap Another race or Menu",
+  "hud.hint.touch": "Tap the buttons for camera, Auto-trim and pause",
+  "hud.sheet.in.touch": "◀ SHEET IN",
+  "hud.sheet.out.touch": "EASE ▶",
+  "hud.gauge.in.touch": "◀ IN",
+  "hud.gauge.out.touch": "OUT / TRAPEZE ▶",
+  "hud.partnerLine.crewOnCall.touch": ({ name, weight, spi }) =>
+    `${name}: ${weight} · spinnaker ${spi} · tap Spi to hoist/drop`,
+  "call.switchSide.touch": ({ name }) => `${name}: “Switch sides!” → tap Switch sides`,
+  "call.spiHoist.touch": ({ name }) => `${name}: “Hoist the spinnaker!” → tap Spi`,
+  "call.spiDrop.touch": ({ name }) => `${name}: “Drop it!” → tap Spi`,
+  "call.hikeOut.touch": ({ name }) => `${name}: “Hike out! We're heeling” → drag your weight right`,
+  "call.comeIn.touch": ({ name }) => `${name}: “In! We'll capsize to windward” → drag your weight left`,
+  "coach.partnerTack.touch": ({ name }) => `${name}: “Tacking!” — tap Switch sides`,
+  "coach.partnerGybe.touch": ({ name }) => `${name}: “Gybing!” — tap Switch sides`,
+  "coach.irons.tiller.touch": "You're stuck head to wind: ease the sheet and push the tiller to bear away",
+  "coach.irons.boat.touch": "You're stuck head to wind: ease the sheet and bear away with the helm",
+  "trim.luffing.touch": "The sail is luffing — sheet in",
+  "trim.stalled.touch": "Oversheeted — ease",
+  "trim.jibBacked.touch": "Jib backed! Tap Switch sides",
+  "toast.camera.free.touch": "Camera: free (drag with your finger)",
+
+  // Buttons for the race actions that have only keys, on touch screens.
+  "touch.pause": "Pause",
+  "touch.camera": "Camera",
+  "touch.autoTrim": "Auto-trim",
+  "touch.spinnaker": "Spi",
+  "touch.switchSide": "Switch sides",
+  "touch.restart": "Restart",
+  "touch.anotherRace": "Another race",
+  "touch.menu": "Menu",
 };
