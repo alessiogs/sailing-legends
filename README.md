@@ -1,13 +1,14 @@
-# Sailing Legends — Prototype 0.4 (Optimist and 420)
+# Sailing Legends — Prototype 0.6 (Optimist and 420)
 
-**Play:** https://alessiogs.github.io/sailing-legends/ · Concept: [docs/CONCEPT.md](docs/CONCEPT.md) · Roadmap: [docs/ROADMAP.md](docs/ROADMAP.md) · Developer guide: [AGENTS.md](AGENTS.md)
+**Play:** https://alessiogs.github.io/sailing-legends/ (test build: `/dev/`) · Concept: [docs/CONCEPT.md](docs/CONCEPT.md) · Roadmap: [docs/ROADMAP.md](docs/ROADMAP.md) · Developer guide: [AGENTS.md](AGENTS.md)
 
-A browser-first prototype in Babylon.js + TypeScript + Vite. A full Optimist race against three AI
-Rivals (Luca, Giulia, Marco) with simplified but "real" sailing physics: apparent wind, the no-go zone,
-sail lift and drag, inertia, leeway, tacks and gybes.
+A browser sailing game in Babylon.js + TypeScript + Vite, growing into a FIFA-style career. Sail an Optimist or a
+420 against AI Rivals with simplified but "real" physics (apparent wind, the no-go zone, lift and drag, inertia,
+leeway, tacks and gybes), the racing rules and a **Career**: Seasons of Regattas, persistent Rivals who grow up
+with you, and the move from the Optimist to the 420 with a Partner of your choice.
 
-The game is in Italian or English (picker in the main menu). In-game labels quoted below (in quotes or italics) are the
-Italian ones as the player sees them, with their English meaning.
+Plays on desktop (keyboard or gamepad) and on phones, portrait or landscape (touch controls). The game is in
+Italian or English (picker in the main menu); labels quoted below are the Italian ones, with their meaning.
 
 ## Getting started
 ```bash
@@ -33,33 +34,71 @@ Requirements: Node.js 20+, a desktop browser with WebGL 2.
   https://alessiogs.github.io/sailing-legends/dev/. Pull requests are only tested and type-checked, never deployed.
 
 ## Controls
-| Keyboard | Gamepad | Action |
-|---|---|---|
-| A / D, ← / → (Shift = fine) | Left stick | Tiller (see below) |
-| W / ↑ | RT | Sheet in |
-| S / ↓ | LT | Ease the sheet |
-| T | X | Auto-trim (an Assist; in game: "Regolazione vela automatica") |
-| C | Y | Camera: chase / free / tactical |
-| P / Esc | Start | Pause |
-| R | Back | New race |
-| M / H | — | Menu |
-| K | — | Commands menu ("Comandi") |
-| V | — | Audio on/off |
+| Keyboard | Gamepad | Touch | Action |
+|---|---|---|---|
+| A / D, ← / → (Shift = fine) | Left stick | Drag the tiller bar (bottom) | Tiller; as Crew, your weight |
+| W / ↑ · S / ↓ | RT · LT | Drag the sheet slider (right edge) | Sheet in · ease |
+| T | X | Auto-trim button | Auto-trim (an Assist) |
+| Space | — | Spi button | Hoist / drop the spinnaker (420) |
+| E | — | Switch button | Switch sides (420 Crew) |
+| C | Y | Camera button | Camera: chase / free / tactical |
+| P / Esc | Start | Pause button | Pause |
+| R | Back | Pause → Restart | New race (Quick race only) |
+| M / H | — | — | Menu |
+| K | — | — | Commands menu ("Comandi") |
+| V | — | — | Audio on/off |
 
-**Commands menu (K, or from the main menu or the pause screen):**
-- *Muovi la barra* ("move the tiller", the default, realistic): → moves the tiller to the right and the boat turns
-  left, as on a real Optimist.
-- *Direzione della barca* ("boat direction"): → turns the boat to the right.
-- The tiller either springs back to the centre or stays where you leave it; tiller and sheet speed.
-The settings are remembered in the browser.
+**Commands menu (K, or from the main menu or the pause screen):** *Muovi la barra* ("move the tiller", default and
+realistic: → moves the tiller right and the boat turns left) or *Direzione della barca* ("boat direction": → turns
+the boat right); the tiller springs back to the centre or stays put; tiller and sheet speed. Remembered in the browser.
 
-## The race
-Windward-leeward course: start (45 s procedure) → **Mark 1** ("Boa 1") upwind → **Mark 2** ("Boa 2") downwind →
-**finish** ("Arrivo") upwind. Marks are left to port. If you are over the line at the gun you are **OCS**: you must
-return below the line and start again. The darker, rippled patches of water are puffs (more wind, a different
-direction).
+## Playing
+- **Quick race:** pick the boat (Optimist or 420), the wind and, for the 420, your Role (*Timoniere* = Helm,
+  *Prodiere* = Crew, *Barca completa* = Full Boat Control) and your Partner.
+- **Career:** choose your starting age (8–12). A **Season** is one year: four **Regattas** (club, regional, national,
+  international) of three races ("prove") each, scored low-point with a Discard from the third Regatta. Fleets grow
+  from 6 to 12 boats with the level. After each Regatta you see the standings and how you did against Luca, Giulia
+  and Marco; after the Season, a summary. Then stay in the Optimist or move to the 420 and pick a Partner from the
+  sailors you raced against; Crew Chemistry ("Intesa") rises and falls with your results. Everyone is a year older
+  each Season and the Rivals improve. The Career is saved in the browser after every race.
+- **The race:** windward-leeward course: start (45 s procedure) → **Mark 1** upwind → **Mark 2** downwind →
+  **finish** upwind, marks to port. Over the line at the gun you are **OCS** and must return. Darker, rippled
+  patches are puffs. Right-of-way rules 10, 11, 12, 13 and 31 are judged on contact, with penalty turns; a penalty
+  still owed at the finish means DSQ.
 
-## New in 0.4: the 420
+## Changelog
+<details>
+<summary><b>0.6</b> — new HUD (in progress)</summary>
+
+- Original "Sail number" HUD: a slim top strip (place, clock, next mark, pause), a compass pill with speed, round
+  Camera and Standings/map buttons, one message at a time with calm status colours.
+- Thumb controls for phones in portrait: a centred tiller bar at the bottom, a vertical sheet slider on the right
+  edge with Auto-trim (and Spinnaker, Switch side) under it; the same layout, scaled, on every screen.
+- The chase camera pulls back in portrait. Menus and the loading screen share the HUD's style and scroll on small
+  screens.
+</details>
+
+<details>
+<summary><b>0.5.1</b> — touch controls</summary>
+
+- Drag the HUD's tiller and trim gauges with a finger or the mouse (two fingers at once), tap buttons for the race
+  actions, and touch wording for every hint.
+</details>
+
+<details>
+<summary><b>0.5</b> — Career season</summary>
+
+- New `career/` module: Season calendar, low-point scoring with Discard and sailing tie-breaks, a versioned save
+  (an unreadable save asks to start again instead of crashing), a seeded sailor pool of Rivals and generated
+  sailors, fleets by Regatta level, Rival growth by age and personality, Crew Chemistry from Seasons together
+  and results.
+- Career menu, Season calendar, Regatta standings with the Rival lines, Season summary, the stay-or-420 choice.
+- English translation with a language picker; in Italian a single race is now "prova".
+</details>
+
+<details>
+<summary><b>0.4</b> — the 420</summary>
+
 - **New boat**: the 420, with mainsail, jib, spinnaker and trapeze (`I420` in `src/sailing/BoatClass.ts`).
   The physics handles several sails: the jib and the spinnaker must be to leeward (after tacks and gybes the Crew
   moves them across, otherwise the jib is backed), the spinnaker only pays off with the wind on the quarter or
@@ -76,8 +115,11 @@ direction).
   "Intesa") comes from shared history, technique and reliability: more chemistry = quicker reactions and more
   precise trim.
 - The 420 opponents are full AI Pairs (Helm + Crew), with a longer course and a wider start line.
+</details>
 
-## New in 0.3
+<details>
+<summary><b>0.3</b> — tiller, rules and sound</summary>
+
 - **Realistic tiller** with an indicator in the HUD; optional arcade mode.
 - **Right-of-way rules** (`src/race/Rules.ts`), judged on contact between hulls:
   rule 10 (port tack keeps clear of starboard tack), 11 (windward keeps clear of leeward),
@@ -90,8 +132,11 @@ direction).
 - **Synthesised audio** (`src/core/Sound.ts`): wind, water, flapping sail, start signals,
   mark rounded, penalty, collisions.
 - Capsule-shaped hulls for contacts (no longer circles); leeward mark moved below the start line.
+</details>
 
-## What's new since 0.1
+<details>
+<summary><b>0.1–0.2</b> — physics, wind, race and AI</summary>
+
 - **Sailing physics** (`src/sailing/BoatPhysics.ts`): true wind + boat speed → apparent wind; the
   sheet limits the boom angle; the angle of attack gives lift and drag (the sail *luffs* if eased too much and
   *stalls* if sheeted in too much); no drive within ~40° of the wind; hull drag with a "wall" at hull speed;
@@ -108,6 +153,7 @@ direction).
   luffing, Helm hiking out, heel and pitch on the waves, masthead wind indicator.
 - **HUD**: trim bar with the optimal zone, wind compass (no-go zone, optimal close-hauled angle, mark
   direction), favourable/unfavourable wind shift indicator, minimap with puffs and laylines, live standings.
+</details>
 
 ## Architecture
 ```
@@ -119,13 +165,14 @@ src/
 ├── ai/          RacingAI.ts (the Helm) with StartPlanning, BeatTactics, TackStateMachine, Avoidance;
 │                CrewAI.ts (the Crew)
 ├── sailors/     Sailors.ts (Rivals, sailor profiles, Crew Chemistry)
+├── career/      the Career: calendar, scoring, save, sailor pool, growth, Chemistry (pure, no graphics)
 ├── world/       Ocean.ts, Waves.ts, the boat views (BoatViewBase, BoatView, Boat420View), sails, CourseView.ts
 ├── i18n/        translation catalogs (it.ts: Italian, en.ts: English) and the typed lookup
-├── ui/          Hud.ts, hudPanel.ts, Menus.ts, race event and name wording, boat colours
+├── ui/          Hud.ts, hudPanel.ts, Menus.ts, CareerScreen.ts, standings, touch controls, wording, boat colours
 ├── game/        GameController.ts (game state and modes), PlayerControls, RaceFeedback, CameraRig, Preferences
 └── main.ts      startup wiring and render loop
 ```
-The simulation (`sailing/`, `race/`, `ai/`, `sailors/`) doesn't depend on Babylon: it runs at a fixed 60 Hz and can
+The simulation and the Career (`sailing/`, `race/`, `ai/`, `sailors/`, `career/`) doesn't depend on Babylon: it runs at a fixed 60 Hz and can
 be tested in Node without a browser. It emits data, never text: every in-game text lives in the catalogs in
 `src/i18n/`. A new class (ILCA…) starts from a new entry in `BoatClass.ts`. The full module map and the
 conventions are in the developer guide, [AGENTS.md](AGENTS.md).
@@ -134,6 +181,7 @@ conventions are in the developer guide, [AGENTS.md](AGENTS.md).
 - The physics model is tuned by feel, not validated against real data. Optimist at 11 knots: ~2.3 kn upwind,
   ~3.9 kn reaching, ~3.5 kn downwind.
 - Simplified rules: no mark-room (rule 18), no rule 16; breaches only count if there is contact.
-- AI starts are still sometimes late (typically 0–15 s); no covering tactics.
+- AI starts are still sometimes late; no covering tactics.
 - In light wind the AI sometimes struggles to keep clear of right-of-way boats and takes penalties.
+- Sailors are simple figures with no animation yet (0.6b), and body weight fore and aft is not simulated (0.6c).
 - `window.__game` exposes debug hooks (autopilot, fast-forward) used by the automated tests.

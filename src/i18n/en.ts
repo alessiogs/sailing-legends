@@ -15,7 +15,7 @@ export const english: Catalog = {
   // Main menu.
   "menu.lede.twoPerson": "420 racing, in a Pair with jib, spinnaker and trapeze",
   "menu.lede.single": "Optimist racing",
-  "menu.versionChip": ({ boatClass }) => `PROTOTYPE 0.4 · ${boatClass}`,
+  "menu.versionChip": ({ boatClass }) => `PROTOTYPE 0.6 · ${boatClass}`,
   "menu.roleHelp.helm": "Helm and mainsail. Your Partner, as Crew, trims the jib and spinnaker, goes out on the trapeze and decides when to hoist the spinnaker.",
   "menu.roleHelp.crew": "Your Partner steers. You: W/S jib (or spinnaker) sheet, A/D weight in/out up to the trapeze, E switch sides after tacks and gybes, Space hoist/drop the spinnaker. Listen for their calls.",
   "menu.roleHelp.fullBoat": "Helm and mainsail, and you call the manoeuvres: Space = hoist/drop the spinnaker. The Crew carries them out (faster when Crew Chemistry is high).",
