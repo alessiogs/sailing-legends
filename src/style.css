@@ -57,7 +57,7 @@ strong { font-weight: 650; font-variant-numeric: tabular-nums; }
 
 /* One column under the compass pill: the message pill (its slot is kept, so what is below never jumps), then the status
    pills (shift, Partner's call, penalty) and the Standings/map panel. */
-#flow { position: absolute; top: 122px; left: 56px; right: 56px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+#flow { position: absolute; top: 150px; left: 56px; right: 56px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
 #toast { width: 100%; min-height: 28px; display: flex; justify-content: center; align-items: flex-start; pointer-events: none; }
 #toast div { max-width: 100%; padding: 4px 10px; border-radius: 6px; background: var(--glass); color: #fff; font-family: var(--cond); font-weight: 700; font-size: 13px; line-height: 1.15; letter-spacing: .03em; text-align: center; text-transform: uppercase; animation: toast 3.2s ease forwards; }
 #toast div.big { font-size: 17px; color: var(--boat); }
@@ -112,10 +112,11 @@ strong { font-weight: 650; font-variant-numeric: tabular-nums; }
 
 .slider { position: absolute; right: 8px; bottom: 14px; width: 44px; height: clamp(140px, 34vh, 360px); display: flex; flex-direction: column; align-items: center; gap: 3px; pointer-events: auto; touch-action: none; cursor: ns-resize; font-family: var(--cond); font-weight: 700; font-size: 11px; }
 .slider-bar { position: relative; flex: 1 1 auto; width: 40px; background: var(--glass); border-radius: 12px; }
-.slider-track { position: absolute; left: 0; right: 0; top: 14px; bottom: 14px; }
+.slider-bar { overflow: hidden; }
+.slider-track { position: absolute; left: 0; right: 0; top: 18px; bottom: 18px; }
 .trim-opt { position: absolute; left: 4px; right: 4px; background: var(--lift); opacity: .45; border-radius: 8px; }
 .trim-cur { position: absolute; left: 4px; right: 4px; height: 28px; margin-top: -14px; border-radius: 8px; background: var(--boat); }
-.trim-cur::after { content: ""; position: absolute; left: 50%; top: 50%; width: 16px; height: 3px; margin: -1.5px 0 0 -10px; border-radius: 2px; background: #081622; }
+.trim-cur::after { content: ""; position: absolute; left: 50%; top: 50%; width: 16px; height: 3px; margin: -1.5px 0 0 -8px; border-radius: 2px; background: #081622; }
 
 #deck-right { position: absolute; right: 7px; bottom: 14px; display: flex; flex-direction: column; align-items: center; gap: 6px; }
 #context-buttons { display: flex; flex-direction: column; gap: 6px; }
@@ -125,7 +126,8 @@ strong { font-weight: 650; font-variant-numeric: tabular-nums; }
 .ctx { width: 46px; height: 46px; border-radius: 50%; border: 1.5px solid var(--boat); background: rgba(8, 22, 34, .72); font-size: 11px; line-height: 1; padding: 0; }
 .ctx.on { background: var(--boat); color: #081622; }
 #context-buttons:not(.two) .only-two, #context-buttons:not(.crew) .only-crew { display: none; }
-#trim-pill { position: fixed; left: 50%; transform: translateX(-50%); bottom: 72px; width: max-content; max-width: calc(100vw - 128px); }
+/* Portrait: the trim state is the first warning under the compass pill, always shown; the other warnings and the hint follow. */
+#trim-pill { position: fixed; top: 122px; left: 50%; transform: translateX(-50%); width: max-content; max-width: calc(100vw - 112px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .pair-block { display: grid; gap: 14px; margin: 12px 0 4px; padding: 14px; border: 1px solid var(--line); border-radius: 10px; background: rgba(255,255,255,.03); }
 .pair-block .steer-help { max-width: 60ch; line-height: 1.45; }
 .partners { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
@@ -246,7 +248,7 @@ html, body { touch-action: none; -webkit-user-select: none; user-select: none; -
   #context-buttons { flex-direction: row-reverse; }
   .slider, #hud:has(#context-buttons.two) .slider, #hud:has(#context-buttons.two.crew) .slider { bottom: 14px; }
   .tiller { left: 8px; transform: none; }
-  #trim-pill { max-width: 220px; }
+  #trim-pill { position: static; transform: none; max-width: 220px; white-space: normal; }
 }
 /* A small landscape screen (a phone): the status pills and the panel share one narrow column, clear of the tiller and the buttons. */
 @media (orientation: landscape) and (max-height: 559px) {
