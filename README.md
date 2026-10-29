@@ -25,7 +25,7 @@ Requirements: Node.js 20+, a desktop browser with WebGL 2.
     Full Boat Control) must match the snapshot `tests/golden/races.json` exactly; `npm run golden:update`
     rewrites it, only when behaviour is meant to change;
   - unit tests: rule verdicts and penalty turns, translation catalogs, race event wording, the AI's parts, the
-    HUD panel, the player's controls and more (the full list is in [AGENTS.md](AGENTS.md)).
+    HUD panel, the player's controls and more (the full list is in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)).
 - `npm run polar`: speed table (polar) per class, after any physics change.
 - Every push to `main` or `develop` runs the GitHub Action `.github/workflows/deploy.yml`: it installs, runs the
   tests, type-checks and builds both branches, and publishes them together to GitHub Pages: `main` at
