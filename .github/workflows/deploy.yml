@@ -30,8 +30,9 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: 22
+          cache: npm
       - name: Install dependencies
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
       - name: Simulation tests
         run: npm test
       # Pull requests only type-check: the production bundle takes most of the run time and the type-check
@@ -72,13 +73,16 @@ jobs:
         with:
           ref: develop
           path: develop
+      # Clean installs from the lockfile. main has none until develop is next published, so fall back to install.
       - name: Build main
         working-directory: main
-        run: npm install --no-audit --no-fund && npm run build
+        run: |
+          if [ -f package-lock.json ]; then npm ci --no-audit --no-fund; else npm install --no-audit --no-fund; fi
+          npm run build
       - name: Build develop
         if: steps.dev.outputs.exists == 'true'
         working-directory: develop
-        run: npm install --no-audit --no-fund && npm run build
+        run: npm ci --no-audit --no-fund && npm run build
       - name: Assemble site
         run: |
           mkdir site
