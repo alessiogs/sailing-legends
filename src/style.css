@@ -135,8 +135,10 @@ strong { font-weight: 650; font-variant-numeric: tabular-nums; }
 #tags { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
 #tags div { position: absolute; transform: translate(-50%, -100%); font-size: 11px; font-weight: 650; padding: 2px 7px; border-radius: 4px; background: rgba(5, 24, 39, .6); white-space: nowrap; }
 
-.overlay { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(4, 16, 27, 0.55); backdrop-filter: blur(3px); padding: 16px; overflow: auto; }
-.sheet { width: min(640px, 100%); background: rgba(6, 24, 38, 0.92); border: 1px solid var(--line); border-radius: 14px; padding: 26px 28px; }
+/* Menus scroll when taller than the screen: a flex column with an auto-margin sheet centres without clipping the top,
+   and pan-y lets the finger scroll here although the page itself never scrolls (touch-action: none on html/body). */
+.overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; background: rgba(4, 16, 27, 0.55); backdrop-filter: blur(3px); padding: 16px; box-sizing: border-box; overflow-y: auto; overflow-x: hidden; touch-action: pan-y; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+.sheet { margin: auto 0; flex-shrink: 0; box-sizing: border-box; max-width: 100%; width: min(640px, 100%); background: rgba(6, 24, 38, 0.92); border: 1px solid var(--line); border-radius: 14px; padding: 26px 28px; }
 .sheet.small { width: min(420px, 100%); text-align: center; }
 .lede { color: #cfe2ea; font-size: 14px; line-height: 1.5; margin: 6px 0 16px; }
 .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 18px; font-size: 13px; }
@@ -200,7 +202,6 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .rival-lines { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 2px; font-size: 13px; }
 .rival-lines .ahead { color: var(--muted); }
 .rival-lines .behind { color: var(--good); }
-#career .sheet { max-height: 92vh; overflow-y: auto; }
 
 
 /* Touch: the HUD's gauges are dragged (pointer events), the race actions have tap buttons, and the page never scrolls or zooms. */
@@ -212,6 +213,16 @@ html, body { touch-action: none; -webkit-user-select: none; user-select: none; -
   .controls, .primary span, .ghost span { display: none; }
 }
 @media (max-width: 760px) { .controls { grid-template-columns: 1fr; } }
+@media (max-width: 520px) {
+  .overlay { padding: 10px; }
+  .sheet { padding: 18px 16px; border-radius: 12px; }
+  .options { flex-direction: column; align-items: stretch; gap: 12px; }
+  .seg { display: flex; flex-wrap: wrap; }
+  .seg button { flex: 1 1 auto; }
+  .row-btns, .career-btns { flex-wrap: wrap; }
+  .row-btns > *, .career-btns > * { flex: 1 1 140px; }
+  .brand.lg { font-size: 19px; white-space: normal; }
+}
 
 /* The HUD in landscape (a phone on its side, a laptop, a desktop): the strip stays at the left, the messages take the middle of the
    top, and the thumb deck keeps its place; the context buttons lie in a row beside the sheet slider. */
