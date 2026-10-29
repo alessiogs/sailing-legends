@@ -34,6 +34,8 @@ src/
              wrong-side check, shared by the Crew AI, the browser autopilot and the HUD). Both read sailor profiles
   sailors/   Sailors.ts (sailor profiles, the Rival roster, the opponents' Crews, the extra Helm, the autopilot
              Helm, the Crew Chemistry formula; sailors are matched by `id`, never by name)
+  career/    Scoring.ts (low-point Race Points, Regatta ranking with the Discard and sailing tie-breaks, Season
+             ranking; pure data in and out, ids and numbers, no text)
   world/     Ocean.ts (Gerstner waves in GLSL), Waves.ts (same waves on CPU), BoatViewBase.ts (what both boat
              visuals share: wave riding, heel, boom swing, rudder, burgee; each class gives its `BoatMotion` and
              draws its own sails and sailors), BoatView.ts (Optimist), Boat420View.ts, SailorFigure.ts (the sailor
@@ -73,6 +75,7 @@ tests/       Vitest tests (npm test): smoke.test.ts (every AI-only race finishes
              page-text.test.ts (index.html filled from the catalog reads as page-text/original.json)
              event-text.test.ts (every race event kind, worded through the Italian catalog, reads as before)
              race-names.test.ts (leg and boat names of every session setup read as before)
+             career-scoring.test.ts (low point, OCS/DSQ, Discard, tie-breaks incl. after the Discard, Season ranking)
              sailors.test.ts (rosters, Partner swap, Crew Chemistry values as the menu shows them)
              player-choice.test.ts (Crew with Full Boat Control is a type error; the Partner set up per choice)
              crew-side.test.ts (the shared Crew wrong-side check)
@@ -92,7 +95,7 @@ tests/       Vitest tests (npm test): smoke.test.ts (every AI-only race finishes
              optimal-sheet.test.ts (the fast optimal-sheet search gives exactly the sheet that sampling every step gives)
 scripts/     polar.ts (npm run polar), golden-update.ts (npm run golden:update)
 ```
-**Rule:** `core/math.ts`, `sailing/`, `race/`, `ai/`, `sailors/`, `i18n/` and every other file a test imports
+**Rule:** `core/math.ts`, `sailing/`, `race/`, `ai/`, `sailors/`, `career/`, `i18n/` and every other file a test imports
 (`hudPanel.ts`, `raceEventText.ts`, `PlayerControls.ts`, `RaceFeedback.ts`, `sailShape.ts`, `sceneCache.ts`, …)
 import neither Babylon nor browser APIs: they run in Node (tests) and in the browser, and `tsconfig.node.json`
 type-checks them without DOM types.
