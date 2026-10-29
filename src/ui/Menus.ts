@@ -48,6 +48,8 @@ export class Menus implements Screens {
   private resultsNext!: HTMLButtonElement;
   private resultsCalendar!: HTMLButtonElement;
   private resultsStandings!: HTMLButtonElement;
+  private resultsQuick!: HTMLElement;
+  private pauseRestart!: HTMLButtonElement;
   /** The Regatta whose standings the results screen offers, or null. */
   private standingsRegatta: number | null = null;
 
@@ -69,6 +71,7 @@ export class Menus implements Screens {
     this.el.results.classList.toggle("hidden", m !== "results");
     this.el.controls.classList.toggle("hidden", m !== "controls");
     this.career.root.classList.toggle("hidden", m !== "career");
+    if (m === "paused") this.pauseRestart.classList.toggle("hidden", this.game.inCareerRace);
     if (m === "menu") this.continueButton.classList.toggle("hidden", this.game.savedCareer() === null);
   }
 
@@ -79,6 +82,7 @@ export class Menus implements Screens {
     this.resultsCalendar.classList.toggle("hidden", !career);
     this.standingsRegatta = career?.standings ?? null;
     this.resultsStandings.classList.toggle("hidden", this.standingsRegatta === null);
+    this.resultsQuick.classList.toggle("hidden", !!career);
     this.el.results.querySelector(".muted")!.classList.toggle("hidden", !!career);
     $("results-table").replaceChildren(...standings.map((r, i) => {
       const time = r.dsq ? t("results.dsq") : r.finishTime !== null ? `${Math.floor(r.finishTime / 60)}:${String(Math.floor(r.finishTime % 60)).padStart(2, "0")}` : "—";
@@ -98,6 +102,7 @@ export class Menus implements Screens {
     $("start-btn").addEventListener("click", () => game.startFromMenu());
     this.attachCareer();
     this.attachCommands();
+    this.attachTouchButtons();
     this.attachBoatMenu();
     this.attachLanguage();
     for (const b of buttons("#wind-opt button")) {
@@ -135,6 +140,23 @@ export class Menus implements Screens {
     });
     this.resultsCalendar = button("results-calendar", "ghost", "career.results.calendar", () => game.showCalendar());
     this.el.results.querySelector(".sheet")!.append(this.resultsNext, this.resultsStandings, this.resultsCalendar);
+  }
+
+  // ---------- Touch buttons ----------
+  /** Adds the buttons the pause and results screens have for the keys R and M, shown only on touch screens (`.touch-only`). */
+  private attachTouchButtons() {
+    const { game } = this;
+    const button = (id: string, kind: string, key: "touch.restart" | "touch.anotherRace" | "touch.menu", run: () => void) => {
+      const b = h("button", { id, class: `${kind} touch-only` }, t(key));
+      b.addEventListener("click", run);
+      return b;
+    };
+    this.pauseRestart = button("pause-restart", "ghost", "touch.restart", () => game.restart());
+    $("pause-menu").before(this.pauseRestart);
+    this.resultsQuick = h("div", { class: "stack touch-only" },
+      button("results-restart", "primary", "touch.anotherRace", () => game.restart()),
+      button("results-menu", "ghost", "touch.menu", () => game.setMode("menu")));
+    this.el.results.querySelector(".sheet")!.append(this.resultsQuick);
   }
 
   // ---------- Language ----------

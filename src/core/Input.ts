@@ -6,9 +6,21 @@ import { clamp } from "./math";
  * Keyboard + gamepad. Produces smooth tiller and sheet commands plus one-shot actions.
  * Keyboard: A/D or ←/→ move the tiller, W/↑ sheet in, S/↓ ease, T Auto-trim, C camera, R restart,
  * H/M menu, P/Esc pause, V sound. Gamepad: left stick tiller, RT sheet in, LT ease, Y camera,
- * X Auto-trim, Start pause, Back restart. How the keys steer is set by `settings` (see ControlSettings.ts).
+ * X Auto-trim, Start pause, Back restart. Drag: the UI layer drags the gauge and the sheet through `dragGauge` and
+ * `dragSheet` (touch or mouse) and presses actions with `press`; this module knows nothing of the HUD.
+ * How the keys steer is set by `settings` (see ControlSettings.ts).
  */
 export type Action = "autoTrim" | "camera" | "restart" | "help" | "pause" | "start" | "menu" | "mute" | "controls" | "spi" | "switch";
+
+/** The key events `Input` listens to, as far as it uses them: the browser's `window` in the game, a stub in tests. */
+export type InputTarget = {
+  addEventListener(type: "keydown", listener: (e: { key: string; repeat: boolean; preventDefault(): void }) => void): void;
+  addEventListener(type: "keyup", listener: (e: { key: string }) => void): void;
+  addEventListener(type: "blur", listener: () => void): void;
+};
+
+/** A gamepad, as far as `Input` reads it (the browser's `Gamepad`). */
+type Pad = { connected: boolean; axes: readonly number[]; buttons: readonly { pressed: boolean; value: number }[] };
 
 export class Input {
   /** Tiller position: -1 = pushed fully to port (left), +1 = fully to starboard (right). */
@@ -24,8 +36,11 @@ export class Input {
   private pressed: Action[] = [];
   private padPrev: boolean[] = [];
   usingPad = false;
+  /** Where a finger or mouse holds the gauge and the sheet, 0 (left / sheeted in) .. 1 (right / eased), or null when released. */
+  private drag: { gauge: number | null; sheet: number | null } = { gauge: null, sheet: null };
 
-  constructor(target: Window = window) {
+  /** `target` defaults to the browser's `window`. */
+  constructor(target: InputTarget = globalThis as unknown as InputTarget) {
     target.addEventListener("keydown", e => {
       const k = e.key.toLowerCase();
       if (["arrowup", "arrowdown", "arrowleft", "arrowright", " "].includes(k)) e.preventDefault();
@@ -63,6 +78,7 @@ export class Input {
       if (k.has("s") || k.has("arrowdown")) this.sheet = clamp(this.sheet + dt * 0.45 * this.settings.sheetSpeed, 0, 1);
       this.tiller = 0;
       this.pollPad(dt);
+      this.applyDrag();
       return;
     }
     const want = this.steering === "tiller" ? keyDir : -keyDir;
@@ -75,11 +91,43 @@ export class Input {
     if (k.has("s") || k.has("arrowdown")) this.sheet = clamp(this.sheet + dt * 0.45 * ss, 0, 1);
 
     this.pollPad(dt);
+    this.applyDrag();
+  }
+
+  /**
+   * A drag holds the gauge at `position` (0 = left end .. 1 = right end of the bar), or lets it go (`null`).
+   * The Helm's gauge is the tiller (its direction follows the steering setting, as the keys do), the Crew's is
+   * their weight (0 in .. 1 trapeze). Letting go leaves the tiller to auto-centre as after the keys.
+   */
+  dragGauge(position: number | null) {
+    this.drag.gauge = position === null ? null : clamp(position, 0, 1);
+    if (position !== null) this.usingPad = false;
+  }
+
+  /** A drag holds the sheet of the sail being trimmed at `position` (0 = sheeted in .. 1 = eased), or lets it go. */
+  dragSheet(position: number | null) {
+    this.drag.sheet = position === null ? null : clamp(position, 0, 1);
+    if (position !== null) this.usingPad = false;
+  }
+
+  /** An action the player tapped on screen, handled like its key. */
+  press(action: Action) {
+    this.pressed.push(action);
+  }
+
+  private applyDrag() {
+    const { gauge, sheet } = this.drag;
+    if (gauge !== null) {
+      if (this.role === "crew") this.crewOut = gauge;
+      else this.tiller = (this.steering === "tiller" ? 1 : -1) * (gauge * 2 - 1);
+    }
+    if (sheet !== null) this.sheet = sheet;
   }
 
   private pollPad(dt: number) {
-    const pads = typeof navigator !== "undefined" && navigator.getGamepads ? navigator.getGamepads() : [];
-    const pad = Array.from(pads).find(p => p && p.connected);
+    const nav = (globalThis as { navigator?: { getGamepads?(): ArrayLike<Pad | null> } }).navigator;
+    const pads = nav?.getGamepads ? nav.getGamepads() : [];
+    const pad = Array.from(pads).find((p): p is Pad => !!p && p.connected);
     if (!pad) return;
     const lx = pad.axes[0] ?? 0;
     const rt = pad.buttons[7]?.value ?? 0;
@@ -105,6 +153,7 @@ export class Input {
   }
 
   reset() {
+    this.drag = { gauge: null, sheet: null };
     this.tiller = 0;
     this.sheet = 0.55;
     this.crewOut = 0.3;

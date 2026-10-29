@@ -2,7 +2,7 @@
 <html lang="it">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Sailing Legends</title>
   </head>
   <body>
@@ -43,23 +43,26 @@
 
         <div class="trim panel">
           <div id="call" class="call hidden"></div>
-          <div class="tiller">
+          <div class="tiller" id="gauge-zone">
             <small id="gauge-label" data-i18n="hud.gauge.tiller"></small>
             <div class="tiller-bar"><i id="tiller-pos"></i><b id="gauge-center"></b><u id="gauge-ideal"></u></div>
             <div class="trim-ends"><span id="gauge-left" data-i18n="hud.gauge.left"></span><span id="gauge-right" data-i18n="hud.gauge.right"></span></div>
           </div>
           <div class="trim-head"><small id="sail-label" data-i18n="hud.sail.single"></small><span id="auto-trim-chip" class="chip" data-i18n="hud.autoTrimChip"></span></div>
-          <div class="trim-bar">
-            <div id="trim-opt" class="trim-opt"></div>
-            <div id="trim-cur" class="trim-cur"></div>
+          <div id="trim-zone" class="trim-zone">
+            <div class="trim-bar">
+              <div id="trim-opt" class="trim-opt"></div>
+              <div id="trim-cur" class="trim-cur"></div>
+            </div>
+            <div class="trim-ends"><span data-i18n="hud.sheet.in"></span><span data-i18n="hud.sheet.out"></span></div>
           </div>
-          <div class="trim-ends"><span data-i18n="hud.sheet.in"></span><span data-i18n="hud.sheet.out"></span></div>
           <div id="trim-state" class="trim-state">—</div>
           <div id="partner-line" class="partner-line hidden"></div>
         </div>
 
         <canvas id="minimap" width="400" height="460" class="panel" data-i18n-aria-label="hud.minimap.label"></canvas>
         <div id="hint" class="hint" data-i18n="hud.hint"></div>
+        <div id="touch-actions" class="touch-actions"></div>
       </section>
 
       <div id="toast"></div>

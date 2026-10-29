@@ -303,4 +303,41 @@ export const italian = {
   "career.next.partner": "Scegli il tuo compagno tra i velisti che hai incontrato. L'intesa cresce con le stagioni passate a regatare insieme.",
   "career.next.chemistry": ({ chemistry }: { chemistry: number }) => `Intesa ${chemistry}/100`,
   "career.next.start": "Inizia la stagione",
+
+  // Touch wording: on a touch screen `t` and `lookup` read "<key>.touch" instead of "<key>" when it exists
+  // (see index.ts), for the messages that name a key. A variant takes the same parameters as its message.
+  "menu.roleHelp.crew.touch": "Il partner timona. Tu: trascina la barra della vela per il fiocco (o lo spi) e quella in alto per il peso dentro/fuori fino al trapezio; tocca Cambio lato dopo virate e strambate e Spi per issare/ammainare. Ascolta le sue chiamate.",
+  "menu.roleHelp.fullBoat.touch": "Timone e randa, e chiami tu le manovre: tocca Spi per issare/ammainare lo spi. Il prodiere esegue (più in fretta se l'intesa è alta).",
+  "pause.restartHint.touch": "Tocca Ricomincia per rifare la prova",
+  "results.hint.touch": "Tocca Altra prova o Menu",
+  "hud.hint.touch": "Tocca i pulsanti per camera, auto-vela e pausa",
+  "hud.sheet.in.touch": "◀ CAZZA",
+  "hud.sheet.out.touch": "LASCA ▶",
+  "hud.gauge.in.touch": "◀ DENTRO",
+  "hud.gauge.out.touch": "FUORI / TRAPEZIO ▶",
+  "hud.partnerLine.crewOnCall.touch": ({ name, weight, spi }: { name: string; weight: string; spi: string }) =>
+    `${name}: ${weight} · spi ${spi} · tocca Spi per issare/ammainare`,
+  "call.switchSide.touch": ({ name }: { name: string }) => `${name}: «Cambia lato!» → tocca Cambio lato`,
+  "call.spiHoist.touch": ({ name }: { name: string }) => `${name}: «Issa lo spi!» → tocca Spi`,
+  "call.spiDrop.touch": ({ name }: { name: string }) => `${name}: «Ammaina!» → tocca Spi`,
+  "call.hikeOut.touch": ({ name }: { name: string }) => `${name}: «Fuori! Siamo sbandati» → trascina il peso a destra`,
+  "call.comeIn.touch": ({ name }: { name: string }) => `${name}: «Dentro! Ci rovesciamo sopravvento» → trascina il peso a sinistra`,
+  "coach.partnerTack.touch": ({ name }: { name: string }) => `${name}: «Viro!» — tocca Cambio lato`,
+  "coach.partnerGybe.touch": ({ name }: { name: string }) => `${name}: «Strambo!» — tocca Cambio lato`,
+  "coach.irons.tiller.touch": "Sei fermo prua al vento: lasca la vela e spingi la barra per poggiare",
+  "coach.irons.boat.touch": "Sei fermo prua al vento: lasca la vela e poggia con il timone",
+  "trim.luffing.touch": "La vela sventa — cazza",
+  "trim.stalled.touch": "Troppo cazzata — lasca",
+  "trim.jibBacked.touch": "Fiocco a collo! Tocca Cambio lato",
+  "toast.camera.free.touch": "Camera: libera (trascina col dito)",
+
+  // Buttons for the race actions that have only keys, on touch screens.
+  "touch.pause": "Pausa",
+  "touch.camera": "Camera",
+  "touch.autoTrim": "Auto-vela",
+  "touch.spinnaker": "Spi",
+  "touch.switchSide": "Cambio lato",
+  "touch.restart": "Ricomincia",
+  "touch.anotherRace": "Altra prova",
+  "touch.menu": "Menu",
 };
