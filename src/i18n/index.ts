@@ -8,7 +8,7 @@
  *
  * Key convention: `area.name` in camelCase, with more dotted segments for variants of one message
  * (`hud.phase.prestart`, `trim.luffing`). Areas: `menu`, `pause`, `controls`, `key`, `toast`, `event`, `coach`, `call`, `race`, `hud`,
- * `trim`, `standings`, `results`.
+ * `trim`, `standings`, `results`, `career`.
  *
  * Static text in `index.html` names its key in a `data-i18n` (text) or `data-i18n-aria-label` attribute and is filled
  * at startup by `ui/pageText.ts`.

@@ -3,14 +3,18 @@ import type { Input } from "../core/Input";
 import type { Sound } from "../core/Sound";
 import { DEG } from "../core/math";
 import { t } from "../i18n";
+import { nextRaceSetup, startCareer, type RaceSetup } from "../career/Career";
+import { loadCareer, saveCareer, type CareerLoad, type CareerState, type CareerStorage } from "../career/CareerSave";
+import { raceEntries, recordRace } from "../career/RecordRace";
 import { legTarget } from "../race/Course";
 import { HELM, type PlayerChoice } from "../race/PlayerChoice";
 import type { Racer } from "../race/Race";
 import { makeFleet } from "../race/Fleet";
-import { RaceSession } from "../race/RaceSession";
+import { FIXED_DT, RaceSession } from "../race/RaceSession";
 import { CLASSES, isTwoPerson, type BoatClass } from "../sailing/BoatClass";
 import { RIVALS, type SailorProfile } from "../sailors/Sailors";
 import { boatColors } from "../ui/boatColors";
+import type { CareerView } from "../ui/CareerScreen";
 import type { Hud } from "../ui/Hud";
 import { buildPanel } from "../ui/hudPanel";
 import { Boat420View } from "../world/Boat420View";
@@ -25,14 +29,19 @@ import { PlayerControls, type Assists } from "./PlayerControls";
 import { RaceFeedback, type Cue } from "./RaceFeedback";
 
 /** What the game is doing: each mode but racing shows its own screen. */
-export type Mode = "menu" | "racing" | "paused" | "results" | "controls";
+export type Mode = "menu" | "racing" | "paused" | "results" | "controls" | "career";
+
+/** What the results screen offers after a Career Race: the next Race when the Regatta has one, else the calendar. */
+export type CareerResults = { nextRace: boolean };
 
 /** The page screens the controller drives: one per mode, plus the Auto-trim option of the main menu. */
 export interface Screens {
   /** Shows the screen of `mode` and hides the others (racing has none). */
   show(mode: Mode): void;
-  /** Fills the results table from the standings. */
-  fillResults(standings: Racer[]): void;
+  /** Fills the results table from the standings; `career` is set after a Career Race (Quick race: `null`). */
+  fillResults(standings: Racer[], career: CareerResults | null): void;
+  /** Fills the Career screen (shown in mode `career`). */
+  showCareer(view: CareerView): void;
   /** Whether the menu's Auto-trim option is ticked. */
   autoTrimChosen(): boolean;
   /** Ticks or unticks the menu's Auto-trim option. */
@@ -51,7 +60,12 @@ export type GameDeps = {
   screens: Screens;
   /** Saves the player's preferences (controls and mute). */
   savePrefs: () => void;
+  /** Where the Career is saved (a getter: merely reaching `localStorage` can throw). */
+  careerStorage: () => CareerStorage;
 };
+
+/** After the player finishes a Career Race, the rest of the fleet is sailed on at most this long to get a full result. */
+const FINISH_FLEET_S = 600;
 
 /**
  * Owns the game state (the race session, the race setup chosen in the menu, the Assists) and the
@@ -66,6 +80,12 @@ export class GameController {
   /** The Assists the player has switched on. */
   readonly assists: Assists = { autoTrim: false };
 
+  // ---------- Career ----------
+  /** The Career being played, or `null` in Quick race and before one is started or continued. */
+  career: CareerState | null = null;
+  /** The Career Race the current session is, or `null` for a Quick race; `recorded` once its result is in the Career. */
+  private careerRace: { setup: RaceSetup; recorded: boolean } | null = null;
+
   // ---------- Modes ----------
   private _mode: Mode = "menu";
   /** The mode the Commands menu returns to. */
@@ -79,6 +99,9 @@ export class GameController {
   private ocean: Ocean | null = null;
   private waves: Wave[] = [];
   private time = 0;
+  /** The class and the player's Role and Control mode of the current session (the menu may have moved on since). */
+  private activeClass: BoatClass = CLASSES.optimist;
+  private activeChoice: PlayerChoice = HELM;
 
   /** The sounds, messages and coaching hints the player gets from the race. */
   private readonly feedback = new RaceFeedback();
@@ -102,6 +125,7 @@ export class GameController {
   private readonly sound: Sound;
   private readonly screens: Screens;
   private readonly savePrefs: () => void;
+  private readonly careerStorage: () => CareerStorage;
 
   constructor(deps: GameDeps) {
     this.engine = deps.engine;
@@ -113,6 +137,7 @@ export class GameController {
     this.sound = deps.sound;
     this.screens = deps.screens;
     this.savePrefs = deps.savePrefs;
+    this.careerStorage = deps.careerStorage;
     this.controls = new PlayerControls(deps.input, this.assists);
   }
 
@@ -125,20 +150,24 @@ export class GameController {
     this.setMode("menu");
   }
 
-  newRace() {
+  /** Starts a race: the Career's `setup` for a Career Race, else a Quick race from the menu's choices. */
+  newRace(setup?: RaceSetup) {
     const { scene, hud, input } = this;
     for (const b of this.boats.values()) b.dispose();
     this.boats.clear();
     this.courseView?.dispose();
     hud.clearTags();
-    const seed = Math.floor(Math.random() * 1e6);
-    const session = this.session = new RaceSession({
-      seed, windKn: this.windKn, fleet: makeFleet({ boatClass: this.boatClass, choice: this.choice, partner: this.partner }),
-    });
-    input.role = isTwoPerson(this.boatClass) ? this.choice.role : "helm";
+    this.careerRace = setup ? { setup, recorded: false } : null;
+    const seed = setup ? setup.seed : Math.floor(Math.random() * 1e6);
+    const windKn = setup ? setup.windKn : this.windKn;
+    const fleet = setup ? setup.fleet : makeFleet({ boatClass: this.boatClass, choice: this.choice, partner: this.partner });
+    this.activeClass = fleet.boatClass;
+    this.activeChoice = setup ? fleet.choice : this.choice;
+    const session = this.session = new RaceSession({ seed, windKn, fleet });
+    input.role = isTwoPerson(this.activeClass) ? this.activeChoice.role : "helm";
     this.controls.newRace();
     this.feedback.newRace(session);
-    this.waves = makeWaves(session.wind.meanDir, this.windKn);
+    this.waves = makeWaves(session.wind.meanDir, windKn);
     if (!this.ocean) this.ocean = new Ocean(scene, this.waves);
     else this.ocean.setWaves(this.waves);
     this.courseView = new CourseView(scene, session.race.course);
@@ -147,7 +176,7 @@ export class GameController {
       this.boats.set(r.id, isTwoPerson(r.sim.cls) ? new Boat420View(scene, r.id, look) : new BoatView(scene, r.id, look));
     }
     input.reset();
-    this.cameraRig.placeBehind(session.player!.sim.state, isTwoPerson(this.boatClass));
+    this.cameraRig.placeBehind(session.player!.sim.state, isTwoPerson(this.activeClass));
     hud.show(true);
     hud.toast(t("toast.startSequence"), "big");
   }
@@ -164,6 +193,62 @@ export class GameController {
     this.setMode("racing");
   }
 
+  // ---------- Career ----------
+  /** The saved Career: `null` when there is none, `{ ok: false }` when it cannot be read. */
+  savedCareer(): CareerLoad | null { return loadCareer(this.careerStorage); }
+
+  /** Asks for the starting age of a new Career. */
+  askCareerAge() {
+    this.screens.showCareer({ kind: "age", replaces: this.savedCareer() !== null });
+    this.setMode("career");
+  }
+
+  /** Starts a new Career at `startingAge`, saves it and shows its calendar. */
+  newCareer(startingAge: number) {
+    this.career = startCareer({ seed: Math.floor(Math.random() * 2 ** 31), startingAge });
+    saveCareer(this.careerStorage, this.career);
+    this.showCalendar();
+  }
+
+  /** Continues the saved Career at its calendar; an unreadable save gets the "start a new career?" prompt instead. */
+  continueCareer() {
+    const saved = this.savedCareer();
+    if (saved === null) return this.askCareerAge();
+    if (!saved.ok) {
+      this.screens.showCareer({ kind: "unreadable" });
+      return this.setMode("career");
+    }
+    this.career = saved.state;
+    this.showCalendar();
+  }
+
+  /** The Season calendar of the Career in progress. */
+  showCalendar() {
+    if (!this.career) return;
+    this.screens.showCareer({ kind: "calendar", state: this.career });
+    this.setMode("career");
+  }
+
+  /** Starts the next Race of the Career's Regatta (nothing when the Season's Regattas are all sailed). */
+  startCareerRace() {
+    const setup = this.career && nextRaceSetup(this.career, { choice: this.choice, partner: this.partner });
+    if (!setup) return;
+    this.sound.init();
+    this.assists.autoTrim = this.screens.autoTrimChosen();
+    this.newRace(setup);
+    this.setMode("racing");
+  }
+
+  /** Records the Career Race once the player has finished: sails the rest of the fleet home, adds the result, saves. */
+  private recordCareerRace(race: { setup: RaceSetup; recorded: boolean }) {
+    if (race.recorded || !this.career) return;
+    const { race: r } = this.session;
+    for (let i = 0; i < FINISH_FLEET_S / FIXED_DT && r.phase !== "done"; i++) this.session.step(FIXED_DT);
+    this.career = recordRace(this.career, raceEntries(race.setup.fleet, r.racers));
+    saveCareer(this.careerStorage, this.career);
+    race.recorded = true;
+  }
+
   openControls() {
     if (this._mode === "controls") return;
     this.controlsReturn = this._mode === "racing" ? "paused" : this._mode;
@@ -173,7 +258,9 @@ export class GameController {
   closeControls() { this.setMode(this.controlsReturn); }
 
   private showResults() {
-    this.screens.fillResults(this.session.race.standings());
+    const career = this.careerRace;
+    if (career) this.recordCareerRace(career);
+    this.screens.fillResults(this.session.race.standings(), career && this.career ? { nextRace: nextRaceSetup(this.career) !== null } : null);
     this.setMode("results");
   }
 
@@ -196,9 +283,13 @@ export class GameController {
         if (a === "start") this.startFromMenu();
         continue;
       }
+      if (this._mode === "career") {
+        if (a === "menu") this.setMode("menu");
+        continue;
+      }
       const mode = this._mode;
       if (a === "pause") this.setMode(mode === "paused" ? "racing" : mode === "racing" ? "paused" : mode);
-      if (a === "restart") { this.newRace(); this.setMode("racing"); }
+      if (a === "restart" && !this.careerRace) { this.newRace(); this.setMode("racing"); }
       if (a === "menu" || a === "help") { this.setMode("menu"); }
       if (a === "autoTrim" && this._mode === "racing") {
         this.assists.autoTrim = !this.assists.autoTrim;
@@ -212,7 +303,7 @@ export class GameController {
       }
       if (a === "switch" && this._mode === "racing" && this.controls.switchSide(this.session)) hud.toast(t("toast.switchSide"));
       if (a === "camera") {
-        hud.toast(t(`toast.camera.${this.cameraRig.nextMode(isTwoPerson(this.boatClass))}`));
+        hud.toast(t(`toast.camera.${this.cameraRig.nextMode(isTwoPerson(this.activeClass))}`));
       }
     }
   }
@@ -245,7 +336,7 @@ export class GameController {
     const leg = p.leg >= 0 && p.leg < session.race.course.legs.length ? session.race.course.legs[p.leg] : null;
     this.courseView!.setTarget(p.finishTime !== null ? null : leg ? legTarget(leg) : null);
     this.courseView!.update(this.time, this.waves, p.leg < 0, !!leg && leg.kind === "finish");
-    this.cameraRig.follow(dt, p.sim.state, isTwoPerson(this.boatClass));
+    this.cameraRig.follow(dt, p.sim.state, isTwoPerson(this.activeClass));
     this.ocean!.update(this.time, camera, session.wind);
     hud.update(dt, session.race, p, session.wind, this.panel(session));
     const tel = p.sim.telemetry;
@@ -300,7 +391,7 @@ export class GameController {
   /** The HUD's bottom panel for the player's boat, from the race and the choices held here. */
   private panel(session: RaceSession) {
     return buildPanel({
-      session, role: this.input.role, control: this.choice.control, twoPerson: isTwoPerson(this.boatClass),
+      session, role: this.input.role, control: this.activeChoice.control, twoPerson: isTwoPerson(this.activeClass),
       tiller: this.input.tiller, autoTrim: this.assists.autoTrim,
     });
   }
