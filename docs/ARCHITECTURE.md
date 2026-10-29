@@ -51,6 +51,8 @@ src/
              Pool.ts (the sailor pool: the Rivals plus 27 generated sailors with Italian names, drawn once from the
              Career seed and stored in the save; `sailorRating`)
              Fleets.ts (`regattaFleet`: a Regatta's fleet from the pool by level, 6 to 12 boats, Rivals always in)
+             RecordRace.ts (`raceEntries`: a race's outcome as Career entries, racer ids mapped to sailor ids;
+             `recordRace`: adds a Race and moves to the next Regatta; `isSeasonOver`)
              Weather.ts (the wind and seed of each Race of a Regatta), Seeds.ts (`mixSeed`)
   world/     Ocean.ts (Gerstner waves in GLSL), Waves.ts (same waves on CPU), BoatViewBase.ts (what both boat
              visuals share: wave riding, heel, boom swing, rudder, burgee; each class gives its `BoatMotion` and
@@ -70,9 +72,12 @@ src/
              boatColors.ts (the one boat colour table by racer id: 3D hull/sail/jacket/stripe and the HUD dot),
              dom.ts (`h(tag, attributes, ...children)`: builds elements; strings become text, never markup),
              Menus.ts (main menu: class, wind, Role, Partner, Auto-trim; Commands menu; pause and results
-             screens. Implements the controller's `Screens`; `attach(game)` wires the buttons)
+             screens, and the Career entries and next-Race buttons. Implements the controller's `Screens`; `attach(game)`
+             wires the buttons), CareerScreen.ts (the Career overlay: starting age, unreadable-save prompt, Season
+             calendar; built with `h()`, so `index.html` holds no text for it)
   game/      GameController.ts (owns the game state: race session, class, Role and Control mode, Partner, wind,
-             Assists; the menu / racing / paused / results / controls modes; one `frame(dt)` per render; plays the
+             Assists; the menu / racing / paused / results / controls / career modes; the Career in progress: new, continue, start a Race,
+             record it and save after every Race; one `frame(dt)` per render; plays the
              race feedback's cues). Drives the page through `Screens`.
              RaceFeedback.ts (countdown beeps, race events as sounds and messages, coaching hints: tack/gybe
              calls, the Partner's calls, the irons hint; returns `Cue`s for the controller to play; DOM/audio-free)
@@ -83,6 +88,8 @@ src/
              testHook.ts (the typed `window.__game` test hook, `GameTestHook`, and `window.__fps`)
   main.ts    startup wiring: language, scene, camera rig, preferences, `Menus`, render loop, installs the test hook
 tests/       Vitest tests (npm test): smoke.test.ts (every AI-only race finishes, every penalty served),
+             career-smoke.test.ts (a Career Regatta of Races through `RaceSession` into `career`),
+             career-record.test.ts (entries of a race, recording a Race, Regatta rollover, Season end)
              golden.test.ts + golden/ (races.ts sails and records the golden races, races.json is the snapshot),
              rules.test.ts (rule 10/11/12/13 verdicts and penalty turns, two boats placed by hand)
              i18n.test.ts (lookup, parameters, plural rules; catalogs with missing or extra keys fail the type-check)

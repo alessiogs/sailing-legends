@@ -61,7 +61,7 @@ const chooseMenuLanguage = (next: Language) => {
   location.reload();
 };
 const menus = new Menus(input, savePlayerPrefs, language, chooseMenuLanguage);
-const game = new GameController({ engine, scene, cameraRig, canvas, input, hud, sound, screens: menus, savePrefs: savePlayerPrefs });
+const game = new GameController({ engine, scene, cameraRig, canvas, input, hud, sound, screens: menus, savePrefs: savePlayerPrefs, careerStorage: storage });
 menus.attach(game);
 
 // ---------- Main loop ----------

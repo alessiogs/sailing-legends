@@ -1,11 +1,12 @@
 import { DEFAULT_CONTROLS } from "../core/ControlSettings";
 import type { Input } from "../core/Input";
-import type { GameController, Mode, Screens } from "../game/GameController";
+import type { CareerResults, GameController, Mode, Screens } from "../game/GameController";
 import { LANGUAGES, t, type Language, type MessageKey } from "../i18n";
 import type { Racer } from "../race/Race";
 import { CREW, FULL_BOAT, HELM, type PlayerChoice } from "../race/PlayerChoice";
 import { CLASSES, isClassId, isTwoPerson } from "../sailing/BoatClass";
 import { crewChemistry, RIVALS, rivalById } from "../sailors/Sailors";
+import { CareerScreen, type CareerView } from "./CareerScreen";
 import { h } from "./dom";
 import { racerName } from "./raceNames";
 
@@ -22,8 +23,8 @@ type RoleOption = keyof typeof ROLE_OPTIONS;
 const roleOption = (c: PlayerChoice): RoleOption => c.role === "crew" ? "crew" : c.control === "fullBoat" ? "fullBoat" : "helm";
 
 /**
- * The page's menus: the main menu (boat class, wind, Role, Partner, Auto-trim), the Commands menu,
- * the pause screen and the results screen. Implements the controller's `Screens`; `attach` wires the
+ * The page's menus: the main menu (boat class, wind, Role, Partner, Auto-trim, and the Career entries), the Commands
+ * menu, the pause screen, the results screen and the Career screen. Implements the controller's `Screens`; `attach` wires the
  * buttons to the game and shows the current choices.
  */
 export class Menus implements Screens {
@@ -32,6 +33,15 @@ export class Menus implements Screens {
     autoTrim: $("auto-trim-opt") as HTMLInputElement,
   };
   private game!: GameController;
+  private readonly career = new CareerScreen({
+    start: age => this.game.newCareer(age),
+    startRace: () => this.game.startCareerRace(),
+    askAge: () => this.game.askCareerAge(),
+    mainMenu: () => this.game.setMode("menu"),
+  });
+  private continueButton!: HTMLButtonElement;
+  private resultsNext!: HTMLButtonElement;
+  private resultsCalendar!: HTMLButtonElement;
 
   /**
    * `savePrefs` saves the player's preferences after a change in the Commands menu. `language` is the active
@@ -50,9 +60,16 @@ export class Menus implements Screens {
     this.el.pause.classList.toggle("hidden", m !== "paused");
     this.el.results.classList.toggle("hidden", m !== "results");
     this.el.controls.classList.toggle("hidden", m !== "controls");
+    this.career.root.classList.toggle("hidden", m !== "career");
+    if (m === "menu") this.continueButton.classList.toggle("hidden", this.game.savedCareer() === null);
   }
 
-  fillResults(standings: Racer[]) {
+  showCareer(view: CareerView) { this.career.render(view); }
+
+  fillResults(standings: Racer[], career: CareerResults | null) {
+    this.resultsNext.classList.toggle("hidden", !career?.nextRace);
+    this.resultsCalendar.classList.toggle("hidden", !career);
+    this.el.results.querySelector(".muted")!.classList.toggle("hidden", !!career);
     $("results-table").replaceChildren(...standings.map((r, i) => {
       const time = r.dsq ? t("results.dsq") : r.finishTime !== null ? `${Math.floor(r.finishTime / 60)}:${String(Math.floor(r.finishTime % 60)).padStart(2, "0")}` : "—";
       return h("tr", { class: r.isPlayer ? "me" : "" },
@@ -69,6 +86,7 @@ export class Menus implements Screens {
   attach(game: GameController) {
     this.game = game;
     $("start-btn").addEventListener("click", () => game.startFromMenu());
+    this.attachCareer();
     this.attachCommands();
     this.attachBoatMenu();
     this.attachLanguage();
@@ -78,6 +96,32 @@ export class Menus implements Screens {
         for (const o of buttons("#wind-opt button")) o.classList.toggle("on", o === b);
       });
     }
+  }
+
+  // ---------- Career ----------
+  /** Adds the Career entries to the main menu, the Career overlay to the page and the next-Race buttons to the results. */
+  private attachCareer() {
+    const { game } = this;
+    const entry = (id: string, key: "career.new" | "career.continue", run: () => void) => {
+      const b = h("button", { id, class: "ghost" }, t(key));
+      b.addEventListener("click", run);
+      return b;
+    };
+    this.continueButton = entry("career-continue", "career.continue", () => game.continueCareer());
+    this.continueButton.classList.toggle("hidden", game.savedCareer() === null);
+    this.el.menu.querySelector(".sheet")!.insertBefore(
+      h("div", { class: "career-btns" }, entry("career-new", "career.new", () => game.askCareerAge()), this.continueButton),
+      $("start-btn"));
+    this.el.menu.after(this.career.root);
+
+    const button = (id: string, kind: string, key: "career.results.next" | "career.results.calendar", run: () => void) => {
+      const b = h("button", { id, class: `${kind} hidden` }, t(key));
+      b.addEventListener("click", run);
+      return b;
+    };
+    this.resultsNext = button("results-next", "primary", "career.results.next", () => game.startCareerRace());
+    this.resultsCalendar = button("results-calendar", "ghost", "career.results.calendar", () => game.showCalendar());
+    this.el.results.querySelector(".sheet")!.append(this.resultsNext, this.resultsCalendar);
   }
 
   // ---------- Language ----------
