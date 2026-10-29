@@ -36,6 +36,8 @@ src/
              Helm, the Crew Chemistry formula; sailors are matched by `id`, never by name)
   career/    Scoring.ts (low-point Race Points, Regatta ranking with the Discard and sailing tie-breaks, Season
              ranking; pure data in and out, ids and numbers, no text)
+             CareerSave.ts (`CareerState`, the versioned save codec `encodeCareer`/`decodeCareer` with migrations by
+             version, `{ ok: false }` for anything unreadable; `loadCareer`/`saveCareer` on the `sl-career` key)
   world/     Ocean.ts (Gerstner waves in GLSL), Waves.ts (same waves on CPU), BoatViewBase.ts (what both boat
              visuals share: wave riding, heel, boom swing, rudder, burgee; each class gives its `BoatMotion` and
              draws its own sails and sailors), BoatView.ts (Optimist), Boat420View.ts, SailorFigure.ts (the sailor
@@ -63,7 +65,7 @@ src/
              PlayerControls.ts (the player's input turned into the boat's controls per Role and Control mode:
              steering, sheets, weight, side switch, spinnaker key, Auto-trim, the browser autopilot; DOM-free)
              CameraRig.ts (the orbit camera and its chase / free / top views), Preferences.ts (`loadPrefs`,
-             `savePrefs`: controls, mute and the optional language under `sl-prefs`; keep the stored format so saved preferences load),
+             `savePrefs`: controls, mute and the optional language under `sl-prefs`; a stored non-object loads the defaults; keep the stored format so saved preferences load),
              testHook.ts (the typed `window.__game` test hook, `GameTestHook`, and `window.__fps`)
   main.ts    startup wiring: language, scene, camera rig, preferences, `Menus`, render loop, installs the test hook
 tests/       Vitest tests (npm test): smoke.test.ts (every AI-only race finishes, every penalty served),
@@ -76,12 +78,13 @@ tests/       Vitest tests (npm test): smoke.test.ts (every AI-only race finishes
              event-text.test.ts (every race event kind, worded through the Italian catalog, reads as before)
              race-names.test.ts (leg and boat names of every session setup read as before)
              career-scoring.test.ts (low point, OCS/DSQ, Discard, tie-breaks incl. after the Discard, Season ranking)
+             career-save.test.ts (save round trip, migrations, unreadable saves never throw, the storage adapter)
              sailors.test.ts (rosters, Partner swap, Crew Chemistry values as the menu shows them)
              player-choice.test.ts (Crew with Full Boat Control is a type error; the Partner set up per choice)
              crew-side.test.ts (the shared Crew wrong-side check)
              boat-states.test.ts (Crew weight and spinnaker thresholds, and their HUD wording)
              boat-colors.test.ts (every boat has its colours; 3D and HUD colours as before)
-             preferences.test.ts (saved preferences still load; saving keeps the `sl-prefs` format; the language is optional)
+             preferences.test.ts (saved preferences still load; saving keeps the `sl-prefs` format; the language is optional; a stored null, number or array loads the defaults)
              player-controls.test.ts (what the player's input does per Role and Control mode, Auto-trim, autopilot)
              hud-panel.test.ts (the HUD panel's lines per Role and Control mode, as the HUD shows them)
              race-feedback.test.ts (which sounds, messages and hints the race gives, and when)

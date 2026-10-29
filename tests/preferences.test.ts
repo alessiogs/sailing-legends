@@ -31,6 +31,12 @@ describe("preferences", () => {
     expect(loadPrefs(memory({ "sl-prefs": "{not json" }).storage)).toEqual(DEFAULTS);
   });
 
+  it("falls back to the defaults when the stored value is JSON but not an object, or its parts are not objects", () => {
+    for (const saved of ["null", "42", "true", '"text"', "[]", "[1,2]", '{"controls":null}', '{"controls":7}', '{"controls":[]}']) {
+      expect(loadPrefs(memory({ "sl-prefs": saved }).storage), saved).toEqual(DEFAULTS);
+    }
+  });
+
   it("fills each missing or invalid setting with its default", () => {
     const saved = '{"controls":{"steering":"rudder","tillerSpeed":"fast","sheetSpeed":2}}';
     expect(loadPrefs(memory({ "sl-prefs": saved }).storage)).toEqual({

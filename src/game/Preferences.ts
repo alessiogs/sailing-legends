@@ -21,15 +21,21 @@ export interface PrefsStorage {
 /** What may be stored: anything an earlier version wrote, or nothing. */
 type StoredPrefs = { controls?: Partial<ControlSettings>; muted?: boolean; language?: unknown };
 
+/** A plain object, or an empty one for anything else (`null`, a number, an array, ...): stored JSON may be any value. */
+const asObject = (v: unknown): Record<string, unknown> =>
+  typeof v === "object" && v !== null && !Array.isArray(v) ? (v as Record<string, unknown>) : {};
+
+function readJson(storage: () => PrefsStorage): unknown {
+  try { return JSON.parse(storage().getItem(PREFS_KEY) || "{}"); } catch { return {}; }
+}
+
 /**
  * Loads the saved preferences, each missing or invalid setting falling back to its default. `storage` is a
  * getter because merely reaching `localStorage` can throw (e.g. with site data blocked).
  */
 export function loadPrefs(storage: () => PrefsStorage): Preferences {
-  const prefs = (() => {
-    try { return JSON.parse(storage().getItem(PREFS_KEY) || "{}") as StoredPrefs; } catch { return {}; }
-  })();
-  const c = prefs.controls ?? {};
+  const prefs = asObject(readJson(storage)) as StoredPrefs;
+  const c = asObject(prefs.controls) as Partial<ControlSettings>;
   return {
     controls: {
       steering: c.steering === "boat" ? "boat" : "tiller",
