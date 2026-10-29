@@ -42,6 +42,7 @@ and the UI words it).
 - `src/ai/`: `RacingAI` (the Helm) composes `BeatTactics`, `TackStateMachine`, `Avoidance` and
   `StartPlanning`. `CrewAI` is the Crew.
 - `src/sailors/`: sailor profiles, Rivals and Crew Chemistry. Sailors are matched by `id`, never by name.
+- `src/career/`: the pure Career rules (scoring so far); returns data, the UI words it.
 - `src/world/`: the Babylon visuals (ocean, boats, sails, course).
 - `src/i18n/`: `t(key, params)` and the catalogs (`it.ts` is the reference, `en.ts` follows it).
 - `src/ui/`: HUD, the pure `buildPanel`, menus, how events and names are worded, boat colours, `h()` for markup.
@@ -51,7 +52,7 @@ and the UI words it).
 - `tests/`: one test file per module, plus `smoke`, `golden` and `rules`.
 - `scripts/`: `polar.ts` and `golden-update.ts`.
 
-**Rule:** `core/math.ts`, `sailing/`, `race/`, `ai/`, `sailors/`, `i18n/` and every other file a test imports
+**Rule:** `core/math.ts`, `sailing/`, `race/`, `ai/`, `sailors/`, `career/`, `i18n/` and every other file a test imports
 use neither Babylon nor browser APIs. They also run in Node.
 
 ## Conventions (get these right)
