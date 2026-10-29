@@ -12,7 +12,7 @@
 html, body, #app { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #071827; color: var(--ink);
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
 #game { display: block; width: 100%; height: 100%; outline: none; touch-action: none; }
-.hidden { display: none !important; }
+.hidden, .trimmed { display: none !important; }
 small { display: block; font-size: 9.5px; letter-spacing: .14em; color: var(--muted); margin-bottom: 4px; }
 strong { font-weight: 650; font-variant-numeric: tabular-nums; }
 .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
@@ -22,47 +22,104 @@ strong { font-weight: 650; font-variant-numeric: tabular-nums; }
 .brand span { display: inline-block; margin-left: 12px; font-size: 9px; letter-spacing: .14em; color: #cfe2ea; background: rgba(6,24,38,.6); border: 1px solid #4c7486; border-radius: 4px; padding: 3px 6px; vertical-align: 2px; }
 .brand.lg { font-size: 22px; margin-bottom: 6px; }
 
+/* ---------- The HUD ("Sail number"): a top strip, the compass pill, round buttons, one message pill, the thumb deck ----------
+   Portrait phone first (the base rules); landscape and big screens move a few boxes, never overlap them: every box of the
+   HUD carries `data-hud`, and `scripts/hud-overlap.cjs` checks that no two intersect at the usual screen sizes. */
+:root { --cond: "Barlow Condensed", "Roboto Condensed", "Arial Narrow", "Helvetica Neue Condensed", "DejaVu Sans Condensed", system-ui, sans-serif;
+  --glass: rgba(8, 22, 34, 0.75); --boat: #ff7a2f; --lift: #2fbf71; --amber: #f2b33d; --alert: #e0503a; }
 #hud { position: absolute; inset: 0; pointer-events: none; }
-.top-left { position: absolute; top: 18px; left: 20px; }
-.race-card { width: 290px; }
-.race-card { margin-top: 12px; padding: 12px 14px; }
-.race-row { display: flex; justify-content: space-between; align-items: flex-end; }
-.big { font-size: 30px; line-height: 1; }
-.pos { text-align: right; }
-.leg { margin-top: 10px; font-size: 13px; font-weight: 600; }
-.target { margin-top: 3px; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+#hud button { font-family: var(--cond); font-weight: 800; color: #fff; cursor: pointer; touch-action: none; pointer-events: auto; -webkit-tap-highlight-color: transparent; }
+#hud strong, #hud em { font-style: normal; }
+#hud small { margin: 0; letter-spacing: .06em; }
 
-#standings { position: absolute; top: 18px; right: 20px; margin: 0; padding: 8px 0; list-style: none; min-width: 200px; font-size: 13px; }
-#standings li { display: grid; grid-template-columns: 26px 1fr auto; gap: 6px; padding: 5px 14px; align-items: center; }
-#standings li.me { background: rgba(111, 211, 255, 0.14); }
+#strip { position: absolute; top: 12px; left: 12px; right: 12px; height: 56px; display: flex; align-items: stretch; background: rgba(8, 22, 34, .78); border-radius: 10px; overflow: hidden; }
+.strip-bar { flex: none; width: 6px; background: var(--boat); }
+.strip-place { flex: none; display: flex; align-items: baseline; justify-content: center; align-self: center; padding: 0 12px; font-family: var(--cond); font-weight: 800; }
+#place { font-weight: 800; font-size: 34px; line-height: .9; color: var(--boat); }
+#boats { font-size: 16px; opacity: .7; }
+.strip-main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
+#clock { font-family: var(--cond); font-weight: 800; font-size: 26px; line-height: .95; }
+#clock.warn { color: var(--amber); }
+.strip-line { font-size: 11px; font-weight: 600; opacity: .8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.strip-line.bad { color: #ff8a78; opacity: 1; }
+.strip-pause { flex: none; width: 56px; border: 0; background: rgba(255, 255, 255, .08); display: flex; align-items: center; justify-content: center; padding: 0; }
+
+#pill { position: absolute; top: 80px; left: 12px; width: 232px; height: 84px; display: flex; align-items: center; gap: 10px; padding: 6px 12px 6px 6px; background: rgba(8, 22, 34, .7); border-radius: 44px; }
+#compass { flex: none; width: 72px; height: 72px; }
+.pill-text { min-width: 0; }
+.pill-speed strong { font-family: var(--cond); font-weight: 800; font-size: 32px; line-height: .9; }
+.pill-speed em { font-size: 14px; font-weight: 600; opacity: .7; margin-left: 3px; }
+.pill-line { margin-top: 2px; font-size: 11px; font-weight: 600; opacity: .8; white-space: nowrap; }
+
+#round-buttons { position: absolute; top: 80px; right: 12px; display: flex; flex-direction: column; gap: 8px; }
+.round { width: 44px; height: 44px; border-radius: 50%; border: 0; background: rgba(8, 22, 34, .7); display: flex; align-items: center; justify-content: center; padding: 0; }
+.round[aria-pressed="true"] { background: var(--boat); color: #081622; }
+
+/* One column under the compass pill: the message pill (its slot is kept, so what is below never jumps), then the status
+   pills (shift, Partner's call, penalty) and the Standings/map panel. */
+#flow { position: absolute; top: 184px; left: 12px; right: 12px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+#toast { width: 100%; min-height: 44px; display: flex; justify-content: center; align-items: flex-start; pointer-events: none; }
+#toast div { max-width: 100%; padding: 7px 14px; border-radius: 6px; background: var(--glass); color: #fff; font-family: var(--cond); font-weight: 800; font-size: 16px; line-height: 1.1; letter-spacing: .04em; text-align: center; text-transform: uppercase; animation: toast 3.2s ease forwards; }
+#toast div.big { font-size: 20px; background: var(--boat); color: #081622; }
+#toast div.good { background: var(--lift); color: #04210f; }
+#toast div.bad { background: var(--alert); color: #fff; }
+@keyframes toast { 0% { opacity: 0; transform: translateY(8px); } 8% { opacity: 1; transform: none; } 80% { opacity: 1; } 100% { opacity: 0; } }
+#stack { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+#hud.off > :not(#flow), #hud.off #stack { display: none; }
+#status { display: flex; flex-direction: column; align-items: center; gap: 6px; max-width: 100%; }
+.status-pill { max-width: 100%; padding: 5px 10px; border-radius: 6px; background: var(--glass); font-family: var(--cond); font-weight: 800; font-size: 15px; line-height: 1.15; letter-spacing: .03em; text-transform: uppercase; text-align: center; }
+.status-pill:empty { display: none; }
+.status-pill.good, .status-pill.running { background: var(--lift); color: #04210f; }
+.status-pill.warn, .status-pill.luffing, .status-pill.stalled { background: var(--amber); color: #2a1a00; }
+.status-pill.bad, .status-pill.irons { background: var(--alert); color: #fff; }
+#penalty { display: flex; flex-direction: column; gap: 4px; text-transform: none; font-size: 14px; }
+.penalty-track { display: block; height: 5px; border-radius: 3px; background: rgba(255, 255, 255, .3); overflow: hidden; }
+.penalty-track i { display: block; height: 100%; width: 0; background: #fff; }
+
+/* In portrait the panel stays in the left column, clear of the sheet slider and the context buttons (the tiller's width), with the map under the list. */
+#panel { align-self: flex-start; width: min(366px, calc(100vw - 152px)); display: flex; flex-direction: column; gap: 4px; padding: 6px 8px; background: var(--glass); border-radius: 10px; font-size: 12px; }
+.panel-stats { display: flex; gap: 16px; }
+.stat small { display: block; font-size: 9.5px; letter-spacing: .1em; color: var(--muted); }
+.stat strong { font-family: var(--cond); font-weight: 800; font-size: 18px; }
+.stat em { margin-left: 5px; font-size: 11px; color: var(--muted); white-space: nowrap; }
+.stat em.warn { color: var(--amber); }
+.panel-body { display: flex; flex-direction: column; gap: 6px; }
+#standings { flex: 1 1 0; min-width: 0; margin: 0; padding: 0; list-style: none; }
+#standings li { display: grid; grid-template-columns: 16px minmax(0, 1fr) auto; gap: 5px; align-items: center; padding: 1px 4px; border-radius: 4px; line-height: 1.25; }
+#standings li.me { background: rgba(255, 255, 255, .12); }
+#standings li > span:nth-child(2) { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 #standings .n { color: var(--muted); font-variant-numeric: tabular-nums; }
-#standings .s { color: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
-#standings .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 7px; }
+#standings .s { color: var(--muted); font-size: 10.5px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+#standings .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+#minimap { flex: none; align-self: center; width: 110px; height: 126px; border-radius: 6px; }
+.panel-line { font-size: 11px; color: var(--muted); line-height: 1.25; }
+#hint { display: none; }
+.panel-line b { color: #fff; }
 
-.bottom-left { position: absolute; left: 20px; bottom: 18px; display: flex; gap: 12px; align-items: flex-end; }
-#compass { width: 150px; height: 150px; }
-.instruments { display: grid; grid-template-columns: repeat(2, 112px); gap: 8px; }
-.stat { padding: 9px 12px; }
-.stat strong { font-size: 22px; }
-.stat em { white-space: nowrap; font-style: normal; font-size: 11px; color: var(--muted); margin-left: 4px; }
-.shift { position: absolute; left: 0; bottom: 172px; font-size: 12px; padding: 6px 10px; border-radius: 6px; background: var(--panel); border: 1px solid var(--line); white-space: nowrap; }
-.shift:empty { display: none; }
-.shift.lift { color: var(--good); }
-.shift.header { color: var(--warn); }
+/* The thumb deck: the tiller bar bottom-left, the sheet slider along the right edge, the context buttons beside it. */
+.tiller { position: absolute; left: 12px; bottom: 24px; width: min(60vw, calc(100vw - 152px), 480px); pointer-events: auto; touch-action: none; cursor: ew-resize; }
+.tiller-ends { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; font-family: var(--cond); font-weight: 800; font-size: 13px; white-space: nowrap; }
+.tiller-ends small { display: inline; font-size: inherit; letter-spacing: 0; color: inherit; opacity: .7; }
+.tiller-bar { position: relative; height: 46px; background: var(--glass); border-radius: 12px; }
+.tiller-track { position: absolute; left: 20px; right: 20px; top: 0; bottom: 0; }
+#gauge-center { position: absolute; left: 50%; top: 8px; bottom: 8px; width: 2px; margin-left: -1px; background: #fff; opacity: .35; }
+#gauge-ideal { position: absolute; top: -6px; width: 10px; height: 6px; margin-left: -5px; background: var(--lift); }
+#tiller-pos { position: absolute; top: 4px; width: 40px; height: 38px; margin-left: -20px; border-radius: 8px; background: var(--boat); }
+#tiller-pos::after { content: ""; position: absolute; left: 50%; top: 9px; bottom: 9px; width: 3px; margin-left: -1.5px; border-radius: 2px; background: #081622; }
 
-.trim { position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%); width: 360px; padding: 10px 14px 12px; }
-.tiller { margin-bottom: 10px; }
-.tiller-bar { position: relative; height: 8px; margin-top: 5px; border-radius: 4px; background: rgba(255,255,255,.1); }
-.tiller-bar i { position: absolute; top: 0; bottom: 0; background: var(--accent); border-radius: 4px; }
-.tiller-bar b { position: absolute; left: 50%; top: -3px; bottom: -3px; width: 2px; margin-left: -1px; background: rgba(255,255,255,.6); }
-.penalty { margin-top: 10px; padding: 8px 10px; border-radius: 7px; border: 1px solid var(--bad); background: rgba(255,107,91,.14); font-size: 12px; line-height: 1.35; color: #ffd6d0; }
-.penalty-track { margin-top: 6px; height: 5px; border-radius: 3px; background: rgba(255,255,255,.12); overflow: hidden; }
-.penalty-track i { display: block; height: 100%; width: 0; background: var(--bad); }
-.tiller-bar u { position: absolute; top: -4px; bottom: -4px; width: 3px; margin-left: -1.5px; background: var(--good); border-radius: 2px; }
-.call { margin: -2px 0 10px; padding: 8px 10px; border-radius: 7px; background: rgba(255,181,71,.16); border: 1px solid var(--warn); color: #ffe2b8; font-size: 13px; font-weight: 650; text-align: center; }
-.partner-line { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); font-size: 12px; color: var(--muted); text-align: center; }
-.chem { margin-top: 8px; font-size: 12px; color: var(--muted); }
-.chem b { color: var(--ink); }
+.slider { position: absolute; right: 12px; bottom: 24px; width: 54px; height: clamp(150px, 40vh, 420px); display: flex; flex-direction: column; align-items: center; gap: 4px; pointer-events: auto; touch-action: none; cursor: ns-resize; font-family: var(--cond); font-weight: 800; font-size: 13px; }
+.slider-bar { position: relative; flex: 1 1 auto; width: 50px; background: var(--glass); border-radius: 12px; }
+.slider-track { position: absolute; left: 0; right: 0; top: 17px; bottom: 17px; }
+.trim-opt { position: absolute; left: 6px; right: 6px; background: var(--lift); opacity: .6; border-radius: 6px; }
+.trim-cur { position: absolute; left: 4px; right: 4px; height: 34px; margin-top: -17px; border-radius: 8px; background: var(--boat); }
+.trim-cur::after { content: ""; position: absolute; left: 50%; top: 50%; width: 20px; height: 3px; margin: -1.5px 0 0 -10px; border-radius: 2px; background: #081622; }
+
+#deck-right { position: absolute; right: 74px; bottom: 24px; display: flex; flex-direction: column-reverse; align-items: flex-end; gap: 10px; }
+#context-buttons { display: flex; flex-direction: column-reverse; gap: 10px; }
+.ctx { width: 58px; height: 58px; border-radius: 50%; border: 2px solid var(--boat); background: rgba(8, 22, 34, .72); font-size: 13px; line-height: 1; padding: 0; }
+.ctx.on { background: var(--boat); color: #081622; }
+#context-buttons:not(.two) .only-two, #context-buttons:not(.crew) .only-crew { display: none; }
+#trim-pill { max-width: calc(100vw - 86px); }
 .pair-block { display: grid; gap: 14px; margin: 12px 0 4px; padding: 14px; border: 1px solid var(--line); border-radius: 10px; background: rgba(111,211,255,.04); }
 .pair-block .steer-help { max-width: 60ch; line-height: 1.45; }
 .partners { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
@@ -74,26 +131,6 @@ strong { font-weight: 650; font-variant-numeric: tabular-nums; }
 .meter i { display: block; height: 100%; background: var(--good); }
 @media (max-width: 560px) { .partners { grid-template-columns: 1fr; } }
 .steer-help { margin-top: 5px; font-size: 11.5px; color: var(--muted); }
-.trim-head { display: flex; justify-content: space-between; align-items: center; }
-.chip { font-size: 9px; letter-spacing: .14em; padding: 2px 6px; border-radius: 4px; border: 1px solid var(--accent); color: var(--accent); }
-.trim-bar { position: relative; height: 14px; margin-top: 6px; border-radius: 7px; background: linear-gradient(90deg, rgba(255,107,91,.35), rgba(255,255,255,.08) 45%, rgba(255,181,71,.35)); overflow: hidden; }
-.trim-opt { position: absolute; top: 0; bottom: 0; background: rgba(62, 224, 143, .55); border-left: 1px solid var(--good); border-right: 1px solid var(--good); }
-.trim-cur { position: absolute; top: -2px; bottom: -2px; width: 4px; margin-left: -2px; background: #fff; border-radius: 2px; box-shadow: 0 0 6px rgba(255,255,255,.8); }
-.trim-ends { display: flex; justify-content: space-between; font-size: 9.5px; letter-spacing: .1em; color: var(--muted); margin-top: 5px; }
-.trim-state { margin-top: 6px; text-align: center; font-size: 14px; font-weight: 650; }
-.trim-state.good { color: var(--good); }
-.trim-state.luffing, .trim-state.stalled { color: var(--warn); }
-.trim-state.irons { color: var(--bad); }
-
-#minimap { position: absolute; right: 20px; bottom: 18px; width: 200px; height: 230px; }
-.hint { position: absolute; right: 232px; bottom: 22px; font-size: 11px; color: var(--muted); }
-
-#toast { position: absolute; top: 22%; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 8px; pointer-events: none; }
-#toast div { padding: 10px 18px; border-radius: 8px; background: rgba(5, 24, 39, 0.72); border: 1px solid var(--line); font-size: 15px; font-weight: 650; letter-spacing: .04em; animation: toast 3.2s ease forwards; }
-#toast div.big { font-size: 26px; letter-spacing: .12em; padding: 12px 26px; }
-#toast div.bad { border-color: var(--bad); color: #ffd6d0; }
-#toast div.good { border-color: var(--good); }
-@keyframes toast { 0% { opacity: 0; transform: translateY(8px); } 8% { opacity: 1; transform: none; } 80% { opacity: 1; } 100% { opacity: 0; } }
 
 #tags { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
 #tags div { position: absolute; transform: translate(-50%, -100%); font-size: 11px; font-weight: 650; padding: 2px 7px; border-radius: 4px; background: rgba(5, 24, 39, .6); white-space: nowrap; }
@@ -140,19 +177,6 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 #loading { position: absolute; inset: 0; display: grid; place-items: center; background: #071827; color: #d8eaf2; letter-spacing: .1em; font-size: 12px; transition: opacity .4s; pointer-events: none; }
 #loading.hidden { opacity: 0; display: grid !important; }
 
-@media (max-width: 1100px) {
-  .instruments { grid-template-columns: repeat(2, 96px); }
-  .trim { width: 300px; }
-  .hint { display: none; }
-}
-@media (max-width: 760px) {
-  .controls { grid-template-columns: 1fr; }
-  #standings, #minimap, .instruments { display: none; }
-  .trim { width: calc(100% - 32px); bottom: 12px; }
-  .bottom-left { bottom: 120px; left: 12px; }
-  .top-left { left: 12px; top: 12px; width: calc(100% - 24px); }
-}
-
 /* Career: the Season calendar, the Career buttons of the main menu and the results screen's next-Race buttons. */
 .career-btns { display: flex; gap: 10px; margin-top: 18px; }
 .career-btns button { flex: 1; padding: 10px 12px; }
@@ -178,48 +202,51 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .rival-lines .behind { color: var(--good); }
 #career .sheet { max-height: 92vh; overflow-y: auto; }
 
+
 /* Touch: the HUD's gauges are dragged (pointer events), the race actions have tap buttons, and the page never scrolls or zooms. */
 html, body { touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
-#gauge-zone, #trim-zone { pointer-events: auto; touch-action: none; cursor: ew-resize; }
-.chip { pointer-events: auto; }
-.touch-only, .touch-actions { display: none; }
-.touch-actions { position: absolute; right: 20px; top: 50%; transform: translateY(-50%); flex-direction: column; gap: 10px; pointer-events: none; }
-.touch-btn { min-width: 84px; min-height: 48px; padding: 8px 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel); color: var(--ink);
-  font: 650 13px inherit; font-family: inherit; letter-spacing: .04em; pointer-events: auto; touch-action: none; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
-.touch-btn:active { background: #1d5c7a; }
-.touch-actions.autotrim #touch-auto-trim { border-color: var(--accent); color: var(--accent); }
-.touch-actions:not(.two) .only-two, .touch-actions:not(.crew) .only-crew { display: none; }
+.touch-only { display: none; }
 @media (pointer: coarse) {
-  .touch-actions { display: flex; }
   .touch-only { display: block; }
   .stack.touch-only { display: grid; }
-  /* A thumb-sized grab area around the bars; the bars themselves keep their look. */
-  .tiller { padding: 12px 0 4px; margin: -12px 0 6px; }
-  .trim-zone { padding: 10px 0 2px; margin: -10px 0 0; }
-  .chip { padding: 8px 12px; margin: -8px -6px; }
   .controls, .primary span, .ghost span { display: none; }
 }
-/* A phone in landscape: the panels shrink so the boat stays in view. */
-@media (max-height: 480px) {
-  .top-left { top: 8px; left: 12px; }
-  .race-card { width: 230px; margin-top: 6px; padding: 8px 10px; }
-  .big { font-size: 22px; }
-  #standings { top: 8px; right: 12px; min-width: 150px; padding: 4px 0; font-size: 11.5px; }
-  #standings li { padding: 2px 10px; }
-  #minimap { right: 12px; bottom: 10px; width: 110px; height: 126px; }
-  .touch-btn { min-height: 44px; }
-  .bottom-left { left: 12px; bottom: 10px; }
-  #compass { width: 96px; height: 96px; }
-  .instruments { display: none; }
-  .shift { bottom: 104px; }
-  .trim { bottom: 8px; width: 330px; padding: 8px 12px 8px; }
-  .hint { display: none; }
-  .sheet { padding: 16px 20px; }
-  .overlay { align-items: start; }
+@media (max-width: 760px) { .controls { grid-template-columns: 1fr; } }
+
+/* The HUD in landscape (a phone on its side, a laptop, a desktop): the strip stays at the left, the messages take the middle of the
+   top, and the thumb deck keeps its place; the context buttons lie in a row beside the sheet slider. */
+@media (orientation: landscape) {
+  #strip { right: auto; width: min(760px, calc(100% - 24px)); }
+  #flow, #stack { display: contents; }
+  .panel-body { flex-direction: row; align-items: flex-start; }
+  #toast { position: absolute; top: 72px; left: 256px; right: 64px; width: auto; min-height: 0; }
+  #toast div { font-size: 15px; }
+  #toast div.big { font-size: 18px; }
+  .tiller { width: min(34vw, 420px); }
+  #context-buttons { flex-direction: row-reverse; }
+  #trim-pill { max-width: 220px; }
 }
-/* A phone in landscape with touch buttons: the buttons take the right-hand corner, where the minimap and the standings were. */
-@media (pointer: coarse) and (max-height: 480px) {
-  #minimap, #standings { display: none; }
-  .touch-actions { display: grid; grid-template-columns: repeat(2, 1fr); right: 12px; top: auto; bottom: 10px; transform: none; gap: 6px; width: 188px; }
-  .touch-btn { min-width: 0; padding: 6px 8px; }
+/* A small landscape screen (a phone): the status pills and the panel share one narrow column, clear of the tiller and the buttons. */
+@media (orientation: landscape) and (max-height: 559px) {
+  #stack { position: absolute; top: 124px; left: 308px; width: 236px; display: flex; flex-direction: column; align-items: stretch; gap: 6px; }
+  .status-pill { padding: 3px 8px; font-size: 12px; }
+  #penalty { font-size: 11px; }
+  #panel { width: auto; padding: 5px 7px; gap: 3px; font-size: 10.5px; }
+  .panel-stats { gap: 12px; }
+  .stat strong { font-size: 15px; }
+  #minimap { width: 84px; height: 96px; }
+  #standings li { padding: 0 3px; }
+  .panel-line { font-size: 10px; }
 }
+/* A bigger landscape screen: the panel stands at the left under the compass pill, the status pills at the right under the round buttons. */
+@media (orientation: landscape) and (min-height: 560px) {
+  #toast { left: 256px; right: 256px; }
+  #status { position: absolute; top: 184px; right: 12px; align-items: flex-end; max-width: 300px; }
+  #panel { position: absolute; top: 172px; left: 12px; width: 400px; padding: 8px 10px; gap: 6px; font-size: 12px; }
+  .stat strong { font-size: 20px; }
+  #minimap { width: 160px; height: 184px; }
+  #standings li { padding: 2px 4px; }
+  .panel-line { font-size: 11.5px; }
+}
+@media (orientation: landscape) and (min-height: 700px) { #hint { display: block; } }
+@media (orientation: portrait) and (min-width: 600px) { #strip { right: auto; width: 560px; } }

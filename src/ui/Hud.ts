@@ -5,10 +5,12 @@ import { isTwoPerson } from "../sailing/BoatClass";
 import type { Telemetry } from "../sailing/BoatPhysics";
 import { WindField } from "../sailing/Wind";
 import { t } from "../i18n";
-import { boatDot } from "./boatColors";
+import { boatAccent, boatDot } from "./boatColors";
 import { h } from "./dom";
 import type { Panel } from "./hudPanel";
 import { legName, racerName } from "./raceNames";
+import { fitPanel } from "./panelFit";
+import { standingsRows } from "./standingsRows";
 import { showTouchAutoTrim, showTouchButtons } from "./TouchButtons";
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
@@ -21,10 +23,11 @@ const fmtClock = (t: number) => {
 
 export class Hud {
   private el = {
-    hud: $("hud"), phase: $("phase"), clock: $("clock"), position: $("position"), leg: $("leg"), target: $("target"),
-    standings: $("standings"), speed: $("speed"), vmg: $("vmg"), twa: $("twa"), tws: $("tws"), heel: $("heel"),
+    hud: $("hud"), clock: $("clock"), place: $("place"), boats: $("boats"), leg: $("leg"), target: $("target"),
+    standings: $("standings"), speed: $("speed"), pillLine: $("pill-line"), twa: $("twa"), tws: $("tws"), heel: $("heel"),
     leeway: $("leeway"), shift: $("shift"), trimOpt: $("trim-opt"), trimCur: $("trim-cur"), trimState: $("trim-state"),
-    autoTrim: $("auto-trim-chip"), toast: $("toast"), tags: $("tags"), tillerPos: $("tiller-pos"),
+    trimPill: $("trim-pill"), panel: $("panel"), panelToggle: $("panel-toggle"), line: $("leg").parentElement!,
+    toast: $("toast"), tags: $("tags"), tillerPos: $("tiller-pos"),
     gaugeLabel: $("gauge-label"), gaugeCenter: $("gauge-center"), gaugeIdeal: $("gauge-ideal"), gaugeLeft: $("gauge-left"),
     gaugeRight: $("gauge-right"), sailLabel: $("sail-label"), call: $("call"), partnerLine: $("partner-line"), chem: $("chem"),
     penalty: $("penalty"), penaltyText: $("penalty-text"), penaltyBar: $("penalty-bar"),
@@ -33,62 +36,82 @@ export class Hud {
   private minimap = $<HTMLCanvasElement>("minimap").getContext("2d")!;
   private tagEls = new Map<string, HTMLDivElement>();
   private slowTimer = 0;
+  private toastTimer: ReturnType<typeof setTimeout> | undefined;
+
+  constructor() {
+    // The Standings/map panel starts open on a big screen and closed on a small one; the round button toggles it.
+    this.showPanel(window.matchMedia("(min-width: 1100px) and (min-height: 650px)").matches);
+    this.el.panelToggle.addEventListener("click", () => this.showPanel(this.el.panel.classList.contains("hidden")));
+    window.addEventListener("resize", () => this.fit());
+  }
+
+  /** Opens or closes the Standings/map panel. */
+  showPanel(open: boolean) {
+    this.el.panel.classList.toggle("hidden", !open);
+    this.el.panelToggle.setAttribute("aria-pressed", String(open));
+    this.fit();
+  }
+
+  /** Trims the panel to the room the messages and pills above it leave (see `panelFit.ts`). */
+  fit() {
+    fitPanel(this.el.panel);
+  }
 
   show(v: boolean) {
-    this.el.hud.classList.toggle("hidden", !v);
+    // Off, the HUD shows nothing but its message pill (the audio toggle speaks in the menu too).
+    this.el.hud.classList.toggle("off", !v);
     this.el.tags.classList.toggle("hidden", !v);
   }
 
-  /** The boat of a new race: its touch buttons (the spinnaker in a 420, the side switch for its Crew). */
+  /** The boat of a new race: its context buttons (the spinnaker in a 420, the side switch for its Crew) and its accent colour. */
   setBoat(twoPerson: boolean, crew: boolean) {
     showTouchButtons(twoPerson, crew);
+    document.documentElement.style.setProperty("--boat", boatAccent("player"));
   }
 
+  /** One message pill at a time under the top strip: a new message replaces the one showing, and fades out by itself. */
   toast(text: string, kind: "" | "big" | "bad" | "good" = "") {
-    const d = document.createElement("div");
-    d.textContent = text;
-    if (kind) d.className = kind;
-    this.el.toast.appendChild(d);
-    setTimeout(() => d.remove(), 3300);
-    while (this.el.toast.children.length > 3) this.el.toast.firstChild?.remove();
+    clearTimeout(this.toastTimer);
+    this.el.toast.replaceChildren(h("div", { class: kind, "data-hud": "" }, text));
+    this.toastTimer = setTimeout(() => this.el.toast.replaceChildren(), 3300);
   }
 
   update(dt: number, race: Race, me: Racer, wind: WindField, panel: Panel) {
     const tel = me.sim.telemetry, s = me.sim.state, c = race.course;
     const legs = c.legs;
 
-    // Race card.
-    this.el.phase.textContent = t(race.phase === "prestart" ? "hud.phase.prestart" : me.finishTime !== null ? "hud.phase.finished"
-      : me.ocs && !me.clearedBack ? "hud.phase.ocs" : "hud.phase.racing");
+    // Top strip: place, clock, and the line with the leg and the distance to its target.
     this.el.clock.textContent = fmtClock(me.finishTime ?? race.clock);
-    this.el.clock.style.color = race.phase === "prestart" && race.clock > -10 ? "var(--warn)" : "";
+    this.el.clock.classList.toggle("warn", race.phase === "prestart" && race.clock > -10);
     const standings = race.standings();
-    const pos = standings.indexOf(me) + 1;
-    this.el.position.textContent = race.phase === "prestart" ? "–" : t("hud.position", { position: pos, boats: standings.length });
+    const prestart = race.phase === "prestart";
+    this.el.place.textContent = prestart ? "–" : String(standings.indexOf(me) + 1);
+    this.el.boats.textContent = prestart ? "" : t("hud.placeOf", { boats: standings.length });
 
     let target = legTarget(legs[Math.max(0, Math.min(me.leg, legs.length - 1))]);
+    const offside = me.ocs && !me.clearedBack;
     if (me.leg === -1) {
-      this.el.leg.textContent = t(me.ocs && !me.clearedBack ? "hud.leg.ocs" : race.phase === "prestart" ? "hud.leg.prestart" : "hud.leg.cross");
+      this.el.leg.textContent = t(offside ? "hud.leg.ocs" : prestart ? "hud.leg.prestart" : "hud.leg.cross");
       target = { x: (c.start.a.x + c.start.b.x) / 2, z: (c.start.a.z + c.start.b.z) / 2 };
     } else if (me.finishTime !== null) {
       this.el.leg.textContent = t("hud.leg.done");
     } else {
       const leg = legs[me.leg];
-      this.el.leg.textContent = t("hud.leg.sailing", { leg: me.leg + 1, legs: legs.length, upwind: leg.upwind, target: legName(leg), toPort: leg.kind === "mark" });
+      this.el.leg.textContent = t("hud.leg.sailing", { leg: me.leg + 1, legs: legs.length, target: legName(leg) });
     }
+    this.el.line.classList.toggle("bad", offside && me.leg === -1);
     const dist = distanceTo(target, s.x, s.z);
     const brg = bearingTo(s.x, s.z, target.x, target.z);
-    const rel = angleDiff(s.heading, brg) / DEG;
-    this.el.target.textContent = me.finishTime !== null ? "" : `${dist.toFixed(0)} m · ${rel >= 0 ? "▶" : "◀"} ${Math.abs(rel).toFixed(0)}°`;
+    this.el.target.textContent = me.finishTime !== null ? "" : t("hud.distance", { meters: dist.toFixed(0) });
 
     // Instruments.
     const vmg = (s.vx * Math.sin(brg) + s.vz * Math.cos(brg)) * KNOTS;
     this.el.speed.textContent = (tel.speed * KNOTS).toFixed(1);
-    this.el.vmg.textContent = vmg.toFixed(1);
+    this.el.pillLine.textContent = t("hud.pillLine", { vmg: vmg.toFixed(1), wind: (tel.tws * KNOTS).toFixed(0) });
     const twaDeg = tel.twa / DEG;
     this.el.twa.textContent = t("hud.twa", { angle: Math.abs(twaDeg).toFixed(0), starboard: twaDeg >= 0 });
     this.el.tws.textContent = `${(tel.tws * KNOTS).toFixed(1)} kn`;
-    this.el.tws.style.color = tel.puff > 0.25 ? "var(--warn)" : "";
+    this.el.tws.classList.toggle("warn", tel.puff > 0.25);
     this.el.heel.textContent = `${Math.abs(tel.heelDeg).toFixed(0)}°`;
     this.el.leeway.textContent = t("hud.leeway", { angle: Math.abs(tel.leewayDeg).toFixed(0) });
 
@@ -99,7 +122,7 @@ export class Hud {
       const onStbd = tel.twa > 0; // wind over the starboard side
       const lift = (shift > 0) === onStbd;
       this.el.shift.textContent = t(lift ? "hud.shift.lift" : "hud.shift.header", { shift: `${shift > 0 ? "+" : ""}${shift.toFixed(0)}` });
-      this.el.shift.className = `shift ${lift ? "lift" : "header"}`;
+      this.el.shift.className = `status-pill ${lift ? "good" : "warn"}`;
     } else {
       this.el.shift.textContent = "";
     }
@@ -109,27 +132,20 @@ export class Hud {
     const tol = 0.08;
     const lo = Math.max(0, sail.optimal - tol), hi = Math.min(1, sail.optimal + tol);
     this.el.sailLabel.textContent = sail.label;
-    this.el.trimOpt.style.left = `${lo * 100}%`;
-    this.el.trimOpt.style.width = `${(hi - lo) * 100}%`;
-    this.el.trimCur.style.left = `${sail.sheet * 100}%`;
+    this.el.trimOpt.style.top = `${lo * 100}%`;
+    this.el.trimOpt.style.height = `${(hi - lo) * 100}%`;
+    this.el.trimCur.style.top = `${sail.sheet * 100}%`;
     this.el.trimState.textContent = sail.text ?? t(`trim.${sail.state}`);
-    this.el.trimState.className = `trim-state ${sail.state}`;
-    this.el.autoTrim.classList.toggle("hidden", !sail.autoTrim);
+    this.el.trimPill.className = `status-pill ${sail.state}`;
     showTouchAutoTrim(sail.autoTrim);
-    // Top gauge: the tiller (centred, left = port) or the Crew's weight (0 in .. 1 trapeze).
+    // The tiller (centred, left = port) or the Crew's weight (0 in .. 1 trapeze): the handle moves along the bar.
     const g = panel.gauge;
     this.el.gaugeLabel.textContent = g.label;
     this.el.gaugeLeft.textContent = g.ends[0];
     this.el.gaugeRight.textContent = g.ends[1];
     this.el.gaugeCenter.classList.toggle("hidden", !g.centered);
-    if (g.centered) {
-      const tp = Math.max(-1, Math.min(1, g.value));
-      this.el.tillerPos.style.left = `${50 + Math.min(0, tp) * 50}%`;
-      this.el.tillerPos.style.width = `${Math.abs(tp) * 50}%`;
-    } else {
-      this.el.tillerPos.style.left = "0%";
-      this.el.tillerPos.style.width = `${Math.max(0, Math.min(1, g.value)) * 100}%`;
-    }
+    const along = g.centered ? (Math.max(-1, Math.min(1, g.value)) + 1) / 2 : Math.max(0, Math.min(1, g.value));
+    this.el.tillerPos.style.left = `${along * 100}%`;
     this.el.gaugeIdeal.classList.toggle("hidden", g.ideal === undefined);
     if (g.ideal !== undefined) this.el.gaugeIdeal.style.left = `${Math.max(0, Math.min(1, g.ideal)) * 100}%`;
     this.el.call.classList.toggle("hidden", !panel.call);
@@ -154,31 +170,36 @@ export class Hud {
     if (this.slowTimer <= 0) {
       this.slowTimer = 0.25;
       this.renderStandings(race, standings, me);
+      this.fit();
     }
     this.drawMinimap(race, wind, me, target);
   }
 
   private renderStandings(race: Race, standings: Racer[], me: Racer) {
     const legs = race.course.legs.length;
-    this.el.standings.replaceChildren(...standings.map((r, i) => {
+    this.el.standings.replaceChildren(...standingsRows(standings.length, standings.indexOf(me)).map(i => {
+      const r = standings[i];
       const status = r.dsq ? t("standings.dsq") : r.finishTime !== null ? fmtClock(r.finishTime)
         : r.penalty ? t("standings.penalty")
         : r.leg < 0 ? t(r.ocs && !r.clearedBack ? "standings.ocs" : race.phase === "prestart" ? "standings.prestart" : "standings.start")
         : t("standings.leg", { leg: r.leg + 1, legs });
       return h("li", { class: r === me ? "me" : "" }, h("span", { class: "n" }, String(i + 1)),
-        h("span", {}, h("i", { class: "dot", style: `background:${boatDot(r.id)}` }), racerName(r)), h("span", { class: "s" }, status));
+        h("span", { "data-truncates": "" }, h("i", { class: "dot", style: `background:${boatDot(r.id)}` }), racerName(r)), h("span", { class: "s" }, status));
     }));
   }
 
   /** Boat-up wind dial: true wind arrow, no-go sector, bearing to the next mark. */
   private drawCompass(tel: Telemetry, heading: number, brgTarget: number, wind: WindField, x: number, z: number) {
+    // Drawn on a 300-unit dial and scaled to the canvas, which shows it at about 72 px: strokes are thick for that.
     const g = this.compass, W = 300, cx = W / 2, cy = W / 2, R = 118;
-    g.clearRect(0, 0, W, W);
+    g.setTransform(1, 0, 0, 1, 0, 0);
+    g.clearRect(0, 0, g.canvas.width, g.canvas.height);
     g.save();
+    g.scale(g.canvas.width / W, g.canvas.height / W);
     g.translate(cx, cy);
-    g.fillStyle = "rgba(6,24,38,.62)";
-    g.strokeStyle = "rgba(205,233,245,.25)";
-    g.lineWidth = 2;
+    g.fillStyle = "rgba(255,255,255,.08)";
+    g.strokeStyle = "rgba(255,255,255,.55)";
+    g.lineWidth = 6;
     g.beginPath(); g.arc(0, 0, R + 22, 0, Math.PI * 2); g.fill(); g.stroke();
     // Canvas angle for a bearing relative to the bow (0 = up, clockwise).
     const ang = (rel: number) => rel - Math.PI / 2;
@@ -187,14 +208,14 @@ export class Hud {
     g.fillStyle = "rgba(255,107,91,.28)";
     g.beginPath(); g.moveTo(0, 0); g.arc(0, 0, R, ang(twa - 40 * DEG), ang(twa + 40 * DEG)); g.closePath(); g.fill();
     // Optimal close-hauled lines.
-    g.strokeStyle = "rgba(62,224,143,.6)"; g.lineWidth = 2;
+    g.strokeStyle = "rgba(62,224,143,.75)"; g.lineWidth = 6;
     for (const d of [-47, 47]) {
       const a = ang(twa + d * DEG);
       g.beginPath(); g.moveTo(Math.cos(a) * 30, Math.sin(a) * 30); g.lineTo(Math.cos(a) * R, Math.sin(a) * R); g.stroke();
     }
     // Ticks.
-    g.strokeStyle = "rgba(205,233,245,.45)"; g.lineWidth = 2;
-    for (let i = 0; i < 36; i++) {
+    g.strokeStyle = "rgba(205,233,245,.5)"; g.lineWidth = 5;
+    for (let i = 0; i < 36; i += 3) {
       const a = (i * 10 * DEG) - Math.PI / 2, r0 = i % 9 === 0 ? R - 14 : R - 6;
       g.beginPath(); g.moveTo(Math.cos(a) * r0, Math.sin(a) * r0); g.lineTo(Math.cos(a) * R, Math.sin(a) * R); g.stroke();
     }
@@ -204,7 +225,7 @@ export class Hud {
     // Wind arrow from the rim toward the centre.
     const wa = ang(twa);
     const puff = wind.sample(x, z).puff;
-    g.strokeStyle = puff > 0.25 ? "#ffd23f" : "#6fd3ff"; g.fillStyle = g.strokeStyle; g.lineWidth = 7;
+    g.strokeStyle = puff > 0.25 ? "#ffd23f" : "#5fd3ff"; g.fillStyle = g.strokeStyle; g.lineWidth = 12;
     const ox = Math.cos(wa) * (R + 16), oy = Math.sin(wa) * (R + 16), ix = Math.cos(wa) * 52, iy = Math.sin(wa) * 52;
     g.beginPath(); g.moveTo(ox, oy); g.lineTo(ix, iy); g.stroke();
     g.beginPath(); g.moveTo(ix, iy);
@@ -214,10 +235,8 @@ export class Hud {
     const ta = ang(angleDiff(heading, brgTarget));
     g.fillStyle = "#3ee08f";
     g.beginPath();
-    g.arc(Math.cos(ta) * (R + 8), Math.sin(ta) * (R + 8), 10, 0, Math.PI * 2); g.fill();
+    g.arc(Math.cos(ta) * (R + 8), Math.sin(ta) * (R + 8), 16, 0, Math.PI * 2); g.fill();
     g.restore();
-    g.fillStyle = "#cfe2ea"; g.font = "600 22px Inter, system-ui, sans-serif"; g.textAlign = "center";
-    g.fillText(`${(tel.tws * KNOTS).toFixed(0)} kn`, cx, cy + 72);
   }
 
   private drawMinimap(race: Race, wind: WindField, me: Racer, target: { x: number; z: number }) {

@@ -8,7 +8,7 @@ import { makeFleet, type FleetOptions } from "../src/race/Fleet";
 import { RaceSession } from "../src/race/RaceSession";
 import { I420, OPTIMIST } from "../src/sailing/BoatClass";
 import { RIVALS } from "../src/sailors/Sailors";
-import { boatColors, boatDot } from "../src/ui/boatColors";
+import { boatAccent, boatColors, boatDot } from "../src/ui/boatColors";
 
 const ids = (opts: FleetOptions) => new RaceSession({ fleet: makeFleet(opts) }).race.racers.map(r => r.id);
 
@@ -51,6 +51,11 @@ describe("boat colours", () => {
 
   it("gives the HUD dots their colours as before", () => {
     expect(["player", "ai0", "ai1", "ai2"].map(boatDot)).toEqual(["#ffffff", "#4aa3ff", "#ffd23f", "#ff5a4e"]);
+  });
+
+  it("gives the HUD the player's jacket as its accent colour", () => {
+    expect(boatAccent("player")).toBe("#f2591f");
+    expect(boatAccent("ai0")).toBe("#334dcc");
   });
 
   it("draws a boat missing from the table like ai0, with a grey dot", () => {

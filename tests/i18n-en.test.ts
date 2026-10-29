@@ -50,7 +50,7 @@ describe("English catalog", () => {
     const places = [1, 2, 3, 4, 11, 12, 13, 21, 22].map(place => t("results.place", { place }));
     expect(places).toEqual(["1st", "2nd", "3rd", "4th", "11th", "12th", "13th", "21st", "22nd"]);
     expect(t("event.finish", { place: 2 })).toBe("FINISH! 2nd place");
-    expect(t("hud.position", { position: 3, boats: 6 })).toBe("3rd/6");
+    expect(t("hud.placeOf", { boats: 6 })).toBe("/6");
   });
 
   it("reads the page's static messages through lookup in the active language", async () => {

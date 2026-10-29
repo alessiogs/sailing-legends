@@ -23,10 +23,10 @@ describe("race names", () => {
   it("shows the leg's name as the HUD target", () => {
     const [mark1, mark2, finish] = new RaceSession().race.course.legs;
     const line = (leg: typeof mark1, i: number) =>
-      t("hud.leg.sailing", { leg: i + 1, legs: 3, upwind: leg.upwind, target: legName(leg), toPort: leg.kind === "mark" });
-    expect(line(mark1, 0)).toBe("Lato 1/3 · Bolina → Boa 1 · a sinistra");
-    expect(line(mark2, 1)).toBe("Lato 2/3 · Poppa → Boa 2 · a sinistra");
-    expect(line(finish, 2)).toBe("Lato 3/3 · Bolina → Arrivo");
+      t("hud.leg.sailing", { leg: i + 1, legs: 3, target: legName(leg) });
+    expect(line(mark1, 0)).toBe("Lato 1/3 · Boa 1");
+    expect(line(mark2, 1)).toBe("Lato 2/3 · Boa 2");
+    expect(line(finish, 2)).toBe("Lato 3/3 · Arrivo");
   });
 
   it("names a single-handed boat by its Helm", () => {

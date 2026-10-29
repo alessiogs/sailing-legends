@@ -80,4 +80,4 @@ window.addEventListener("resize", () => engine.resize());
 setTimeout(() => document.getElementById("loading")!.classList.add("hidden"), 300);
 
 // Debug/testing hook (used by automated browser tests).
-installTestHook(game, input);
+installTestHook(game, input, hud);
