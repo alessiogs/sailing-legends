@@ -1,7 +1,7 @@
 import { ArcRotateCamera, Vector3, type Scene } from "@babylonjs/core";
 import { lerpAngle } from "../core/math";
 import type { BoatState } from "../sailing/BoatPhysics";
-import { chasePullBack, chaseView } from "./chaseView";
+import { CHASE_BETA, chasePullBack, chaseView } from "./chaseView";
 
 /** The three views the camera key cycles through: chase (behind the boat), free (mouse orbit), top (north-up tactical). */
 export type CameraMode = "chase" | "free" | "top";
@@ -22,7 +22,7 @@ export class CameraRig {
     camera.lowerRadiusLimit = 5;
     camera.upperRadiusLimit = 120;
     camera.lowerBetaLimit = 0.08;
-    camera.upperBetaLimit = 1.45;
+    camera.upperBetaLimit = CHASE_BETA;
     camera.wheelPrecision = 30;
     camera.panningSensibility = 0;
     camera.minZ = 0.1;
