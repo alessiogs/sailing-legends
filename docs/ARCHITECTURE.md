@@ -40,11 +40,14 @@ src/
              ranking; pure data in and out, ids and numbers, no text)
              CareerSave.ts (`CareerState`, the versioned save codec `encodeCareer`/`decodeCareer` with migrations by
              version, `{ ok: false }` for anything unreadable; `loadCareer`/`saveCareer` on the `sl-career` key; the state
-             holds starting age, Season, class, Regatta index and the Races sailed so far)
+             holds starting age, Season, class, Regatta index, the Races sailed so far, the pool, and the Partner, Role,
+             Control mode, Chemistry and its history)
              Calendar.ts (`Regatta` and the 0.5 Season calendar constants per class: 4 Regattas x 3 Races, Discard from
              the third, entry rule `open`)
-             SeasonClose.ts (`closeSeason`: next Season, index and results reset, the pool grown; the end-of-Season class
-             choice is applied afterwards to its result), Growth.ts (`growSailor`: seeded age curve shaped by personality)
+             SeasonClose.ts (`closeSeason`: next Season, index and results reset, the pool grown, the Seasons raced
+             together counted; `startNextSeason`: the end-of-Season choice, stay or the 420 with a Partner, Role and
+             Control mode; `partnerOffers`), Chemistry.ts (starting Chemistry, the change per 420 Regatta with its caps,
+             `partnerProfile`), PlayerId.ts, Growth.ts (`growSailor`: seeded age curve shaped by personality)
              Standings.ts (`regattaReport`: Regatta and Season rankings after a Regatta, `seasonSummary`, and
              `compareWithRivals`: ids, places and point gaps for the Rival lines; the Discard comes from the calendar)
              Ages.ts (`ageInSeason`, `canRace` against a class's Age limit, the starting-age range)
@@ -77,7 +80,7 @@ src/
              screens, and the Career entries and next-Race buttons. Implements the controller's `Screens`; `attach(game)`
              wires the buttons), CareerScreen.ts (the Career overlay: starting age, unreadable-save prompt, Season
              calendar, Regatta standings, Season summary; built with `h()`, so `index.html` holds no text for it),
-             StandingsView.ts (the standings and summary sheets; rankings with Rivals highlighted), rivalText.ts
+             NextSeasonView.ts (the stay/move choice and Partner pick), StandingsView.ts (the standings and summary sheets; rankings with Rivals highlighted), rivalText.ts
              (words a Rival comparison: "Luca beat you by 2 points")
   game/      GameController.ts (owns the game state: race session, class, Role and Control mode, Partner, wind,
              Assists; the menu / racing / paused / results / controls / career modes; the Career in progress: new, continue, start a Race,
@@ -108,6 +111,7 @@ tests/       Vitest tests (npm test): smoke.test.ts (every AI-only race finishes
              career-season-close.test.ts (closing a Season: ages, reset, Rival growth by personality, pinned over 3 Seasons)
              career-standings.test.ts (Regatta/Season standings, the Discard, Rival comparison, Season summary),
              rival-text.test.ts (Rival lines in Italian and English)
+             career-chemistry.test.ts (starting Chemistry, per-Regatta change and caps, the Partner in the next Race)
              career-start.test.ts (starting a Career: Season 1 at the chosen age)
              career-pool.test.ts (the pool: same seed, same sailors; names, ages, levels)
              career-fleets.test.ts (fleets by level, Rivals always in, the Races' wind and seed, 420 fleets)

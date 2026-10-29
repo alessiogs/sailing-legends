@@ -6,7 +6,8 @@ import { t } from "../i18n";
 import { seasonCalendar } from "../career/Calendar";
 import { nextRaceSetup, startCareer, type RaceSetup } from "../career/Career";
 import { loadCareer, saveCareer, type CareerLoad, type CareerState, type CareerStorage } from "../career/CareerSave";
-import { raceEntries, recordRace } from "../career/RecordRace";
+import { isSeasonOver, raceEntries, recordRace } from "../career/RecordRace";
+import { startNextSeason, type SeasonChoice } from "../career/SeasonClose";
 import { isRegattaComplete, regattaReport, seasonSummary } from "../career/Standings";
 import { legTarget } from "../race/Course";
 import { HELM, type PlayerChoice } from "../race/PlayerChoice";
@@ -247,9 +248,24 @@ export class GameController {
     this.setMode("career");
   }
 
+  /** The end-of-Season choice of the Career in progress, once the Season is over. */
+  showNextSeason() {
+    if (!this.career || !isSeasonOver(this.career)) return;
+    this.screens.showCareer({ kind: "next", state: this.career });
+    this.setMode("career");
+  }
+
+  /** Closes the Season with the player's choice (stay, or the 420 with a Partner), saves and shows the new Season's calendar. */
+  startSeason(choice: SeasonChoice) {
+    if (!this.career || !isSeasonOver(this.career)) return;
+    this.career = startNextSeason(this.career, choice);
+    saveCareer(this.careerStorage, this.career);
+    this.showCalendar();
+  }
+
   /** Starts the next Race of the Career's Regatta (nothing when the Season's Regattas are all sailed). */
   startCareerRace() {
-    const setup = this.career && nextRaceSetup(this.career, { choice: this.choice, partner: this.partner });
+    const setup = this.career && nextRaceSetup(this.career);
     if (!setup) return;
     this.sound.init();
     this.assists.autoTrim = this.screens.autoTrimChosen();

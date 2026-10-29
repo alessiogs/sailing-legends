@@ -6,11 +6,12 @@ import type { Fleet } from "../race/Fleet";
 import type { Racer } from "../race/Race";
 import { seasonCalendar } from "./Calendar";
 import type { CareerState } from "./CareerSave";
+import { applyRegattaChemistry } from "./Chemistry";
 import { FLEET_SIZE } from "./Fleets";
+import { PLAYER_ID } from "./PlayerId";
 import type { RaceEntry } from "./Scoring";
 
-/** The sailor id of the player in a Career's results. */
-export const PLAYER_ID = "player";
+export { PLAYER_ID };
 
 /**
  * The outcome of a finished (or stopped) race as Career entries, one per boat. A boat is named by its Helm: the player
@@ -56,6 +57,9 @@ export function recordRace(state: CareerState, entries: readonly RaceEntry[]): C
   if (new Set(entries.map(e => e.id)).size !== entries.length) throw new RangeError("A sailor is entered twice in the Race");
   const results = state.results.map((races, i) => i === state.regattaIndex ? [...races, entries.map(e => ({ ...e }))] : races);
   const regattaDone = results[state.regattaIndex].length >= regatta.races;
-  if (!regattaDone || state.regattaIndex === calendar.length - 1) return { ...state, results };
-  return { ...state, regattaIndex: state.regattaIndex + 1, results: [...results, []] };
+  if (!regattaDone) return { ...state, results };
+  // A 420 Regatta just sailed moves the Pair's Crew Chemistry (a no-op in the Optimist).
+  const scored = applyRegattaChemistry({ ...state, results }, state.regattaIndex);
+  if (state.regattaIndex === calendar.length - 1) return scored;
+  return { ...scored, regattaIndex: state.regattaIndex + 1, results: [...results, []] };
 }

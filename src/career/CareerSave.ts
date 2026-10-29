@@ -6,6 +6,7 @@ import { isClassId, type ClassId } from "../sailing/BoatClass";
 import { seasonCalendar } from "./Calendar";
 import { MAX_STARTING_AGE, MIN_STARTING_AGE } from "./Ages";
 import { RIVALS } from "../sailors/Sailors";
+import type { PlayerChoice } from "../race/PlayerChoice";
 import type { PoolSailor } from "./Pool";
 import type { RaceEntry } from "./Scoring";
 
@@ -29,6 +30,14 @@ export type CareerState = {
   results: RaceEntry[][][];
   /** The sailor pool: the Rivals and the generated sailors, with the profiles they have now. Matched by `id`. */
   pool: PoolSailor[];
+  /** The Partner in a two-person class (a pool sailor's `id`), or `null` in the Optimist. */
+  partnerId: string | null;
+  /** The player's Role and Control mode in a two-person class (Helm, Player Career in the Optimist, where they do not matter). */
+  choice: PlayerChoice;
+  /** Crew Chemistry 0..100 of the Pair now, or `null` without a Partner. It moves after each 420 Regatta. */
+  chemistry: number | null;
+  /** The Chemistry history: by sailor `id`, the Seasons the player raced in the same fleets as them, or with them as Partner. */
+  seasonsTogether: Record<string, number>;
 };
 
 export const CAREER_VERSION = 1;
@@ -77,6 +86,16 @@ function isPool(v: unknown): v is PoolSailor[] {
     && RIVALS.every(r => v.some(s => s.id === r.id));
 }
 
+function isChoice(v: unknown): v is PlayerChoice {
+  if (!isRecord(v)) return false;
+  return (v.role === "helm" && (v.control === "playerCareer" || v.control === "fullBoat")) || (v.role === "crew" && v.control === "playerCareer");
+}
+
+/** The Seasons raced together: whole counts by the id of a pool sailor. */
+function isHistory(v: unknown, pool: PoolSailor[]): v is Record<string, number> {
+  return isRecord(v) && Object.entries(v).every(([id, n]) => isInt(n, 1) && pool.some(s => s.id === id));
+}
+
 /** The Races of the Regattas begun so far: one list per Regatta up to `regattaIndex`, earlier ones complete. */
 function isResults(v: unknown, classId: ClassId, regattaIndex: number): v is RaceEntry[][][] {
   const calendar = seasonCalendar(classId);
@@ -106,13 +125,20 @@ export function decodeCareer(
       saved = step(saved);
       version++;
     }
-    const { seed, startingAge, season, classId, regattaIndex, results, pool } = saved;
+    const { seed, startingAge, season, classId, regattaIndex, results, pool, partnerId, choice, chemistry, seasonsTogether } = saved;
     if (!isInt(seed, 0) || !isInt(season, 1)) return { ok: false };
     if (!isInt(startingAge, MIN_STARTING_AGE) || startingAge > MAX_STARTING_AGE) return { ok: false };
     if (typeof classId !== "string" || !isClassId(classId)) return { ok: false };
     if (!isInt(regattaIndex, 0) || !isResults(results, classId, regattaIndex)) return { ok: false };
-    if (!isPool(pool)) return { ok: false };
-    return { ok: true, state: { version: current, seed, startingAge, season, classId, regattaIndex, results, pool } };
+    if (!isPool(pool) || !isChoice(choice) || !isHistory(seasonsTogether, pool)) return { ok: false };
+    const paired = classId === "420";
+    if (!paired && (partnerId !== null || chemistry !== null)) return { ok: false };
+    if (paired && (typeof partnerId !== "string" || !pool.some(s => s.id === partnerId)
+      || typeof chemistry !== "number" || chemistry < 0 || chemistry > 100)) return { ok: false };
+    return {
+      ok: true,
+      state: { version: current, seed, startingAge, season, classId, regattaIndex, results, pool, partnerId: partnerId as string | null, choice, chemistry: chemistry as number | null, seasonsTogether },
+    };
   } catch {
     return { ok: false };
   }

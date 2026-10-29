@@ -296,4 +296,12 @@ export const english: Catalog = {
     `You finish the Season in ${ordinal(place)} place with ${plural(points, { one: `${points} point`, other: `${points} points` })}.`,
   "career.summary.places": "Regatta places",
   "career.summary.rivals": "Against your Rivals",
+  "career.summary.next": "Next Season",
+  "career.next.title": ({ season }) => `Season ${season}: what next?`,
+  "career.next.help": "Stay in the Optimist, or move to the 420 with a Partner you have raced against?",
+  "career.next.stay": "Stay in the Optimist",
+  "career.next.move": "Move to the 420",
+  "career.next.partner": "Pick your Partner among the sailors you raced against. Chemistry grows with the Seasons raced together.",
+  "career.next.chemistry": ({ chemistry }) => `Chemistry ${chemistry}/100`,
+  "career.next.start": "Start the Season",
 };

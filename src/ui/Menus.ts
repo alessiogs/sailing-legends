@@ -39,6 +39,8 @@ export class Menus implements Screens {
     showCalendar: () => this.game.showCalendar(),
     showStandings: index => this.game.showStandings(index),
     showSummary: () => this.game.showSummary(),
+    showNextSeason: () => this.game.showNextSeason(),
+    startSeason: choice => this.game.startSeason(choice),
     askAge: () => this.game.askCareerAge(),
     mainMenu: () => this.game.setMode("menu"),
   });

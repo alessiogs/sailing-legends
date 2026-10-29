@@ -6,7 +6,9 @@ import { FLEET_SIZE } from "../career/Fleets";
 import { isSeasonOver } from "../career/RecordRace";
 import { lastCompleteRegatta, type RegattaReport, type SeasonSummary } from "../career/Standings";
 import { CLASSES } from "../sailing/BoatClass";
+import type { SeasonChoice } from "../career/SeasonClose";
 import { h } from "./dom";
+import { nextSeasonSheet } from "./NextSeasonView";
 import { standingsSheet, summarySheet } from "./StandingsView";
 
 /** What the Career overlay shows: the starting-age choice, the unreadable-save prompt, or the Season calendar. */
@@ -15,7 +17,8 @@ export type CareerView =
   | { kind: "unreadable" }
   | { kind: "calendar"; state: CareerState }
   | { kind: "standings"; state: CareerState; report: RegattaReport; /** Whether it was the Season's last Regatta, which the summary follows. */ last: boolean }
-  | { kind: "summary"; state: CareerState; summary: SeasonSummary };
+  | { kind: "summary"; state: CareerState; summary: SeasonSummary }
+  | { kind: "next"; state: CareerState };
 
 /** What the Career overlay's buttons do; the game implements them. */
 export interface CareerActions {
@@ -29,6 +32,10 @@ export interface CareerActions {
   showStandings(index: number): void;
   /** Shows the Season summary. */
   showSummary(): void;
+  /** Shows the end-of-Season choice (stay or move to the 420). */
+  showNextSeason(): void;
+  /** Closes the Season with the player's choice and shows the next Season's calendar. */
+  startSeason(choice: SeasonChoice): void;
   /** Asks for the starting age (after the unreadable-save prompt). */
   askAge(): void;
   /** Goes back to the main menu. */
@@ -54,6 +61,7 @@ export class CareerScreen {
       case "calendar": return this.calendar(view.state);
       case "standings": return this.standings(view.state, view.report, view.last);
       case "summary": return this.summary(view.state, view.summary);
+      case "next": return nextSeasonSheet(view.state, { choose: c => this.actions.startSeason(c), back: () => this.actions.showSummary() }, c => this.root.replaceChildren(h("div", { class: "sheet" }, ...c)));
     }
   }
 
@@ -106,7 +114,8 @@ export class CareerScreen {
       ...summarySheet(state, summary),
       h("div", { class: "row-btns" },
         this.button("ghost", t("career.mainMenu"), () => this.actions.mainMenu(), "career-summary-menu"),
-        this.button("primary", t("career.results.calendar"), () => this.actions.showCalendar(), "career-summary-calendar")),
+        this.button("ghost", t("career.results.calendar"), () => this.actions.showCalendar(), "career-summary-calendar"),
+        this.button("primary", t("career.summary.next"), () => this.actions.showNextSeason(), "career-summary-next")),
     ];
   }
 
@@ -133,7 +142,9 @@ export class CareerScreen {
       h("div", { class: "row-btns" },
         this.button("ghost", t("career.mainMenu"), () => this.actions.mainMenu(), "career-menu"),
         ...(latest !== null ? [this.button("ghost", t("career.standings.last"), () => this.actions.showStandings(latest), "career-standings")] : []),
-        ...(over ? [] : [this.button("primary", t("career.race.start", { race: sailed + 1 }), () => this.actions.startRace(), "career-race")])),
+        ...(over
+          ? [this.button("primary", t("career.summary.next"), () => this.actions.showNextSeason(), "career-next-season")]
+          : [this.button("primary", t("career.race.start", { race: sailed + 1 }), () => this.actions.startRace(), "career-race")])),
     ];
   }
 }

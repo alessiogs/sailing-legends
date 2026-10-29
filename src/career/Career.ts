@@ -5,10 +5,12 @@
 import { DEFAULT_STARTING_AGE, MAX_STARTING_AGE, MIN_STARTING_AGE } from "./Ages";
 import { seasonCalendar } from "./Calendar";
 import { CAREER_VERSION, type CareerState } from "./CareerSave";
+import { partnerProfile } from "./Chemistry";
 import { regattaFleet, type FleetOptions } from "./Fleets";
 import { generatePool } from "./Pool";
 import { raceSeed, raceWindKn } from "./Weather";
 import type { Fleet } from "../race/Fleet";
+import { HELM } from "../race/PlayerChoice";
 
 /**
  * Starts a Career: Season 1 in the Optimist at `startingAge` (8..12, 10 by default), at the first Regatta with
@@ -20,7 +22,11 @@ export function startCareer({ seed, startingAge = DEFAULT_STARTING_AGE }: { seed
   if (!Number.isInteger(startingAge) || startingAge < MIN_STARTING_AGE || startingAge > MAX_STARTING_AGE) {
     throw new RangeError(`Career starting age must be ${MIN_STARTING_AGE}..${MAX_STARTING_AGE}, got ${startingAge}`);
   }
-  return { version: CAREER_VERSION, seed, startingAge, season: 1, classId: "optimist", regattaIndex: 0, results: [[]], pool: generatePool(seed, startingAge) };
+  return {
+    version: CAREER_VERSION, seed, startingAge, season: 1, classId: "optimist", regattaIndex: 0, results: [[]],
+    pool: generatePool(seed, startingAge),
+    partnerId: null, choice: HELM, chemistry: null, seasonsTogether: {},
+  };
 }
 
 /** What a Race needs to start: who sails, in what wind, from which seed (all for `RaceSession`). */
@@ -37,14 +43,16 @@ export type RaceSetup = {
 /**
  * The setup of the next Race of the Regatta in progress, or `null` when all its Races are sailed. The fleet comes from
  * the pool by the Regatta's level and is the same for every Race of the Regatta; the wind and the seed differ by Race.
- * In the 420, `options` give the player's Role, Control mode and Partner.
+ * In the 420 the Role, Control mode and Partner are the Career's own (with the Partner's bond set to the Pair's Crew
+ * Chemistry); `options` override them.
  */
 export function nextRaceSetup(state: CareerState, options: FleetOptions = {}): RaceSetup | null {
   const regatta = seasonCalendar(state.classId)[state.regattaIndex];
+  const fleetOptions: FleetOptions = { choice: options.choice ?? state.choice, partner: options.partner ?? partnerProfile(state) };
   const raceIndex = state.results[state.regattaIndex].length;
   if (raceIndex >= regatta.races) return null;
   return {
-    regattaId: regatta.id, raceIndex, fleet: regattaFleet(state, options),
+    regattaId: regatta.id, raceIndex, fleet: regattaFleet(state, fleetOptions),
     windKn: raceWindKn(state.seed, state.season, state.regattaIndex, raceIndex),
     seed: raceSeed(state.seed, state.season, state.regattaIndex, raceIndex),
   };

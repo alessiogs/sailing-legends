@@ -9,8 +9,8 @@ const plural = plurals("it");
 
 export const italian = {
   // Main menu.
-  "menu.lede.twoPerson": "Regata 420, in due con fiocco, spinnaker e trapezio",
-  "menu.lede.single": "Regata Optimist",
+  "menu.lede.twoPerson": "Prova 420, in due con fiocco, spinnaker e trapezio",
+  "menu.lede.single": "Prova Optimist",
   "menu.versionChip": ({ boatClass }: { boatClass: string }) => `PROTOTIPO 0.4 · ${boatClass}`,
   "menu.roleHelp.helm": "Timone e randa. Il tuo prodiere regola fiocco e spi, esce al trapezio e decide quando issare lo spi.",
   "menu.roleHelp.crew": "Il partner timona. Tu: W/S fiocco (o spi), A/D peso dentro/fuori fino al trapezio, E cambio lato dopo virate e strambate, Spazio issa/ammaina lo spi. Ascolta le sue chiamate.",
@@ -44,7 +44,7 @@ export const italian = {
   "menu.tips.tacks": "Le virate costano velocità: falle con la barca lanciata, non da ferma.",
   "menu.tips.marksAndStart": "Boe da lasciare a sinistra. Alla partenza resta sotto la linea fino allo sparo.",
   "menu.tips.rightOfWay": "Precedenze: mure a sinistra dà acqua a mure a dritta, sopravvento a sottovento, chi è dietro a chi è davanti. Se tocchi per colpa tua: 2 giri di penalità; se tocchi una boa: 1 giro.",
-  "menu.start": "Inizia regata",
+  "menu.start": "Inizia prova",
   "menu.label.language": "LINGUA",
   "menu.language.it": "Italiano",
   "menu.language.en": "English",
@@ -54,7 +54,7 @@ export const italian = {
   "pause.resume": "Riprendi",
   "pause.controls": "Comandi",
   "pause.mainMenu": "Menu principale",
-  "pause.restartHint": "R per ricominciare la regata",
+  "pause.restartHint": "R per ricominciare la prova",
 
   // Controls menu.
   "controls.steerHelp.tiller": "→ sposta la barra a destra e la barca gira a sinistra, come nella realtà.",
@@ -188,7 +188,7 @@ export const italian = {
   "hud.leg.ocs": "Partenza anticipata: torna sotto la linea",
   "hud.leg.prestart": "Partenza: resta sotto la linea",
   "hud.leg.cross": "Attraversa la linea di partenza",
-  "hud.leg.done": "Regata conclusa",
+  "hud.leg.done": "Prova conclusa",
   "hud.leg.sailing": ({ leg, legs, upwind, target, toPort }: { leg: number; legs: number; upwind: boolean; target: string; toPort: boolean }) =>
     `Lato ${leg}/${legs} · ${upwind ? "Bolina" : "Poppa"} → ${target}${toPort ? " · a sinistra" : ""}`,
   "hud.twa": ({ angle, starboard }: { angle: string; starboard: boolean }) => `${angle}° ${starboard ? "dx" : "sx"}`,
@@ -243,7 +243,7 @@ export const italian = {
 
   // Results table.
   "results.title": "RISULTATI",
-  "results.hint": "R per un'altra regata · M per il menu",
+  "results.hint": "R per un'altra prova · M per il menu",
   "results.dsq": "DSQ",
   "results.place": ({ place }: { place: number }) => `${place}°`,
 
@@ -295,4 +295,12 @@ export const italian = {
     `Chiudi la stagione al ${place}° posto con ${plural(points, { one: `${points} punto`, other: `${points} punti` })}.`,
   "career.summary.places": "Posizioni nelle regate",
   "career.summary.rivals": "Contro i tuoi rivali",
+  "career.summary.next": "Prossima stagione",
+  "career.next.title": ({ season }: { season: number }) => `Stagione ${season}: come prosegui?`,
+  "career.next.help": "Resti in Optimist o passi al 420, in due con un compagno che hai incontrato in regata?",
+  "career.next.stay": "Resta in Optimist",
+  "career.next.move": "Passa al 420",
+  "career.next.partner": "Scegli il tuo compagno tra i velisti che hai incontrato. L'intesa cresce con le stagioni passate a regatare insieme.",
+  "career.next.chemistry": ({ chemistry }: { chemistry: number }) => `Intesa ${chemistry}/100`,
+  "career.next.start": "Inizia la stagione",
 };
