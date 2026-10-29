@@ -44,3 +44,11 @@ export function boatColors(id: string): BoatColors {
 export function boatDot(id: string): string {
   return BOAT_COLORS[id]?.dot ?? UNKNOWN_DOT;
 }
+
+const hex = (channel: number) => Math.round(channel * 255).toString(16).padStart(2, "0");
+
+/** The HUD's accent colour for the boat with this racer id: its Helm's jacket as a CSS hex colour (the player's orange). */
+export function boatAccent(id: string): string {
+  const [r, g, b] = boatColors(id).jacket;
+  return `#${hex(r)}${hex(g)}${hex(b)}`;
+}

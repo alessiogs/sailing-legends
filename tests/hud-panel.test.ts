@@ -84,7 +84,7 @@ describe("HUD panel as Crew", () => {
   it("shows the Crew's own weight against the ideal, the jib, the Helm line and Crew Chemistry", () => {
     const { s, tel, panel } = quiet();
     expect(panel(0.9, true)).toEqual({
-      gauge: { label: "IL TUO PESO · IN CINGHIA", value: 0.5, centered: false, ideal: 0.4, ends: ["◀ DENTRO (A)", "FUORI / TRAPEZIO (D) ▶"] },
+      gauge: { label: "IN CINGHIA", value: 0.5, centered: false, ideal: 0.4, ends: ["◀ DENTRO", "FUORI ▶"] },
       sail: { label: "FIOCCO", sheet: s.jibSheet, optimal: tel.jib!.optimal, state: tel.jib!.trimState, autoTrim: true },
       call: null,
       partnerLine: "Giulia al timone e alla randa · spi: giù",
@@ -95,9 +95,9 @@ describe("HUD panel as Crew", () => {
   it("words the Crew's own weight", () => {
     const { s, panel } = quiet();
     s.crewOut = 0.1;
-    expect(panel().gauge.label).toBe("IL TUO PESO · SEDUTO DENTRO");
+    expect(panel().gauge.label).toBe("SEDUTO DENTRO");
     s.crewOut = 1;
-    expect(panel().gauge.label).toBe("IL TUO PESO · AL TRAPEZIO");
+    expect(panel().gauge.label).toBe("AL TRAPEZIO");
   });
 
   it("trims the spinnaker once it is drawing", () => {

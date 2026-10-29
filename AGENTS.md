@@ -50,7 +50,8 @@ and the UI words it).
   the test hook.
 - `src/main.ts`: startup wiring.
 - `tests/`: one test file per module, plus `smoke`, `golden` and `rules`.
-- `scripts/`: `polar.ts` and `golden-update.ts`.
+- `scripts/`: `polar.ts` and `golden-update.ts`, and `hud-overlap.cjs` (the HUD no-overlap check, run by hand in a
+  browser; see `docs/agents/sandbox-build.md`). After any HUD change, run it.
 
 **Rule:** `core/math.ts`, `sailing/`, `race/`, `ai/`, `sailors/`, `career/`, `i18n/` and every other file a test imports
 use neither Babylon nor browser APIs. They also run in Node.

@@ -69,14 +69,19 @@ src/
   i18n/      index.ts (`t(key, params)`: typed lookup in the active catalog; `setLanguage`), it.ts (Italian catalog,
              the reference: it defines the keys), en.ts (English catalog, typed against it), language.ts (`Language`,
              `chooseLanguage`: saved choice, else the browser's language, else Italian), plural.ts (plural forms from Intl.PluralRules). All player-facing text lives in a catalog
-  ui/        touchDrag.ts (pointer drag of the tiller/weight and trim bars into Input), TouchButtons.ts (tap buttons for
-             pause, camera, Auto-trim, spinnaker, side switch; shown only for `pointer: coarse`),
-             Hud.ts (draws the panel, compass, minimap, standings, tags), hudPanel.ts (`buildPanel`: the
-             Role-driven bottom panel built from the race and the player's choices; pure, DOM-free),
+  ui/        touchDrag.ts (pointer drag of the horizontal tiller/weight bar and the vertical sheet slider into Input),
+             TouchButtons.ts (the tap buttons, found by `data-action` in index.html: pause, camera, Auto-trim,
+             spinnaker, side switch; the last three are the context buttons, shown when the boat has them),
+             Hud.ts (the "Sail number" HUD: top strip, compass pill and speed, messages as one pill, status pills, the
+             Standings/map panel, the tiller and sheet handles, tags; `style.css` places its boxes, each marked
+             `data-hud`), hudPanel.ts (`buildPanel`: the Role-driven gauge, sail trim, Partner call and lines built from
+             the race and the player's choices; pure, DOM-free), standingsRows.ts (which boats the standings list
+             shows: all, or the first three and those around the player; pure),
              pageText.ts (fills index.html's data-i18n text from the catalog at startup), raceEventText.ts (words race events from their data),
              raceNames.ts (names legs by `LegId` and boats by the sailors on board),
              boatStateText.ts (words the Crew weight and spinnaker states for the HUD),
-             boatColors.ts (the one boat colour table by racer id: 3D hull/sail/jacket/stripe and the HUD dot),
+             boatColors.ts (the one boat colour table by racer id: 3D hull/sail/jacket/stripe and the HUD dot; `boatAccent`:
+             the HUD's accent colour, the Helm's jacket),
              dom.ts (`h(tag, attributes, ...children)`: builds elements; strings become text, never markup),
              Menus.ts (main menu: class, wind, Role, Partner, Auto-trim; Commands menu; pause and results
              screens, and the Career entries and next-Race buttons. Implements the controller's `Screens`; `attach(game)`
@@ -92,9 +97,10 @@ src/
              calls, the Partner's calls, the irons hint; returns `Cue`s for the controller to play; DOM/audio-free)
              PlayerControls.ts (the player's input turned into the boat's controls per Role and Control mode:
              steering, sheets, weight, side switch, spinnaker key, Auto-trim, the browser autopilot; DOM-free)
-             CameraRig.ts (the orbit camera and its chase / free / top views), Preferences.ts (`loadPrefs`,
+             CameraRig.ts (the orbit camera and its chase / free / top views), chaseView.ts (the chase distance and angle for
+             the screen's shape: farther and higher in portrait; pure), Preferences.ts (`loadPrefs`,
              `savePrefs`: controls, mute and the optional language under `sl-prefs`; a stored non-object loads the defaults; keep the stored format so saved preferences load),
-             testHook.ts (the typed `window.__game` test hook, `GameTestHook`, and `window.__fps`)
+             testHook.ts (the typed `window.__game` test hook, `GameTestHook` (also a message pill and the panel), and `window.__fps`)
   main.ts    startup wiring: language, scene, camera rig, preferences, `Menus`, render loop, installs the test hook
 tests/       Vitest tests (npm test): smoke.test.ts (every AI-only race finishes, every penalty served),
              career-smoke.test.ts (a Career Regatta of Races through `RaceSession` into `career`),
@@ -123,7 +129,9 @@ tests/       Vitest tests (npm test): smoke.test.ts (every AI-only race finishes
              player-choice.test.ts (Crew with Full Boat Control is a type error; the Partner set up per choice)
              crew-side.test.ts (the shared Crew wrong-side check)
              boat-states.test.ts (Crew weight and spinnaker thresholds, and their HUD wording)
-             boat-colors.test.ts (every boat has its colours; 3D and HUD colours as before)
+             boat-colors.test.ts (every boat has its colours; 3D and HUD colours as before; the HUD accent)
+             standings-rows.test.ts (the standings list: a small fleet whole, a big one first three plus the player's neighbours)
+             chase-view.test.ts (the chase camera is farther and higher on a portrait screen)
              preferences.test.ts (saved preferences still load; saving keeps the `sl-prefs` format; the language is optional; a stored null, number or array loads the defaults)
              player-controls.test.ts (what the player's input does per Role and Control mode, Auto-trim, autopilot)
              hud-panel.test.ts (the HUD panel's lines per Role and Control mode, as the HUD shows them)
@@ -137,7 +145,8 @@ tests/       Vitest tests (npm test): smoke.test.ts (every AI-only race finishes
              scene-cache.test.ts (boat materials made once per scene, again for a recreated scene)
              sail-shape.test.ts (the shared sail grid draws the Optimist and 420 sails exactly as before)
              optimal-sheet.test.ts (the fast optimal-sheet search gives exactly the sheet that sampling every step gives)
-scripts/     polar.ts (npm run polar), golden-update.ts (npm run golden:update)
+scripts/     polar.ts (npm run polar), golden-update.ts (npm run golden:update), hud-overlap.cjs (the HUD no-overlap check in
+             headless Chromium, run by hand: docs/agents/sandbox-build.md)
 ```
 **Rule:** `core/math.ts`, `sailing/`, `race/`, `ai/`, `sailors/`, `career/`, `i18n/` and every other file a test imports
 (`hudPanel.ts`, `raceEventText.ts`, `PlayerControls.ts`, `RaceFeedback.ts`, `sailShape.ts`, `sceneCache.ts`, …)

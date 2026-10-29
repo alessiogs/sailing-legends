@@ -1,7 +1,7 @@
 /**
  * Static page text: index.html names catalog keys (data-i18n, data-i18n-aria-label) instead of holding Italian
- * text. Filled from the catalog, the page must read word for word as it did before (`page-text/original.json`,
- * the visible text and aria-labels of the page as it was before its text moved to the catalog).
+ * text. Filled from the catalog, the page must read word for word as in `page-text/original.json`: the visible text
+ * and aria-labels of the page as it was before its text moved to the catalog (the HUD part follows the 0.6a "Sail number" HUD).
  */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
