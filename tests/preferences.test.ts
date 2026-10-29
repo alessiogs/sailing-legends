@@ -1,6 +1,6 @@
 /**
  * The player's preferences (controls and mute) are stored under "sl-prefs" as
- * `{ controls: { steering, autoCenter, tillerSpeed, sheetSpeed }, muted }`. Preferences saved by earlier
+ * `{ controls: { steering, autoCenter, tillerSpeed, sheetSpeed }, muted, language? }`. Preferences saved by earlier
  * versions of the game must still load, and saving must keep writing that same format.
  */
 import { describe, expect, it } from "vitest";
@@ -42,6 +42,22 @@ describe("preferences", () => {
     const { store, storage } = memory();
     savePrefs(storage, { controls: { steering: "boat", autoCenter: true, tillerSpeed: 0.6, sheetSpeed: 1 }, muted: true });
     expect(store["sl-prefs"]).toBe('{"controls":{"steering":"boat","autoCenter":true,"tillerSpeed":0.6,"sheetSpeed":1},"muted":true}');
+  });
+
+  it("loads preferences saved before the language existed, with no language chosen", () => {
+    const saved = '{"controls":{"steering":"boat","autoCenter":true,"tillerSpeed":1,"sheetSpeed":1},"muted":false}';
+    expect(loadPrefs(memory({ "sl-prefs": saved }).storage).language).toBeUndefined();
+  });
+
+  it("loads and saves the chosen language, next to the other settings", () => {
+    const { store, storage } = memory();
+    savePrefs(storage, { ...DEFAULTS, language: "en" });
+    expect(store["sl-prefs"]).toBe('{"controls":{"steering":"tiller","autoCenter":true,"tillerSpeed":1,"sheetSpeed":1},"muted":false,"language":"en"}');
+    expect(loadPrefs(storage)).toEqual({ ...DEFAULTS, language: "en" });
+  });
+
+  it("ignores a saved language that is not one of the game's", () => {
+    expect(loadPrefs(memory({ "sl-prefs": '{"language":"de","muted":true}' }).storage).language).toBeUndefined();
   });
 
   it("ignores an unavailable storage when saving", () => {

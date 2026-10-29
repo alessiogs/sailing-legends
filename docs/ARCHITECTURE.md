@@ -41,8 +41,9 @@ src/
              `boatMaterial`: the one material cache of both boat views, per scene via sceneCache.ts), SailMesh.ts (the
              one sail mesh, for every sail of both classes) and sailShape.ts (its Babylon-free grid maths; a
              `SailCut` per class: the 420's in proportion to the chord, the Optimist's fixed offsets), CourseView.ts
-  i18n/      index.ts (`t(key, params)`: typed lookup), it.ts (Italian catalog, the reference: it defines the
-             keys), plural.ts (plural forms from Intl.PluralRules). All player-facing text lives in a catalog
+  i18n/      index.ts (`t(key, params)`: typed lookup in the active catalog; `setLanguage`), it.ts (Italian catalog,
+             the reference: it defines the keys), en.ts (English catalog, typed against it), language.ts (`Language`,
+             `chooseLanguage`: saved choice, else the browser's language, else Italian), plural.ts (plural forms from Intl.PluralRules). All player-facing text lives in a catalog
   ui/        Hud.ts (draws the panel, compass, minimap, standings, tags), hudPanel.ts (`buildPanel`: the
              Role-driven bottom panel built from the race and the player's choices; pure, DOM-free),
              pageText.ts (fills index.html's data-i18n text from the catalog at startup), raceEventText.ts (words race events from their data),
@@ -60,13 +61,15 @@ src/
              PlayerControls.ts (the player's input turned into the boat's controls per Role and Control mode:
              steering, sheets, weight, side switch, spinnaker key, Auto-trim, the browser autopilot; DOM-free)
              CameraRig.ts (the orbit camera and its chase / free / top views), Preferences.ts (`loadPrefs`,
-             `savePrefs`: controls and mute under `sl-prefs`; keep the stored format so saved preferences load),
+             `savePrefs`: controls, mute and the optional language under `sl-prefs`; keep the stored format so saved preferences load),
              testHook.ts (the typed `window.__game` test hook, `GameTestHook`, and `window.__fps`)
-  main.ts    startup wiring: scene, camera rig, preferences, `Menus`, render loop, installs the test hook
+  main.ts    startup wiring: language, scene, camera rig, preferences, `Menus`, render loop, installs the test hook
 tests/       Vitest tests (npm test): smoke.test.ts (every AI-only race finishes, every penalty served),
              golden.test.ts + golden/ (races.ts sails and records the golden races, races.json is the snapshot),
              rules.test.ts (rule 10/11/12/13 verdicts and penalty turns, two boats placed by hand)
              i18n.test.ts (lookup, parameters, plural rules; catalogs with missing or extra keys fail the type-check)
+             i18n-en.test.ts (English catalog: same keys, glossary terms, plural and ordinal forms)
+             language.test.ts (language selection: saved, browser, default; switching the active catalog)
              page-text.test.ts (index.html filled from the catalog reads as page-text/original.json)
              event-text.test.ts (every race event kind, worded through the Italian catalog, reads as before)
              race-names.test.ts (leg and boat names of every session setup read as before)
@@ -75,7 +78,7 @@ tests/       Vitest tests (npm test): smoke.test.ts (every AI-only race finishes
              crew-side.test.ts (the shared Crew wrong-side check)
              boat-states.test.ts (Crew weight and spinnaker thresholds, and their HUD wording)
              boat-colors.test.ts (every boat has its colours; 3D and HUD colours as before)
-             preferences.test.ts (saved preferences still load; saving keeps the `sl-prefs` format)
+             preferences.test.ts (saved preferences still load; saving keeps the `sl-prefs` format; the language is optional)
              player-controls.test.ts (what the player's input does per Role and Control mode, Auto-trim, autopilot)
              hud-panel.test.ts (the HUD panel's lines per Role and Control mode, as the HUD shows them)
              race-feedback.test.ts (which sounds, messages and hints the race gives, and when)

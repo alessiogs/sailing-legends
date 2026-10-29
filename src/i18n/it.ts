@@ -45,6 +45,9 @@ export const italian = {
   "menu.tips.marksAndStart": "Boe da lasciare a sinistra. Alla partenza resta sotto la linea fino allo sparo.",
   "menu.tips.rightOfWay": "Precedenze: mure a sinistra dà acqua a mure a dritta, sopravvento a sottovento, chi è dietro a chi è davanti. Se tocchi per colpa tua: 2 giri di penalità; se tocchi una boa: 1 giro.",
   "menu.start": "Inizia regata",
+  "menu.label.language": "LINGUA",
+  "menu.language.it": "Italiano",
+  "menu.language.en": "English",
 
   // Pause menu.
   "pause.title": "PAUSA",

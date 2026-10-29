@@ -11,7 +11,8 @@ Browser sailing game (Babylon.js 9 + TypeScript + Vite) aiming at a FIFA-style c
 - Building without npm: `docs/agents/sandbox-build.md`
 
 **Languages:** code, comments, docs and the README are English and use the glossary's terms. In-game text is
-Italian and lives only in the catalogs in `src/i18n/` (ADR 0001: the simulation emits data and the UI words it).
+Italian or English (the player's choice) and lives only in the catalogs in `src/i18n/` (ADR 0001: the simulation emits data
+and the UI words it).
 
 ## Branches, PRs, deploys
 - `main` is published at https://alessiogs.github.io/sailing-legends/ and `develop` at the same address under
@@ -42,7 +43,7 @@ Italian and lives only in the catalogs in `src/i18n/` (ADR 0001: the simulation 
   `StartPlanning`. `CrewAI` is the Crew.
 - `src/sailors/`: sailor profiles, Rivals and Crew Chemistry. Sailors are matched by `id`, never by name.
 - `src/world/`: the Babylon visuals (ocean, boats, sails, course).
-- `src/i18n/`: `t(key, params)` and the catalogs (`it.ts` is the reference).
+- `src/i18n/`: `t(key, params)` and the catalogs (`it.ts` is the reference, `en.ts` follows it).
 - `src/ui/`: HUD, the pure `buildPanel`, menus, how events and names are worded, boat colours, `h()` for markup.
 - `src/game/`: `GameController` (state and modes), `PlayerControls`, `RaceFeedback`, the camera, preferences and
   the test hook.

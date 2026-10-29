@@ -2,6 +2,7 @@ import {
   Color3, Color4, DirectionalLight, Engine, HemisphericLight, Scene, Vector3,
 } from "@babylonjs/core";
 import { Input } from "./core/Input";
+import { chooseLanguage, setLanguage, type Language } from "./i18n";
 import { Sound } from "./core/Sound";
 import { GameController } from "./game/GameController";
 import { CameraRig } from "./game/CameraRig";
@@ -11,6 +12,14 @@ import { Hud } from "./ui/Hud";
 import { Menus } from "./ui/Menus";
 import { fillPageText } from "./ui/pageText";
 import "./style.css";
+
+// ---------- Preferences and language ----------
+const storage = () => localStorage;
+const prefs = loadPrefs(storage);
+// The saved choice, else the browser's language, else Italian.
+const language = chooseLanguage(prefs.language, navigator.language);
+setLanguage(language);
+document.documentElement.lang = language;
 
 // The page's static text first: the code below overwrites some of it, and the loading screen hides the menus until then.
 fillPageText();
@@ -38,14 +47,20 @@ const hud = new Hud();
 const sound = new Sound();
 
 // ---------- Preferences ----------
-const storage = () => localStorage;
-const prefs = loadPrefs(storage);
+let savedLanguage = prefs.language;
 input.settings = prefs.controls;
 sound.muted = prefs.muted;
-const savePlayerPrefs = () => savePrefs(storage, { controls: input.settings, muted: sound.muted });
+const savePlayerPrefs = () => savePrefs(storage, { controls: input.settings, muted: sound.muted, language: savedLanguage });
 
 // ---------- Menus and game ----------
-const menus = new Menus(input, savePlayerPrefs);
+// Changing the language saves it and reloads the page: every screen and the HUD then read the new catalog from the
+// start, instead of each one re-wording what it already shows.
+const chooseMenuLanguage = (next: Language) => {
+  savedLanguage = next;
+  savePlayerPrefs();
+  location.reload();
+};
+const menus = new Menus(input, savePlayerPrefs, language, chooseMenuLanguage);
 const game = new GameController({ engine, scene, cameraRig, canvas, input, hud, sound, screens: menus, savePrefs: savePlayerPrefs });
 menus.attach(game);
 
