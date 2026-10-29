@@ -1,7 +1,7 @@
 import { DEFAULT_CONTROLS } from "../core/ControlSettings";
 import type { Input } from "../core/Input";
 import type { GameController, Mode, Screens } from "../game/GameController";
-import { t, type MessageKey } from "../i18n";
+import { LANGUAGES, t, type Language, type MessageKey } from "../i18n";
 import type { Racer } from "../race/Race";
 import { CREW, FULL_BOAT, HELM, type PlayerChoice } from "../race/PlayerChoice";
 import { CLASSES, isClassId, isTwoPerson } from "../sailing/BoatClass";
@@ -33,8 +33,16 @@ export class Menus implements Screens {
   };
   private game!: GameController;
 
-  /** `savePrefs` saves the player's preferences after a change in the Commands menu. */
-  constructor(private readonly input: Input, private readonly savePrefs: () => void) {}
+  /**
+   * `savePrefs` saves the player's preferences after a change in the Commands menu. `language` is the active
+   * language, and `chooseLanguage` is called when the player picks another one in the main menu.
+   */
+  constructor(
+    private readonly input: Input,
+    private readonly savePrefs: () => void,
+    private readonly language: Language,
+    private readonly chooseLanguage: (language: Language) => void,
+  ) {}
 
   // ---------- Screens ----------
   show(m: Mode) {
@@ -63,12 +71,26 @@ export class Menus implements Screens {
     $("start-btn").addEventListener("click", () => game.startFromMenu());
     this.attachCommands();
     this.attachBoatMenu();
+    this.attachLanguage();
     for (const b of buttons("#wind-opt button")) {
       b.addEventListener("click", () => {
         game.windKn = Number(b.dataset.v);
         for (const o of buttons("#wind-opt button")) o.classList.toggle("on", o === b);
       });
     }
+  }
+
+  // ---------- Language ----------
+  /** Adds the language picker to the main menu's options (built here, so the page holds no text of its own for it). */
+  private attachLanguage() {
+    const options = this.el.menu.querySelector(".options")!;
+    options.append(h("div", { class: "opt" },
+      h("small", {}, t("menu.label.language")),
+      h("div", { class: "seg", id: "language-opt" }, ...LANGUAGES.map(l => {
+        const b = h("button", { "data-v": l, class: l === this.language ? "on" : "" }, t(`menu.language.${l}`));
+        b.addEventListener("click", () => { if (l !== this.language) this.chooseLanguage(l); });
+        return b;
+      }))));
   }
 
   // ---------- Commands menu ----------

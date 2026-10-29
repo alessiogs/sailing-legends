@@ -6,8 +6,8 @@ A browser-first prototype in Babylon.js + TypeScript + Vite. A full Optimist rac
 Rivals (Luca, Giulia, Marco) with simplified but "real" sailing physics: apparent wind, the no-go zone,
 sail lift and drag, inertia, leeway, tacks and gybes.
 
-The game itself is in Italian: in-game labels quoted below (in quotes or italics) are shown as the player sees them,
-with their English meaning.
+The game is in Italian or English (picker in the main menu). In-game labels quoted below (in quotes or italics) are the
+Italian ones as the player sees them, with their English meaning.
 
 ## Getting started
 ```bash
@@ -120,7 +120,7 @@ src/
 │                CrewAI.ts (the Crew)
 ├── sailors/     Sailors.ts (Rivals, sailor profiles, Crew Chemistry)
 ├── world/       Ocean.ts, Waves.ts, the boat views (BoatViewBase, BoatView, Boat420View), sails, CourseView.ts
-├── i18n/        translation catalogs (it.ts: Italian) and the typed lookup
+├── i18n/        translation catalogs (it.ts: Italian, en.ts: English) and the typed lookup
 ├── ui/          Hud.ts, hudPanel.ts, Menus.ts, race event and name wording, boat colours
 ├── game/        GameController.ts (game state and modes), PlayerControls, RaceFeedback, CameraRig, Preferences
 └── main.ts      startup wiring and render loop
