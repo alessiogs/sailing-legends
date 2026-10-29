@@ -100,7 +100,9 @@ strong { font-weight: 650; font-variant-numeric: tabular-nums; }
 /* The thumb deck: the tiller bar bottom-left, the sheet slider along the right edge, the context buttons beside it. */
 .tiller { position: absolute; left: 50%; transform: translateX(-50%); bottom: 14px; width: min(62vw, calc(100vw - 128px), 440px); pointer-events: auto; touch-action: none; cursor: ew-resize; }
 .tiller-ends { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 3px; font-family: var(--cond); font-weight: 700; font-size: 11px; white-space: nowrap; }
-.tiller-ends small { display: inline; font-size: inherit; letter-spacing: 0; color: inherit; opacity: .7; }
+.tiller-ends { gap: 6px; }
+.tiller-ends > * { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.tiller-ends small { display: inline; flex: 1 1 auto; text-align: center; font-size: inherit; letter-spacing: 0; color: inherit; opacity: .7; }
 .tiller-bar { position: relative; height: 36px; background: var(--glass); border-radius: 12px; }
 .tiller-track { position: absolute; left: 16px; right: 16px; top: 0; bottom: 0; }
 #gauge-center { position: absolute; left: 50%; top: 7px; bottom: 7px; width: 2px; margin-left: -1px; background: #fff; opacity: .35; }
@@ -111,7 +113,7 @@ strong { font-weight: 650; font-variant-numeric: tabular-nums; }
 .slider { position: absolute; right: 8px; bottom: 14px; width: 44px; height: clamp(140px, 34vh, 360px); display: flex; flex-direction: column; align-items: center; gap: 3px; pointer-events: auto; touch-action: none; cursor: ns-resize; font-family: var(--cond); font-weight: 700; font-size: 11px; }
 .slider-bar { position: relative; flex: 1 1 auto; width: 40px; background: var(--glass); border-radius: 12px; }
 .slider-track { position: absolute; left: 0; right: 0; top: 14px; bottom: 14px; }
-.trim-opt { position: absolute; left: 6px; right: 6px; background: var(--lift); opacity: .45; border-radius: 6px; }
+.trim-opt { position: absolute; left: 4px; right: 4px; background: var(--lift); opacity: .45; border-radius: 8px; }
 .trim-cur { position: absolute; left: 4px; right: 4px; height: 28px; margin-top: -14px; border-radius: 8px; background: var(--boat); }
 .trim-cur::after { content: ""; position: absolute; left: 50%; top: 50%; width: 16px; height: 3px; margin: -1.5px 0 0 -10px; border-radius: 2px; background: #081622; }
 
@@ -123,7 +125,7 @@ strong { font-weight: 650; font-variant-numeric: tabular-nums; }
 .ctx { width: 46px; height: 46px; border-radius: 50%; border: 1.5px solid var(--boat); background: rgba(8, 22, 34, .72); font-size: 11px; line-height: 1; padding: 0; }
 .ctx.on { background: var(--boat); color: #081622; }
 #context-buttons:not(.two) .only-two, #context-buttons:not(.crew) .only-crew { display: none; }
-#trim-pill { position: fixed; left: 50%; transform: translateX(-50%); bottom: 72px; white-space: nowrap; max-width: calc(100vw - 128px); overflow: hidden; text-overflow: ellipsis; }
+#trim-pill { position: fixed; left: 50%; transform: translateX(-50%); bottom: 72px; width: max-content; max-width: calc(100vw - 128px); }
 .pair-block { display: grid; gap: 14px; margin: 12px 0 4px; padding: 14px; border: 1px solid var(--line); border-radius: 10px; background: rgba(255,255,255,.03); }
 .pair-block .steer-help { max-width: 60ch; line-height: 1.45; }
 .partners { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
