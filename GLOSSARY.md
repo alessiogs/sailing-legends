@@ -96,7 +96,7 @@ _it_: Limite di età
 
 **Race**:
 One start-to-finish contest on a course, from the countdown to the last boat finishing.
-_it_: Regata
+_it_: Prova
 _Avoid_: Match, heat
 
 **Course**:
