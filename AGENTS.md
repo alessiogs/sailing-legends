@@ -42,7 +42,7 @@ and the UI words it).
 - `src/ai/`: `RacingAI` (the Helm) composes `BeatTactics`, `TackStateMachine`, `Avoidance` and
   `StartPlanning`. `CrewAI` is the Crew.
 - `src/sailors/`: sailor profiles, Rivals and Crew Chemistry. Sailors are matched by `id`, never by name.
-- `src/career/`: the pure Career rules (scoring so far); returns data, the UI words it.
+- `src/career/`: the pure Career rules (Season, scoring, save, sailor pool, Chemistry); returns data, the UI words it.
 - `src/world/`: the Babylon visuals (ocean, boats, sails, course).
 - `src/i18n/`: `t(key, params)` and the catalogs (`it.ts` is the reference, `en.ts` follows it).
 - `src/ui/`: HUD, the pure `buildPanel`, menus, how events and names are worded, boat colours, `h()` for markup.
@@ -110,7 +110,11 @@ use neither Babylon nor browser APIs. They also run in Node.
   - **Sonnet:** implementing a clearly specified issue.
   - **Haiku:** mechanical work (searches, docs passes, CI polling).
   - If a cheaper model fails the same check twice, hand the task to the stronger one.
-- **Size:** aim for about 5–8 issues per spec. One agent can implement a group of related issues in one context.
+- **Size:** aim for about 5–8 issues per spec.
+- **Grouping:** give one agent 2–3 related issues in one context, not one agent per issue: each fresh agent spends
+  30–50k tokens re-reading the docs and code.
+- **Browser checks:** run the headless-browser check once per milestone, at the end, not in every issue. Issues rely
+  on unit tests, the golden races and CI.
 - **Ceremony:** use the spec, grilling and TDD skills for big or risky work, and plain instructions for small fixes.
 - **Context:** keep one task per context, with durable facts in files, and start fresh when the topic changes.
 - **This file:** it is loaded into every agent, so keep it short and put detail in `docs/`.
