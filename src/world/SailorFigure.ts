@@ -1,4 +1,7 @@
-import { MeshBuilder, TransformNode, type Material, type Scene } from "@babylonjs/core";
+import { MeshBuilder } from "@babylonjs/core/Meshes/meshBuilder";
+import { TransformNode } from "@babylonjs/core/Meshes/transformNode";
+import { type Material } from "@babylonjs/core/Materials/material";
+import { type Scene } from "@babylonjs/core/scene";
 
 /** A sailor figure's proportions: capsule legs and torso, sphere head, each at a height above the node. */
 export type FigureSize = {

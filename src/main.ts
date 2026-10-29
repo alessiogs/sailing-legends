@@ -1,6 +1,9 @@
-import {
-  Color3, Color4, DirectionalLight, Engine, HemisphericLight, Scene, Vector3,
-} from "@babylonjs/core";
+import { Color3, Color4 } from "@babylonjs/core/Maths/math.color";
+import { DirectionalLight } from "@babylonjs/core/Lights/directionalLight";
+import { Engine } from "@babylonjs/core/Engines/engine";
+import { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
+import { Scene } from "@babylonjs/core/scene";
+import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { Input } from "./core/Input";
 import { chooseLanguage, setLanguage, type Language } from "./i18n";
 import { Sound } from "./core/Sound";

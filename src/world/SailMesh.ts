@@ -1,4 +1,8 @@
-import { Mesh, VertexData, type Material, type Scene, type TransformNode } from "@babylonjs/core";
+import { Mesh } from "@babylonjs/core/Meshes/mesh";
+import { VertexData } from "@babylonjs/core/Meshes/mesh.vertexData";
+import { type Material } from "@babylonjs/core/Materials/material";
+import { type Scene } from "@babylonjs/core/scene";
+import { type TransformNode } from "@babylonjs/core/Meshes/transformNode";
 import { CHORD_CUT, sailGridIndices, sailGridUvs, shapeSail, type Point3, type SailCorners, type SailCut } from "./sailShape";
 
 /**

@@ -1,4 +1,6 @@
-import { ArcRotateCamera, Vector3, type Scene } from "@babylonjs/core";
+import { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
+import { Vector3 } from "@babylonjs/core/Maths/math.vector";
+import { type Scene } from "@babylonjs/core/scene";
 import { lerpAngle } from "../core/math";
 import type { BoatState } from "../sailing/BoatPhysics";
 

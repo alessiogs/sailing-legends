@@ -1,4 +1,6 @@
-import { Color3, StandardMaterial, type Scene } from "@babylonjs/core";
+import { Color3 } from "@babylonjs/core/Maths/math.color";
+import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
+import { type Scene } from "@babylonjs/core/scene";
 import type { BoatColors } from "../ui/boatColors";
 import { SceneCache } from "./sceneCache";
 

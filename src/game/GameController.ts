@@ -1,4 +1,6 @@
-import { Matrix, Vector3, type Engine, type Scene } from "@babylonjs/core";
+import { Matrix, Vector3 } from "@babylonjs/core/Maths/math.vector";
+import { type Engine } from "@babylonjs/core/Engines/engine";
+import { type Scene } from "@babylonjs/core/scene";
 import type { Input } from "../core/Input";
 import type { Sound } from "../core/Sound";
 import { DEG } from "../core/math";

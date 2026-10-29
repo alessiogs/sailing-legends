@@ -1,6 +1,10 @@
-import {
-  Color3, Mesh, MeshBuilder, Quaternion, TransformNode, Vector3, type LinesMesh, type Scene,
-} from "@babylonjs/core";
+import { Color3 } from "@babylonjs/core/Maths/math.color";
+import { Mesh } from "@babylonjs/core/Meshes/mesh";
+import { MeshBuilder } from "@babylonjs/core/Meshes/meshBuilder";
+import { Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector";
+import { TransformNode } from "@babylonjs/core/Meshes/transformNode";
+import { type LinesMesh } from "@babylonjs/core/Meshes/linesMesh";
+import { type Scene } from "@babylonjs/core/scene";
 import { clamp, DEG } from "../core/math";
 import type { BoatState, Telemetry } from "../sailing/BoatPhysics";
 import { boatMaterial, type BoatLook } from "./boatMaterials";

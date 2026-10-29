@@ -1,4 +1,8 @@
-import { Mesh, MeshBuilder, TransformNode, type Material, type Scene } from "@babylonjs/core";
+import { Mesh } from "@babylonjs/core/Meshes/mesh";
+import { MeshBuilder } from "@babylonjs/core/Meshes/meshBuilder";
+import { TransformNode } from "@babylonjs/core/Meshes/transformNode";
+import { type Material } from "@babylonjs/core/Materials/material";
+import { type Scene } from "@babylonjs/core/scene";
 import { clamp, DEG, lerpAngle } from "../core/math";
 import type { BoatState, Telemetry, TrimState } from "../sailing/BoatPhysics";
 import { surfaceAt, type Wave } from "./Waves";

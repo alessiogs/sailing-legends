@@ -1,4 +1,10 @@
-import { Effect, Mesh, MeshBuilder, ShaderMaterial, Vector2, Vector3, type Camera, type Scene } from "@babylonjs/core";
+import { Effect } from "@babylonjs/core/Materials/effect";
+import { Mesh } from "@babylonjs/core/Meshes/mesh";
+import { MeshBuilder } from "@babylonjs/core/Meshes/meshBuilder";
+import { ShaderMaterial } from "@babylonjs/core/Materials/shaderMaterial";
+import { Vector2, Vector3 } from "@babylonjs/core/Maths/math.vector";
+import { type Camera } from "@babylonjs/core/Cameras/camera";
+import { type Scene } from "@babylonjs/core/scene";
 import { WindField } from "../sailing/Wind";
 import { packWaves, type Wave } from "./Waves";
 
