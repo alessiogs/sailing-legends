@@ -1,26 +1,13 @@
 import {
-  Color3, Mesh, MeshBuilder, StandardMaterial, TransformNode, Vector3, VertexData, type Scene,
+  Color3, Mesh, MeshBuilder, TransformNode, Vector3, type Scene,
 } from "@babylonjs/core";
-import { clamp, DEG, lerpAngle } from "../core/math";
+import { clamp } from "../core/math";
 import type { BoatState, Telemetry } from "../sailing/BoatPhysics";
-import { surfaceAt, type Wave } from "./Waves";
-
-/** Visual of an Optimist: pram hull, sprit rig with a cambered sail that luffs, sailor, foils. */
-export type BoatLook = { hull: Color3; sail: Color3; jacket: Color3; stripe: Color3 };
-
-const mats = new Map<string, StandardMaterial>();
-function mat(scene: Scene, name: string, color: Color3, spec = 0.15, twoSided = false): StandardMaterial {
-  const key = `${name}-${color.toHexString()}`;
-  let m = mats.get(key);
-  if (!m) {
-    m = new StandardMaterial(key, scene);
-    m.diffuseColor = color;
-    m.specularColor = new Color3(spec, spec, spec);
-    if (twoSided) { m.backFaceCulling = false; m.twoSidedLighting = true; }
-    mats.set(key, m);
-  }
-  return m;
-}
+import { boatMaterial, type BoatLook } from "./boatMaterials";
+import { BoatViewBase, sailLook, type BoatMotion } from "./BoatViewBase";
+import { SailMesh } from "./SailMesh";
+import { OPTIMIST_CUT } from "./sailShape";
+import { placeSailor, sailorFigure, type FigureSize } from "./SailorFigure";
 
 // Sail corners in the rig frame (mast at origin, boom along -Z, sail plane = YZ).
 const TACK = new Vector3(0, 0.5, 0);
@@ -29,33 +16,33 @@ const PEAK = new Vector3(0, 2.78, -1.72);
 const CLEW = new Vector3(0, 0.5, -1.98);
 const NU = 10, NV = 9;
 
-export class BoatView {
-  root: TransformNode;
-  private body: TransformNode; // takes heel and pitch
-  private rig: TransformNode; // rotates with the boom
-  private sail: Mesh;
-  private sailPos: Float32Array;
-  private sailIdx: number[];
-  private sailNormals: Float32Array;
-  private rudder: TransformNode;
+const MOTION: BoatMotion = { waveHeight: 0.85, pitch: 0.8, roll: 0.6, heelRate: 3, heel: 0.5, boomRate: 2.6, rudderDeg: 30 };
+const SAILOR: FigureSize = {
+  legs: { radius: 0.08, height: 0.6, y: 0 },
+  torso: { radius: 0.15, height: 0.62, y: 0.3 },
+  head: { diameter: 0.21, y: 0.72 },
+  seated: true,
+};
+
+/** Visual of an Optimist: pram hull, sprit rig with a cambered sail that luffs, sailor, foils. */
+export class BoatView extends BoatViewBase {
+  protected readonly rig: TransformNode;
+  protected readonly rudder: TransformNode;
+  protected readonly burgee: TransformNode;
+  private sail: SailMesh;
   private sailor: TransformNode;
-  private burgee: TransformNode;
-  private boomVisual = 0; // signed boom angle actually drawn (rad), + = starboard
-  private flutter = Math.random() * 10;
-  private heelVisual = 0;
 
   constructor(scene: Scene, name: string, look: BoatLook) {
-    this.root = new TransformNode(name, scene);
-    this.body = new TransformNode(`${name}-body`, scene);
-    this.body.parent = this.root;
+    super(scene, name, MOTION);
 
-    const hullMat = mat(scene, "hull", look.hull, 0.35, true);
-    const woodMat = mat(scene, "wood", new Color3(0.62, 0.45, 0.26), 0.1);
-    const darkMat = mat(scene, "spar", new Color3(0.12, 0.13, 0.15), 0.4);
-    const sailMat = mat(scene, "sail", look.sail, 0.05, true);
-    const jacketMat = mat(scene, "jacket", look.jacket, 0.1);
-    const skinMat = mat(scene, "skin", new Color3(0.86, 0.66, 0.52), 0.05);
-    const stripeMat = mat(scene, "stripe", look.stripe, 0.2);
+    const hullMat = boatMaterial(scene, "hull", look.hull, 0.35, true);
+    const woodMat = boatMaterial(scene, "wood", new Color3(0.62, 0.45, 0.26), 0.1);
+    const darkMat = boatMaterial(scene, "spar", new Color3(0.12, 0.13, 0.15), 0.4);
+    const sailMat = boatMaterial(scene, "sail", look.sail, 0.05, true);
+    const jacketMat = boatMaterial(scene, "jacket", look.jacket, 0.1);
+    const skinMat = boatMaterial(scene, "skin", new Color3(0.86, 0.66, 0.52), 0.05);
+    const stripeMat = boatMaterial(scene, "stripe", look.stripe, 0.2);
+    const shortsMat = boatMaterial(scene, "shorts", new Color3(0.1, 0.12, 0.2));
 
     // --- Hull: lofted pram sections, open on top so the cockpit is visible.
     const stations = 11;
@@ -146,127 +133,26 @@ export class BoatView {
     sprit.material = darkMat;
     sprit.parent = this.rig;
 
-    // Sail: a grid we re-shape every frame (camber, twist, luffing flutter).
-    this.sail = new Mesh(`${name}-sail`, scene);
-    this.sailPos = new Float32Array((NU + 1) * (NV + 1) * 3);
-    this.sailNormals = new Float32Array(this.sailPos.length);
-    this.sailIdx = [];
-    for (let v = 0; v < NV; v++) {
-      for (let u = 0; u < NU; u++) {
-        const a = v * (NU + 1) + u, b = a + 1, c = a + NU + 1, d = c + 1;
-        this.sailIdx.push(a, c, b, b, c, d);
-      }
-    }
-    const uvs: number[] = [];
-    for (let v = 0; v <= NV; v++) for (let u = 0; u <= NU; u++) uvs.push(u / NU, v / NV);
-    this.shapeSail(0.5, 0, 1);
-    const vd = new VertexData();
-    vd.positions = this.sailPos;
-    vd.indices = this.sailIdx;
-    vd.normals = this.sailNormals;
-    vd.uvs = uvs;
-    vd.applyToMesh(this.sail, true);
-    this.sail.material = sailMat;
-    this.sail.parent = this.rig;
+    // Sail: a grid re-shaped every frame (camber, twist, luffing flutter), with the sprit sail's fixed offsets.
+    this.sail = new SailMesh(scene, `${name}-sail`, sailMat, this.rig, TACK, CLEW, THROAT, PEAK, NU, NV, OPTIMIST_CUT);
 
-    // Masthead burgee shows the apparent wind.
-    this.burgee = new TransformNode(`${name}-burgeePivot`, scene);
-    this.burgee.position.set(0, 2.46, 0.78);
-    this.burgee.parent = this.body;
-    const flag = MeshBuilder.CreatePlane(`${name}-burgee`, { width: 0.28, height: 0.1, sideOrientation: Mesh.DOUBLESIDE }, scene);
-    flag.rotation.y = Math.PI / 2;
-    flag.position.z = -0.14;
-    flag.material = stripeMat;
-    flag.parent = this.burgee;
+    this.burgee = this.addBurgee(scene, name, 2.46, 0.78, 0.28, stripeMat);
 
     // Sailor: sits on the windward side and hikes out as the breeze builds.
-    this.sailor = new TransformNode(`${name}-sailor`, scene);
-    this.sailor.parent = this.body;
-    const torso = MeshBuilder.CreateCapsule(`${name}-torso`, { radius: 0.15, height: 0.62, tessellation: 8 }, scene);
-    torso.position.set(0, 0.3, 0);
-    torso.material = jacketMat;
-    torso.parent = this.sailor;
-    const head = MeshBuilder.CreateSphere(`${name}-head`, { diameter: 0.21, segments: 8 }, scene);
-    head.position.set(0, 0.72, 0.02);
-    head.material = skinMat;
-    head.parent = this.sailor;
-    const legs = MeshBuilder.CreateCapsule(`${name}-legs`, { radius: 0.08, height: 0.6, tessellation: 6 }, scene);
-    legs.rotation.z = Math.PI / 2;
-    legs.position.set(0, 0.0, 0.0);
-    legs.material = mat(scene, "shorts", new Color3(0.1, 0.12, 0.2));
-    legs.parent = this.sailor;
+    this.sailor = sailorFigure(scene, `${name}-sailor`, this.body, SAILOR, { legs: shortsMat, jacket: jacketMat, skin: skinMat });
 
     for (const m of this.root.getChildMeshes()) m.isPickable = false;
   }
 
-  /**
-   * Re-shape the sail grid. camber 0..1 = how full the sail is drawing, side = +1/-1 bulge direction,
-   * luff 0..1 = how much it is flapping.
-   */
-  private shapeSail(camber: number, luff: number, side: number) {
-    this.flutter += 0;
-    let i = 0;
-    const t = this.flutter;
-    for (let v = 0; v <= NV; v++) {
-      const fv = v / NV;
-      for (let u = 0; u <= NU; u++) {
-        const fu = u / NU;
-        const bx = TACK.x + (CLEW.x - TACK.x) * fu, by = TACK.y + (CLEW.y - TACK.y) * fu, bz = TACK.z + (CLEW.z - TACK.z) * fu;
-        const tx = THROAT.x + (PEAK.x - THROAT.x) * fu, ty = THROAT.y + (PEAK.y - THROAT.y) * fu, tz = THROAT.z + (PEAK.z - THROAT.z) * fu;
-        const belly = 4 * fu * (1 - fu);
-        const edge = Math.min(1, fv * 6) * Math.min(1, (1 - fv) * 6) * 0.6 + 0.4;
-        let x = side * (0.2 * camber * belly * edge + 0.28 * fu * fv * camber); // camber + twist to leeward
-        // Luffing: ripples travel aft from the mast.
-        x += luff * Math.sin(t * 22 - fu * 9 + fv * 4) * 0.07 * (0.35 + belly) * edge;
-        this.sailPos[i++] = bx + (tx - bx) * fv + x;
-        this.sailPos[i++] = by + (ty - by) * fv;
-        this.sailPos[i++] = bz + (tz - bz) * fv;
-      }
-    }
-    VertexData.ComputeNormals(this.sailPos, this.sailIdx, this.sailNormals);
+  protected drawSails(_dt: number, s: BoatState, tel: Telemetry) {
+    const { camber, luff } = sailLook(tel);
+    this.sail.shape(camber, luff, Math.sign(this.boomVisual) || s.boomSide, this.flutter);
+    this.sail.commit();
   }
 
-  update(dt: number, time: number, s: BoatState, tel: Telemetry, waves: Wave[]) {
-    this.flutter += dt;
-    // Ride the waves: height, pitch and roll from the local surface slope.
-    const surf = surfaceAt(waves, s.x, s.z, time);
-    const fx = Math.sin(s.heading), fz = Math.cos(s.heading);
-    const slopeFwd = surf.dx * fx + surf.dz * fz;
-    const slopeSide = surf.dx * fz - surf.dz * fx;
-    this.root.position.set(s.x, surf.h * 0.85 + 0.02, s.z);
-    this.root.rotation.y = s.heading;
-
-    // Heel (+ = to starboard) eases toward the physics value; the sailor hikes to windward.
-    this.heelVisual += (tel.heelDeg - this.heelVisual) * Math.min(1, dt * 3);
-    this.body.rotation.x = -Math.atan(slopeFwd) * 0.8;
-    this.body.rotation.z = -(this.heelVisual * DEG) * 0.5 + Math.atan(slopeSide) * 0.6;
-
-    // Boom swings to the leeward side; a gybe swings it across quickly.
-    const target = s.boomSide * tel.boomAngle;
-    const maxRate = 2.6 * dt;
-    const diff = target - this.boomVisual;
-    this.boomVisual += clamp(diff, -maxRate, maxRate);
-    this.rig.rotation.y = -this.boomVisual;
-
-    const luff = tel.trimState === "luffing" || tel.trimState === "irons" ? clamp(1 - tel.aoa / (6 * DEG), 0.25, 1) : 0;
-    const camber = clamp(tel.aoa / (14 * DEG), 0.15, 1) * (1 - luff * 0.7);
-    this.shapeSail(camber, luff, Math.sign(this.boomVisual) || s.boomSide);
-    this.sail.updateVerticesData("position", this.sailPos);
-    this.sail.updateVerticesData("normal", this.sailNormals);
-
-    this.rudder.rotation.y = -s.rudder * 30 * DEG;
-
+  protected placeSailors(s: BoatState, tel: Telemetry) {
     const windward = -s.boomSide;
     const hike = clamp(Math.abs(tel.sideForce) / 110, 0, 1);
-    this.sailor.position.set(windward * (0.32 + 0.26 * hike), 0.22, -0.55);
-    this.sailor.rotation.z = -windward * (0.15 + hike * 0.95);
-    this.sailor.rotation.y = windward * 0.25;
-
-    // Burgee points where the apparent wind goes.
-    this.burgee.rotation.y = lerpAngle(this.burgee.rotation.y, tel.awa, Math.min(1, dt * 8));
-  }
-
-  dispose() {
-    this.root.dispose(false, false);
+    placeSailor(this.sailor, windward, 0.32 + 0.26 * hike, 0.22, -0.55, 0.15 + hike * 0.95, 0.25);
   }
 }

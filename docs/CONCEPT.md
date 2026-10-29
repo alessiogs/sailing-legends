@@ -33,7 +33,7 @@ speed in critical phases.
 precision.
 
 ## Roles and control modes
-- **Skipper**: helm, mainsheet, route, tacks, start positioning, tactical calls.
+- **Helm (timoniere)**: steering, mainsheet, route, tacks, start positioning, tactical calls.
 - **Crew (prodiere)**: weight and trapeze, jib, spinnaker/gennaker hoist and trim, side changes in
   manoeuvres, communication about wind and boat.
 - **Player Career** — control only your role; the partner is AI.
@@ -59,5 +59,5 @@ sailing physics separate from rendering. Open source on GitHub, deployed to GitH
 1. The boat responds intuitively to the controls.
 2. You understand how to use the wind without a manual.
 3. A good tack can win you a place.
-4. Crew feels different from skipper.
+4. Crew feels different from Helm.
 5. After a race you want to start another one.

@@ -60,11 +60,11 @@ strong { font-weight: 650; font-variant-numeric: tabular-nums; }
 .penalty-track i { display: block; height: 100%; width: 0; background: var(--bad); }
 .tiller-bar u { position: absolute; top: -4px; bottom: -4px; width: 3px; margin-left: -1.5px; background: var(--good); border-radius: 2px; }
 .call { margin: -2px 0 10px; padding: 8px 10px; border-radius: 7px; background: rgba(255,181,71,.16); border: 1px solid var(--warn); color: #ffe2b8; font-size: 13px; font-weight: 650; text-align: center; }
-.crew-line { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); font-size: 12px; color: var(--muted); text-align: center; }
+.partner-line { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); font-size: 12px; color: var(--muted); text-align: center; }
 .chem { margin-top: 8px; font-size: 12px; color: var(--muted); }
 .chem b { color: var(--ink); }
-.crew-block { display: grid; gap: 14px; margin: 12px 0 4px; padding: 14px; border: 1px solid var(--line); border-radius: 10px; background: rgba(111,211,255,.04); }
-.crew-block .steer-help { max-width: 60ch; line-height: 1.45; }
+.pair-block { display: grid; gap: 14px; margin: 12px 0 4px; padding: 14px; border: 1px solid var(--line); border-radius: 10px; background: rgba(111,211,255,.04); }
+.pair-block .steer-help { max-width: 60ch; line-height: 1.45; }
 .partners { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .partner { display: grid; gap: 5px; text-align: left; background: transparent; color: var(--ink); border: 1px solid #4c7486; border-radius: 8px; padding: 9px 10px; font: inherit; cursor: pointer; }
 .partner.on { background: #1d5c7a; border-color: var(--accent); }
@@ -151,4 +151,75 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .trim { width: calc(100% - 32px); bottom: 12px; }
   .bottom-left { bottom: 120px; left: 12px; }
   .top-left { left: 12px; top: 12px; width: calc(100% - 24px); }
+}
+
+/* Career: the Season calendar, the Career buttons of the main menu and the results screen's next-Race buttons. */
+.career-btns { display: flex; gap: 10px; margin-top: 18px; }
+.career-btns button { flex: 1; padding: 10px 12px; }
+.regattas { list-style: none; margin: 16px 0 6px; padding: 0; display: grid; gap: 6px; }
+.regattas li { display: grid; grid-template-columns: 28px 1fr auto; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 8px; border: 1px solid var(--line); font-size: 13.5px; }
+.regattas li small { display: block; color: var(--muted); font-size: 12px; margin-top: 2px; }
+.regattas li.current { border-color: var(--accent); background: rgba(111, 211, 255, 0.1); }
+.regattas li.done { opacity: .65; }
+.regattas .n { color: var(--muted); text-align: center; font-weight: 700; }
+.regattas .s { font-size: 12px; color: var(--muted); }
+.regattas .current .s { color: var(--accent); }
+#results .ghost { margin-top: 8px; }
+.sheet h3 { margin: 16px 0 4px; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.ranking { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.ranking td { padding: 5px 8px; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+.ranking .pl { width: 36px; color: var(--muted); }
+.ranking .sc { color: var(--muted); text-align: right; font-size: 12px; }
+.ranking .pt { width: 32px; text-align: right; font-weight: 700; }
+.ranking tr.me td { color: var(--accent); font-weight: 700; }
+.ranking tr.rival td:nth-child(2) { color: var(--good); font-weight: 600; }
+.rival-lines { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 2px; font-size: 13px; }
+.rival-lines .ahead { color: var(--muted); }
+.rival-lines .behind { color: var(--good); }
+#career .sheet { max-height: 92vh; overflow-y: auto; }
+
+/* Touch: the HUD's gauges are dragged (pointer events), the race actions have tap buttons, and the page never scrolls or zooms. */
+html, body { touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
+#gauge-zone, #trim-zone { pointer-events: auto; touch-action: none; cursor: ew-resize; }
+.chip { pointer-events: auto; }
+.touch-only, .touch-actions { display: none; }
+.touch-actions { position: absolute; right: 20px; top: 50%; transform: translateY(-50%); flex-direction: column; gap: 10px; pointer-events: none; }
+.touch-btn { min-width: 84px; min-height: 48px; padding: 8px 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel); color: var(--ink);
+  font: 650 13px inherit; font-family: inherit; letter-spacing: .04em; pointer-events: auto; touch-action: none; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+.touch-btn:active { background: #1d5c7a; }
+.touch-actions.autotrim #touch-auto-trim { border-color: var(--accent); color: var(--accent); }
+.touch-actions:not(.two) .only-two, .touch-actions:not(.crew) .only-crew { display: none; }
+@media (pointer: coarse) {
+  .touch-actions { display: flex; }
+  .touch-only { display: block; }
+  .stack.touch-only { display: grid; }
+  /* A thumb-sized grab area around the bars; the bars themselves keep their look. */
+  .tiller { padding: 12px 0 4px; margin: -12px 0 6px; }
+  .trim-zone { padding: 10px 0 2px; margin: -10px 0 0; }
+  .chip { padding: 8px 12px; margin: -8px -6px; }
+  .controls, .primary span, .ghost span { display: none; }
+}
+/* A phone in landscape: the panels shrink so the boat stays in view. */
+@media (max-height: 480px) {
+  .top-left { top: 8px; left: 12px; }
+  .race-card { width: 230px; margin-top: 6px; padding: 8px 10px; }
+  .big { font-size: 22px; }
+  #standings { top: 8px; right: 12px; min-width: 150px; padding: 4px 0; font-size: 11.5px; }
+  #standings li { padding: 2px 10px; }
+  #minimap { right: 12px; bottom: 10px; width: 110px; height: 126px; }
+  .touch-btn { min-height: 44px; }
+  .bottom-left { left: 12px; bottom: 10px; }
+  #compass { width: 96px; height: 96px; }
+  .instruments { display: none; }
+  .shift { bottom: 104px; }
+  .trim { bottom: 8px; width: 330px; padding: 8px 12px 8px; }
+  .hint { display: none; }
+  .sheet { padding: 16px 20px; }
+  .overlay { align-items: start; }
+}
+/* A phone in landscape with touch buttons: the buttons take the right-hand corner, where the minimap and the standings were. */
+@media (pointer: coarse) and (max-height: 480px) {
+  #minimap, #standings { display: none; }
+  .touch-actions { display: grid; grid-template-columns: repeat(2, 1fr); right: 12px; top: auto; bottom: 10px; transform: none; gap: 6px; width: 188px; }
+  .touch-btn { min-width: 0; padding: 6px 8px; }
 }

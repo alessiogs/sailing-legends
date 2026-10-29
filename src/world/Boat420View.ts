@@ -1,63 +1,51 @@
 import {
-  Color3, Mesh, MeshBuilder, Quaternion, StandardMaterial, TransformNode, Vector3, type LinesMesh, type Scene,
+  Color3, Mesh, MeshBuilder, Quaternion, TransformNode, Vector3, type LinesMesh, type Scene,
 } from "@babylonjs/core";
-import { clamp, DEG, lerpAngle } from "../core/math";
+import { clamp, DEG } from "../core/math";
 import type { BoatState, Telemetry } from "../sailing/BoatPhysics";
-import type { BoatLook } from "./BoatView";
+import { boatMaterial, type BoatLook } from "./boatMaterials";
+import { BoatViewBase, sailLook, type BoatMotion } from "./BoatViewBase";
 import { SailMesh } from "./SailMesh";
-import { surfaceAt, type Wave } from "./Waves";
-
-const mats = new Map<string, StandardMaterial>();
-function mat(scene: Scene, name: string, color: Color3, spec = 0.15, twoSided = false): StandardMaterial {
-  const key = `420-${name}-${color.toHexString()}`;
-  let m = mats.get(key);
-  if (!m || m.getScene() !== scene) {
-    m = new StandardMaterial(key, scene);
-    m.diffuseColor = color;
-    m.specularColor = new Color3(spec, spec, spec);
-    if (twoSided) { m.backFaceCulling = false; m.twoSidedLighting = true; }
-    mats.set(key, m);
-  }
-  return m;
-}
+import { placeSailor, sailorFigure, type FigureSize } from "./SailorFigure";
 
 const MAST_Z = 0.45;
 const SPI_COLORS = [new Color3(0.95, 0.25, 0.2), new Color3(0.15, 0.4, 0.9), new Color3(1, 0.8, 0.15), new Color3(0.2, 0.75, 0.45)];
 let spiColorIdx = 0;
 
+const MOTION: BoatMotion = { waveHeight: 0.7, pitch: 0.6, roll: 0.4, heelRate: 2.5, heel: 0.8, boomRate: 2.4, rudderDeg: 28 };
+const SAILOR: FigureSize = {
+  legs: { radius: 0.09, height: 0.8, y: 0.32 },
+  torso: { radius: 0.17, height: 0.68, y: 0.95 },
+  head: { diameter: 0.23, y: 1.42 },
+  seated: false,
+};
+
 /** Visual of a 420: sloop rig (main + jib), spinnaker on a pole, helm hiking and crew on the trapeze. */
-export class Boat420View {
-  root: TransformNode;
-  private body: TransformNode;
-  private rig: TransformNode;
+export class Boat420View extends BoatViewBase {
+  protected readonly rig: TransformNode;
+  protected readonly rudder: TransformNode;
+  protected readonly burgee: TransformNode;
   private jibPivot: TransformNode;
   private main: SailMesh;
   private jib: SailMesh;
   private spis: { port: SailMesh; stbd: SailMesh; node: TransformNode };
   private pole: Mesh;
-  private rudder: TransformNode;
   private helm: TransformNode;
   private crew: TransformNode;
   private wire: LinesMesh;
-  private burgee: TransformNode;
-  private boomVisual = 0;
   private jibVisual = 0;
-  private heelVisual = 0;
-  private flutter = Math.random() * 10;
 
   constructor(scene: Scene, name: string, look: BoatLook) {
-    this.root = new TransformNode(name, scene);
-    this.body = new TransformNode(`${name}-body`, scene);
-    this.body.parent = this.root;
-    const hullMat = mat(scene, "hull", look.hull, 0.4, true);
-    const deckMat = mat(scene, "deck", new Color3(0.93, 0.94, 0.95), 0.3, true);
-    const darkMat = mat(scene, "spar", new Color3(0.72, 0.74, 0.77), 0.6);
-    const sailMat = mat(scene, "sail", look.sail, 0.05, true);
-    const jacketMat = mat(scene, "jacket", look.jacket, 0.1);
-    const skinMat = mat(scene, "skin", new Color3(0.86, 0.66, 0.52), 0.05);
-    const stripeMat = mat(scene, "stripe", look.stripe, 0.2);
-    const legMat = mat(scene, "legs", new Color3(0.1, 0.12, 0.2));
-    const spiMat = mat(scene, "spi", SPI_COLORS[spiColorIdx++ % SPI_COLORS.length], 0.05, true);
+    super(scene, name, MOTION);
+    const hullMat = boatMaterial(scene, "420-hull", look.hull, 0.4, true);
+    const deckMat = boatMaterial(scene, "420-deck", new Color3(0.93, 0.94, 0.95), 0.3, true);
+    const darkMat = boatMaterial(scene, "420-spar", new Color3(0.72, 0.74, 0.77), 0.6);
+    const sailMat = boatMaterial(scene, "420-sail", look.sail, 0.05, true);
+    const jacketMat = boatMaterial(scene, "420-jacket", look.jacket, 0.1);
+    const skinMat = boatMaterial(scene, "420-skin", new Color3(0.86, 0.66, 0.52), 0.05);
+    const stripeMat = boatMaterial(scene, "420-stripe", look.stripe, 0.2);
+    const legMat = boatMaterial(scene, "420-legs", new Color3(0.1, 0.12, 0.2));
+    const spiMat = boatMaterial(scene, "420-spi", SPI_COLORS[spiColorIdx++ % SPI_COLORS.length], 0.05, true);
 
     // --- Hull: lofted sections with a fine bow, open cockpit, foredeck.
     const N = 15;
@@ -123,7 +111,7 @@ export class Boat420View {
     blade.parent = this.rudder;
     const tiller = MeshBuilder.CreateBox(`${name}-tiller`, { width: 0.035, height: 0.035, depth: 1.1 }, scene);
     tiller.position.set(0, 0.25, 0.55);
-    tiller.material = mat(scene, "wood", new Color3(0.62, 0.45, 0.26), 0.1);
+    tiller.material = boatMaterial(scene, "420-wood", new Color3(0.62, 0.45, 0.26), 0.1);
     tiller.parent = this.rudder;
 
     // --- Rig.
@@ -167,59 +155,22 @@ export class Boat420View {
     this.pole.parent = this.body;
 
     // --- People.
-    const person = (id: string, jacket: StandardMaterial) => {
-      const node = new TransformNode(`${name}-${id}`, scene);
-      node.parent = this.body;
-      const legs = MeshBuilder.CreateCapsule(`${name}-${id}-legs`, { radius: 0.09, height: 0.8, tessellation: 6 }, scene);
-      legs.position.set(0, 0.32, 0);
-      legs.material = legMat;
-      legs.parent = node;
-      const torso = MeshBuilder.CreateCapsule(`${name}-${id}-torso`, { radius: 0.17, height: 0.68, tessellation: 8 }, scene);
-      torso.position.set(0, 0.95, 0);
-      torso.material = jacket;
-      torso.parent = node;
-      const headM = MeshBuilder.CreateSphere(`${name}-${id}-head`, { diameter: 0.23, segments: 8 }, scene);
-      headM.position.set(0, 1.42, 0.02);
-      headM.material = skinMat;
-      headM.parent = node;
-      return node;
-    };
-    this.helm = person("helm", jacketMat);
-    this.crew = person("crew", mat(scene, "jacket2", look.stripe, 0.1));
+    this.helm = sailorFigure(scene, `${name}-helm`, this.body, SAILOR, { legs: legMat, jacket: jacketMat, skin: skinMat });
+    const crewJacketMat = boatMaterial(scene, "420-jacket2", look.stripe, 0.1);
+    this.crew = sailorFigure(scene, `${name}-crew`, this.body, SAILOR, { legs: legMat, jacket: crewJacketMat, skin: skinMat });
     this.wire = MeshBuilder.CreateLines(`${name}-wire`, { points: [Vector3.Zero(), Vector3.Zero()], updatable: true }, scene);
     this.wire.color = new Color3(0.2, 0.2, 0.22);
     this.wire.parent = this.body;
 
-    this.burgee = new TransformNode(`${name}-burgeePivot`, scene);
-    this.burgee.position.set(0, 6.35, MAST_Z);
-    this.burgee.parent = this.body;
-    const flag = MeshBuilder.CreatePlane(`${name}-burgee`, { width: 0.32, height: 0.1, sideOrientation: Mesh.DOUBLESIDE }, scene);
-    flag.rotation.y = Math.PI / 2;
-    flag.position.z = -0.16;
-    flag.material = stripeMat;
-    flag.parent = this.burgee;
+    this.burgee = this.addBurgee(scene, name, 6.35, MAST_Z, 0.32, stripeMat);
 
     for (const m of this.root.getChildMeshes()) m.isPickable = false;
   }
 
-  update(dt: number, time: number, s: BoatState, tel: Telemetry, waves: Wave[]) {
-    this.flutter += dt;
-    const surf = surfaceAt(waves, s.x, s.z, time);
-    const fx = Math.sin(s.heading), fz = Math.cos(s.heading);
-    const slopeFwd = surf.dx * fx + surf.dz * fz;
-    const slopeSide = surf.dx * fz - surf.dz * fx;
-    this.root.position.set(s.x, surf.h * 0.7 + 0.02, s.z);
-    this.root.rotation.y = s.heading;
-    this.heelVisual += (tel.heelDeg - this.heelVisual) * Math.min(1, dt * 2.5);
-    this.body.rotation.x = -Math.atan(slopeFwd) * 0.6;
-    this.body.rotation.z = -(this.heelVisual * DEG) * 0.8 + Math.atan(slopeSide) * 0.4;
-
+  protected drawSails(dt: number, s: BoatState, tel: Telemetry) {
     // Main.
-    const target = s.boomSide * tel.boomAngle;
-    this.boomVisual += clamp(target - this.boomVisual, -2.4 * dt, 2.4 * dt);
-    this.rig.rotation.y = -this.boomVisual;
-    const luff = tel.trimState === "luffing" || tel.trimState === "irons" ? clamp(1 - tel.aoa / (6 * DEG), 0.25, 1) : 0;
-    this.main.shape(clamp(tel.aoa / (14 * DEG), 0.15, 1) * (1 - luff * 0.7), luff, Math.sign(this.boomVisual) || s.boomSide, this.flutter);
+    const main = sailLook(tel);
+    this.main.shape(main.camber, main.luff, Math.sign(this.boomVisual) || s.boomSide, this.flutter);
     this.main.commit();
 
     // Jib (stays on its side until the crew moves it: backed jibs show up on the windward side).
@@ -227,8 +178,8 @@ export class Boat420View {
       const jt = s.jibSide * tel.jib.angle;
       this.jibVisual += clamp(jt - this.jibVisual, -3 * dt, 3 * dt);
       this.jibPivot.rotation.y = -this.jibVisual;
-      const jl = tel.jib.trimState === "luffing" || tel.jib.trimState === "irons" ? clamp(1 - tel.jib.aoa / (6 * DEG), 0.25, 1) : 0;
-      this.jib.shape(clamp(tel.jib.aoa / (14 * DEG), 0.15, 1) * (1 - jl * 0.7), jl, Math.sign(this.jibVisual) || s.jibSide, this.flutter + 1);
+      const jib = sailLook(tel.jib);
+      this.jib.shape(jib.camber, jib.luff, Math.sign(this.jibVisual) || s.jibSide, this.flutter + 1);
       this.jib.commit();
     }
 
@@ -254,9 +205,9 @@ export class Boat420View {
       if (!this.pole.rotationQuaternion) this.pole.rotationQuaternion = new Quaternion();
       Quaternion.FromUnitVectorsToRef(Vector3.Up(), d.normalize(), this.pole.rotationQuaternion);
     }
+  }
 
-    this.rudder.rotation.y = -s.rudder * 28 * DEG;
-
+  protected placeSailors(s: BoatState, tel: Telemetry) {
     // People: both on the crew's side (the windward side once the crew has moved across).
     const windward = s.crewSide;
     const need = Math.abs(tel.sideForce);
@@ -273,18 +224,10 @@ export class Boat420View {
       const hx = ax + windward * Math.sin(lean) * 0.95, hy = ay + Math.cos(lean) * 0.95;
       MeshBuilder.CreateLines("", { points: [new Vector3(0, 5.0, MAST_Z), new Vector3(hx, hy, 0.05)], instance: this.wire });
     }
-
-    this.burgee.rotation.y = lerpAngle(this.burgee.rotation.y, tel.awa, Math.min(1, dt * 8));
   }
 
   /** Feet on the gunwale at (side * footX, z); body leaning outboard by `lean` radians. */
   private placePerson(node: TransformNode, side: number, z: number, lean: number, footX: number) {
-    node.position.set(side * footX, 0.42, z);
-    node.rotation.z = -side * lean;
-    node.rotation.y = side * 0.35;
-  }
-
-  dispose() {
-    this.root.dispose(false, false);
+    placeSailor(node, side, footX, 0.42, z, lean, 0.35);
   }
 }

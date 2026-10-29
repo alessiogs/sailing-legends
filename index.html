@@ -2,7 +2,7 @@
 <html lang="it">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Sailing Legends</title>
   </head>
   <body>
@@ -12,13 +12,13 @@
 
       <section id="hud" class="hidden">
         <div class="top-left">
-          <div class="brand">SAILING <b>LEGENDS</b><span id="version-chip">PROTOTIPO 0.4 · OPTIMIST</span></div>
+          <div class="brand">SAILING <b>LEGENDS</b><span id="version-chip"></span></div>
           <div class="race-card panel">
             <div class="race-row">
-              <div><small id="phase">PRE-PARTENZA</small><strong id="clock" class="big">-0:45</strong></div>
-              <div class="pos"><small>POSIZIONE</small><strong id="position" class="big">–</strong></div>
+              <div><small id="phase" data-i18n="hud.phase.prestart"></small><strong id="clock" class="big">-0:45</strong></div>
+              <div class="pos"><small data-i18n="hud.label.position"></small><strong id="position" class="big">–</strong></div>
             </div>
-            <div id="leg" class="leg">Partenza</div>
+            <div id="leg" class="leg"></div>
             <div id="target" class="target">—</div>
             <div id="chem" class="chem hidden"></div>
             <div id="penalty" class="penalty hidden">
@@ -31,35 +31,38 @@
         <ol id="standings" class="panel"></ol>
 
         <div class="bottom-left">
-          <canvas id="compass" width="300" height="300" aria-label="Bussola del vento"></canvas>
+          <canvas id="compass" width="300" height="300" data-i18n-aria-label="hud.compass"></canvas>
           <div class="instruments">
-            <div class="panel stat"><small>VELOCITÀ</small><strong id="speed">0.0</strong><em>kn</em></div>
-            <div class="panel stat"><small>VMG BOA</small><strong id="vmg">0.0</strong><em>kn</em></div>
-            <div class="panel stat"><small>VENTO REALE</small><strong id="twa">0°</strong><em id="tws">11 kn</em></div>
-            <div class="panel stat"><small>SBANDAMENTO</small><strong id="heel">0°</strong><em id="leeway">scarroccio 0°</em></div>
+            <div class="panel stat"><small data-i18n="hud.label.speed"></small><strong id="speed">0.0</strong><em>kn</em></div>
+            <div class="panel stat"><small data-i18n="hud.label.vmg"></small><strong id="vmg">0.0</strong><em>kn</em></div>
+            <div class="panel stat"><small data-i18n="hud.label.trueWind"></small><strong id="twa">0°</strong><em id="tws">11 kn</em></div>
+            <div class="panel stat"><small data-i18n="hud.label.heel"></small><strong id="heel">0°</strong><em id="leeway"></em></div>
           </div>
           <div id="shift" class="shift"></div>
         </div>
 
         <div class="trim panel">
           <div id="call" class="call hidden"></div>
-          <div class="tiller">
-            <small id="gauge-label">BARRA DEL TIMONE</small>
+          <div class="tiller" id="gauge-zone">
+            <small id="gauge-label" data-i18n="hud.gauge.tiller"></small>
             <div class="tiller-bar"><i id="tiller-pos"></i><b id="gauge-center"></b><u id="gauge-ideal"></u></div>
-            <div class="trim-ends"><span id="gauge-left">◀ SINISTRA</span><span id="gauge-right">DESTRA ▶</span></div>
+            <div class="trim-ends"><span id="gauge-left" data-i18n="hud.gauge.left"></span><span id="gauge-right" data-i18n="hud.gauge.right"></span></div>
           </div>
-          <div class="trim-head"><small id="sail-label">REGOLAZIONE VELA</small><span id="autotrim" class="chip">AUTO</span></div>
-          <div class="trim-bar">
-            <div id="trim-opt" class="trim-opt"></div>
-            <div id="trim-cur" class="trim-cur"></div>
+          <div class="trim-head"><small id="sail-label" data-i18n="hud.sail.single"></small><span id="auto-trim-chip" class="chip" data-i18n="hud.autoTrimChip"></span></div>
+          <div id="trim-zone" class="trim-zone">
+            <div class="trim-bar">
+              <div id="trim-opt" class="trim-opt"></div>
+              <div id="trim-cur" class="trim-cur"></div>
+            </div>
+            <div class="trim-ends"><span data-i18n="hud.sheet.in"></span><span data-i18n="hud.sheet.out"></span></div>
           </div>
-          <div class="trim-ends"><span>◀ CAZZA (W)</span><span>LASCA (S) ▶</span></div>
           <div id="trim-state" class="trim-state">—</div>
-          <div id="crew-line" class="crew-line hidden"></div>
+          <div id="partner-line" class="partner-line hidden"></div>
         </div>
 
-        <canvas id="minimap" width="400" height="460" class="panel" aria-label="Mappa del campo di regata"></canvas>
-        <div id="hint" class="hint">H: aiuto · C: camera · T: auto-vela · V: audio · P: pausa</div>
+        <canvas id="minimap" width="400" height="460" class="panel" data-i18n-aria-label="hud.minimap.label"></canvas>
+        <div id="hint" class="hint" data-i18n="hud.hint"></div>
+        <div id="touch-actions" class="touch-actions"></div>
       </section>
 
       <div id="toast"></div>
@@ -67,152 +70,152 @@
       <section id="menu" class="overlay">
         <div class="sheet">
           <div class="brand lg">SAILING <b>LEGENDS</b></div>
-          <p class="lede"><span id="lede-class">Regata Optimist</span> · Bastone (bolina – poppa – bolina). Partenza con 45 secondi di procedura.
-            Leggi il vento: le zone d'acqua più scure sono raffiche.</p>
+          <p class="lede"><span id="lede-class" data-i18n="menu.lede.single"></span> · <span data-i18n="menu.lede.course"></span></p>
           <div class="controls">
-            <div><kbd>A</kbd><kbd>D</kbd> / <kbd>←</kbd><kbd>→</kbd><span>Barra (Shift = fine)</span></div>
-            <div><kbd>W</kbd> / <kbd>↑</kbd><span>Cazza la scotta</span></div>
-            <div><kbd>S</kbd> / <kbd>↓</kbd><span>Lasca la scotta</span></div>
-            <div><kbd>T</kbd><span>Regolazione vela automatica</span></div>
-            <div><kbd>C</kbd><span>Camera: inseguimento / libera / tattica</span></div>
-            <div><kbd>P</kbd><span>Pausa</span> <kbd>R</kbd><span>Ricomincia</span> <kbd>V</kbd><span>Audio</span></div>
-            <div class="pad">Gamepad: stick sinistro barra · RT/LT cazza/lasca · Y camera · X auto-vela</div>
+            <div><kbd>A</kbd><kbd>D</kbd> / <kbd>←</kbd><kbd>→</kbd><span data-i18n="menu.keys.tiller"></span></div>
+            <div><kbd>W</kbd> / <kbd>↑</kbd><span data-i18n="controls.action.sheetIn"></span></div>
+            <div><kbd>S</kbd> / <kbd>↓</kbd><span data-i18n="controls.action.sheetOut"></span></div>
+            <div><kbd>T</kbd><span data-i18n="controls.action.autoTrim"></span></div>
+            <div><kbd>C</kbd><span data-i18n="menu.keys.camera"></span></div>
+            <div><kbd>P</kbd><span data-i18n="controls.action.pause"></span> <kbd>R</kbd><span data-i18n="controls.action.restart"></span> <kbd>V</kbd><span data-i18n="menu.keys.audio"></span></div>
+            <div class="pad" data-i18n="menu.keys.gamepad"></div>
           </div>
           <div class="options">
             <div class="opt">
-              <small>BARCA</small>
+              <small data-i18n="menu.label.boat"></small>
               <div class="seg" id="class-opt">
                 <button data-v="optimist" class="on">Optimist</button>
                 <button data-v="420">420</button>
               </div>
             </div>
             <div class="opt">
-              <small>VENTO</small>
+              <small data-i18n="menu.label.wind"></small>
               <div class="seg" id="wind-opt">
-                <button data-v="7">Leggero 7 kn</button>
-                <button data-v="11" class="on">Medio 11 kn</button>
-                <button data-v="15">Forte 15 kn</button>
+                <button data-v="7" data-i18n="menu.wind.light"></button>
+                <button data-v="11" class="on" data-i18n="menu.wind.medium"></button>
+                <button data-v="15" data-i18n="menu.wind.strong"></button>
               </div>
             </div>
             <div class="opt">
-              <small>COMANDI</small>
-              <button id="open-controls" class="ghost">Comandi… <span>K</span></button>
+              <small data-i18n="menu.label.controls"></small>
+              <button id="open-controls" class="ghost" data-i18n="menu.openControls"> <span>K</span></button>
               <div id="steer-summary" class="steer-help"></div>
             </div>
-            <label class="opt check"><input type="checkbox" id="assist" /> Regolazione vela automatica (assist)</label>
+            <label class="opt check"><input type="checkbox" id="auto-trim-opt" /> <span data-i18n="menu.autoTrim"></span></label>
           </div>
-          <div id="crew-block" class="crew-block hidden">
+          <div id="pair-block" class="pair-block hidden">
             <div class="opt">
-              <small>IL TUO RUOLO</small>
+              <small data-i18n="menu.label.role"></small>
               <div class="seg" id="role-opt">
-                <button data-v="skipper" class="on">Timoniere</button>
-                <button data-v="crew">Prodiere</button>
-                <button data-v="full">Barca completa</button>
+                <button data-v="helm" class="on" data-i18n="menu.role.helm"></button>
+                <button data-v="crew" data-i18n="menu.role.crew"></button>
+                <button data-v="fullBoat" data-i18n="menu.role.fullBoat"></button>
               </div>
               <div id="role-help" class="steer-help"></div>
             </div>
             <div class="opt">
-              <small>IL TUO COMPAGNO · CREW CHEMISTRY</small>
+              <small data-i18n="menu.label.partner"></small>
               <div id="partner-opt" class="partners"></div>
             </div>
           </div>
           <div class="tips">
-            <b>Come si va veloci</b>
+            <b data-i18n="menu.tips.title"></b>
             <ul>
-              <li>Non puoi puntare dritto nel vento: sotto i ~40° la vela sbatte. Risali a zig-zag virando.</li>
-              <li>La barra in basso mostra la regolazione ideale (zona verde): tieni l'indicatore lì dentro.</li>
-              <li>Le virate costano velocità: falle con la barca lanciata, non da ferma.</li>
-              <li>Boe da lasciare a sinistra. Alla partenza resta sotto la linea fino allo sparo.</li>
-              <li>Precedenze: mure a sinistra dà acqua a mure a dritta, sopravvento a sottovento, chi è dietro a chi è davanti. Se tocchi per colpa tua: 2 giri di penalità; se tocchi una boa: 1 giro.</li>
+              <li data-i18n="menu.tips.upwind"></li>
+              <li data-i18n="menu.tips.trimBar"></li>
+              <li data-i18n="menu.tips.tacks"></li>
+              <li data-i18n="menu.tips.marksAndStart"></li>
+              <li data-i18n="menu.tips.rightOfWay"></li>
             </ul>
           </div>
-          <button id="start-btn" class="primary">Inizia regata <span>Invio</span></button>
+          <button id="start-btn" class="primary" data-i18n="menu.start"> <span data-i18n="key.enter"></span></button>
         </div>
       </section>
 
       <section id="pause" class="overlay hidden">
         <div class="sheet small">
-          <div class="brand">PAUSA</div>
+          <div class="brand" data-i18n="pause.title"></div>
           <div class="stack">
-            <button id="resume-btn" class="primary">Riprendi <span>P</span></button>
-            <button id="pause-controls" class="ghost">Comandi <span>K</span></button>
-            <button id="pause-menu" class="ghost">Menu principale <span>M</span></button>
+            <button id="resume-btn" class="primary" data-i18n="pause.resume"> <span>P</span></button>
+            <button id="pause-controls" class="ghost" data-i18n="pause.controls"> <span>K</span></button>
+            <button id="pause-menu" class="ghost" data-i18n="pause.mainMenu"> <span>M</span></button>
           </div>
-          <p class="muted">R per ricominciare la regata</p>
+          <p class="muted" data-i18n="pause.restartHint"></p>
         </div>
       </section>
 
       <section id="controls" class="overlay hidden">
         <div class="sheet">
-          <div class="brand">COMANDI</div>
+          <div class="brand" data-i18n="controls.title"></div>
           <div class="settings">
             <div class="setting">
-              <div class="setting-label"><b>Timone: cosa controllano le frecce</b>
+              <div class="setting-label"><b data-i18n="controls.steering.label"></b>
                 <span id="steer-help" class="steer-help"></span></div>
               <div class="seg" id="steer-opt">
-                <button data-v="tiller">Muovi la barra</button>
-                <button data-v="boat">Direzione della barca</button>
+                <button data-v="tiller" data-i18n="controls.steering.tiller"></button>
+                <button data-v="boat" data-i18n="controls.steering.boat"></button>
               </div>
             </div>
             <div class="setting">
-              <div class="setting-label"><b>Ritorno della barra al centro</b>
-                <span class="steer-help">Se disattivato la barra resta dove la lasci, come una barra vera.</span></div>
+              <div class="setting-label"><b data-i18n="controls.autoCenter.label"></b>
+                <span class="steer-help" data-i18n="controls.autoCenter.help"></span></div>
               <div class="seg" id="center-opt">
-                <button data-v="1">Automatico</button>
-                <button data-v="0">Resta ferma</button>
+                <button data-v="1" data-i18n="controls.autoCenter.on"></button>
+                <button data-v="0" data-i18n="controls.autoCenter.off"></button>
               </div>
             </div>
             <div class="setting">
-              <div class="setting-label"><b>Velocità della barra</b></div>
+              <div class="setting-label"><b data-i18n="controls.tillerSpeed"></b></div>
               <div class="seg" id="tspeed-opt">
-                <button data-v="0.6">Lenta</button>
-                <button data-v="1">Normale</button>
-                <button data-v="1.6">Veloce</button>
+                <button data-v="0.6" data-i18n="controls.speed.slow"></button>
+                <button data-v="1" data-i18n="controls.speed.normal"></button>
+                <button data-v="1.6" data-i18n="controls.speed.fast"></button>
               </div>
             </div>
             <div class="setting">
-              <div class="setting-label"><b>Velocità della scotta</b></div>
+              <div class="setting-label"><b data-i18n="controls.sheetSpeed"></b></div>
               <div class="seg" id="sspeed-opt">
-                <button data-v="0.6">Lenta</button>
-                <button data-v="1">Normale</button>
-                <button data-v="1.6">Veloce</button>
+                <button data-v="0.6" data-i18n="controls.speed.slow"></button>
+                <button data-v="1" data-i18n="controls.speed.normal"></button>
+                <button data-v="1.6" data-i18n="controls.speed.fast"></button>
               </div>
             </div>
           </div>
           <table class="keys">
-            <tr><th>Azione</th><th>Tastiera</th><th>Gamepad</th></tr>
-            <tr><td id="key-left-label">Barra a sinistra</td><td><kbd>A</kbd> <kbd>←</kbd></td><td>Stick sinistro</td></tr>
-            <tr><td id="key-right-label">Barra a destra</td><td><kbd>D</kbd> <kbd>→</kbd></td><td>Stick sinistro</td></tr>
-            <tr><td>Movimento fine della barra</td><td><kbd>Shift</kbd> + frecce</td><td>—</td></tr>
-            <tr><td>Cazza la scotta</td><td><kbd>W</kbd> <kbd>↑</kbd></td><td>RT</td></tr>
-            <tr><td>Lasca la scotta</td><td><kbd>S</kbd> <kbd>↓</kbd></td><td>LT</td></tr>
-            <tr><td>Regolazione vela automatica</td><td><kbd>T</kbd></td><td>X</td></tr>
-            <tr><td>Camera</td><td><kbd>C</kbd></td><td>Y</td></tr>
-            <tr><td>Pausa</td><td><kbd>P</kbd> <kbd>Esc</kbd></td><td>Start</td></tr>
-            <tr><td>Ricomincia</td><td><kbd>R</kbd></td><td>Back</td></tr>
-            <tr><td colspan="3" class="keys-sub">420 da prodiere</td></tr>
-            <tr><td>Peso dentro / fuori (fino al trapezio)</td><td><kbd>A</kbd> <kbd>D</kbd> · <kbd>←</kbd> <kbd>→</kbd></td><td>Stick sinistro</td></tr>
-            <tr><td>Cazza / lasca fiocco o spi</td><td><kbd>W</kbd> <kbd>S</kbd></td><td>RT / LT</td></tr>
-            <tr><td>Cambio lato dopo virata o strambata</td><td><kbd>E</kbd></td><td>B</td></tr>
-            <tr><td>Issa / ammaina lo spi (anche "Barca completa")</td><td><kbd>Spazio</kbd></td><td>A</td></tr>
-            <tr><td>Audio · Comandi · Menu</td><td><kbd>V</kbd> <kbd>K</kbd> <kbd>M</kbd></td><td>—</td></tr>
+            <tr><th data-i18n="controls.table.action"></th><th data-i18n="controls.table.keyboard"></th><th data-i18n="controls.table.gamepad"></th></tr>
+            <tr><td id="key-left-label"></td><td><kbd>A</kbd> <kbd>←</kbd></td><td data-i18n="controls.pad.leftStick"></td></tr>
+            <tr><td id="key-right-label"></td><td><kbd>D</kbd> <kbd>→</kbd></td><td data-i18n="controls.pad.leftStick"></td></tr>
+            <tr><td data-i18n="controls.action.fineTiller"></td><td><kbd>Shift</kbd> + <span data-i18n="key.arrows"></span></td><td>—</td></tr>
+            <tr><td data-i18n="controls.action.sheetIn"></td><td><kbd>W</kbd> <kbd>↑</kbd></td><td>RT</td></tr>
+            <tr><td data-i18n="controls.action.sheetOut"></td><td><kbd>S</kbd> <kbd>↓</kbd></td><td>LT</td></tr>
+            <tr><td data-i18n="controls.action.autoTrim"></td><td><kbd>T</kbd></td><td>X</td></tr>
+            <tr><td data-i18n="controls.action.camera"></td><td><kbd>C</kbd></td><td>Y</td></tr>
+            <tr><td data-i18n="controls.action.pause"></td><td><kbd>P</kbd> <kbd>Esc</kbd></td><td>Start</td></tr>
+            <tr><td data-i18n="controls.action.restart"></td><td><kbd>R</kbd></td><td>Back</td></tr>
+            <tr><td colspan="3" class="keys-sub" data-i18n="controls.table.crew420"></td></tr>
+            <tr><td data-i18n="controls.action.crewWeight"></td><td><kbd>A</kbd> <kbd>D</kbd> · <kbd>←</kbd> <kbd>→</kbd></td><td data-i18n="controls.pad.leftStick"></td></tr>
+            <tr><td data-i18n="controls.action.crewSheet"></td><td><kbd>W</kbd> <kbd>S</kbd></td><td>RT / LT</td></tr>
+            <tr><td data-i18n="controls.action.switchSide"></td><td><kbd>E</kbd></td><td>B</td></tr>
+            <tr><td data-i18n="controls.action.spinnaker"></td><td><kbd data-i18n="key.space"></kbd></td><td>A</td></tr>
+            <tr><td data-i18n="controls.action.menus"></td><td><kbd>V</kbd> <kbd>K</kbd> <kbd>M</kbd></td><td>—</td></tr>
           </table>
           <div class="row-btns">
-            <button id="controls-reset" class="ghost">Ripristina predefiniti</button>
-            <button id="controls-back" class="primary">Fatto <span>Esc</span></button>
+            <button id="controls-reset" class="ghost" data-i18n="controls.reset"></button>
+            <button id="controls-back" class="primary" data-i18n="controls.done"> <span>Esc</span></button>
           </div>
         </div>
       </section>
 
       <section id="results" class="overlay hidden">
         <div class="sheet small">
-          <div class="brand">RISULTATI</div>
+          <div class="brand" data-i18n="results.title"></div>
           <table id="results-table"></table>
-          <p class="muted">R per un'altra regata · M per il menu</p>
+          <p class="muted" data-i18n="results.hint"></p>
         </div>
       </section>
 
-      <div id="loading">Caricamento regata…</div>
+      <!-- Shown while the scripts load, before the catalog can fill it: tests/page-text.test.ts keeps it equal to menu.loading. -->
+      <div id="loading" data-i18n="menu.loading">Caricamento regata…</div>
     </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
