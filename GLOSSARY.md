@@ -154,6 +154,10 @@ _Avoid_: Jibe
 The boat's sails; the jib and spinnaker exist only on two-person classes.
 _it_: Randa, Fiocco, Spinnaker (spi)
 
+**Sail number**:
+The class symbol and number ("ITA 4821") on a boat's mainsail, made up from the Helm's id and the class.
+_it_: Numero velico
+
 **Sheet**:
 The rope that sets a sail's angle; sheeting in pulls the sail toward the centreline, easing lets it out.
 _it_: Scotta (cazzare / lascare)

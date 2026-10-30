@@ -6,14 +6,23 @@ import type { BoatState, Telemetry } from "../sailing/BoatPhysics";
 import { boatMaterial, type BoatLook } from "./boatMaterials";
 import { BoatViewBase, sailLook, type BoatMotion } from "./BoatViewBase";
 import { SailMesh } from "./SailMesh";
+import { block, fromTurned, LineSet, toeStrap } from "./Rigging";
+import { DECAL, sailNumberMaterial } from "./SailNumber";
 import { limbMesh, setLimb, SailorFigure } from "./SailorFigure";
 import { RIG, section420 } from "./pose/boatRig";
-import type { BoatCrew } from "./pose/looks";
+import { sailNumber, type BoatCrew } from "./pose/looks";
+import type { V3 } from "./pose/reach";
 import { sailorPose, type Pose, type PoseInput } from "./pose/sailorPose";
 
 const MAST_Z = RIG["420"].mastZ;
 const SPI_COLORS = [new Color3(0.95, 0.25, 0.2), new Color3(0.15, 0.4, 0.9), new Color3(1, 0.8, 0.15), new Color3(0.2, 0.75, 0.45)];
 let spiColorIdx = 0;
+
+// Sheet lines: 0 main, 1 jib, 2 spinnaker, 3 and 4 the trapeze handle's two pendants.
+const MAIN_BLOCK: V3 = { x: 0, y: -0.1, z: -1.0 };
+const FAIRLEAD_X = 0.62, FAIRLEAD_Y = 0.46, FAIRLEAD_Z = 0.1;
+const SHEET_COLOR = new Color3(0.93, 0.93, 0.88);
+const MAST_STEP: V3 = { x: 0, y: 0, z: MAST_Z };
 
 const MOTION: BoatMotion = { waveHeight: 0.7, pitch: 0.6, roll: 0.4, heelRate: 2.5, heel: 0.8, boomRate: 2.4, rudderDeg: RIG["420"].rudderDeg };
 
@@ -35,6 +44,15 @@ export class Boat420View extends BoatViewBase {
   private handle: InstancedMesh;
   private wire: LinesMesh;
   private jibVisual = 0;
+  private sheets: LineSet;
+  private spiShown: SailMesh | null = null;
+  private readonly clew: V3 = { x: 0, y: 0, z: 0 };
+  private readonly clewBody: V3 = { x: 0, y: 0, z: 0 };
+  private readonly fairlead: V3 = { x: 0, y: FAIRLEAD_Y, z: FAIRLEAD_Z };
+  private readonly cleat: V3 = { x: 0, y: FAIRLEAD_Y - 0.25, z: FAIRLEAD_Z };
+  private readonly pendantTop: V3 = { x: 0, y: 0, z: 0 };
+  private readonly pendantA: V3 = { x: 0, y: 0, z: 0 };
+  private readonly pendantB: V3 = { x: 0, y: 0, z: 0 };
 
   constructor(scene: Scene, name: string, look: BoatLook, crew: BoatCrew) {
     super(scene, name, MOTION);
@@ -124,7 +142,8 @@ export class Boat420View extends BoatViewBase {
     boom.material = darkMat;
     boom.parent = this.rig;
     this.main = new SailMesh(scene, `${name}-main`, sailMat, this.rig,
-      new Vector3(0, 1.0, -0.04), new Vector3(0, 1.0, -2.55), new Vector3(0, 6.25, 0), new Vector3(0, 6.15, -0.35), 10, 12);
+      new Vector3(0, 1.0, -0.04), new Vector3(0, 1.0, -2.55), new Vector3(0, 6.25, 0), new Vector3(0, 6.15, -0.35), 10, 12, undefined,
+      { material: sailNumberMaterial(scene, "420", sailNumber(crew.helm.id, "420"), look.sail), vSpan: DECAL["420"].vSpan });
 
     this.jibPivot = new TransformNode(`${name}-jibPivot`, scene);
     this.jibPivot.position.set(0, 0.45, 1.95);
@@ -151,7 +170,16 @@ export class Boat420View extends BoatViewBase {
     this.helm = new SailorFigure(scene, `${name}-helm`, this.body, crew.helm, look.jacket);
     this.crew = new SailorFigure(scene, `${name}-crew`, this.body, crew.crew ?? crew.helm, look.stripe);
     this.extension = limbMesh(scene, `${name}-extension`, woodMat, this.body);
-    this.handle = limbMesh(scene, `${name}-handle`, darkMat, this.body);
+    this.handle = limbMesh(scene, `${name}-handle`, boatMaterial(scene, "420-grip", new Color3(0.85, 0.2, 0.15), 0.3), this.body);
+
+    // Toe straps on the floor, the main sheet block, the jib fairleads, and the sheets and handle pendants.
+    const strapMat = boatMaterial(scene, "420-strap", new Color3(0.82, 0.82, 0.78), 0.1);
+    for (const side of [-1, 1]) {
+      toeStrap(scene, `${name}-strap${side}`, strapMat, this.body, 1.1, side * 0.17, -0.06, -0.3);
+      block(scene, `${name}-fairlead${side}`, darkMat, this.body, side * FAIRLEAD_X, FAIRLEAD_Y - 0.02, FAIRLEAD_Z);
+    }
+    block(scene, `${name}-mainblock`, darkMat, this.body, MAIN_BLOCK.x, MAIN_BLOCK.y, MAIN_BLOCK.z);
+    this.sheets = new LineSet(scene, `${name}-sheets`, this.body, [3, 3, 2, 3, 3], SHEET_COLOR);
     this.wire = MeshBuilder.CreateLines(`${name}-wire`, { points: [Vector3.Zero(), Vector3.Zero()], updatable: true }, scene);
     this.wire.color = new Color3(0.2, 0.2, 0.22);
     this.wire.parent = this.body;
@@ -183,6 +211,7 @@ export class Boat420View extends BoatViewBase {
     this.spis.port.mesh.isVisible = showPort;
     this.spis.stbd.mesh.isVisible = showStbd;
     const spi = showPort ? this.spis.port : showStbd ? this.spis.stbd : null;
+    this.spiShown = spi && tel.spi ? spi : null;
     if (spi && tel.spi) {
       const collapse = tel.spi.collapsed || tel.spi.wrongSide ? 0.8 : tel.spi.trimState === "luffing" ? 0.5 : 0;
       spi.shape(clamp(1.2 - collapse, 0.2, 1.2), collapse, 1, this.flutter + 2, h, 0.32);
@@ -212,16 +241,52 @@ export class Boat420View extends BoatViewBase {
     this.helm.update(helm, this.sailorsNear);
     this.crew.update(crew, this.sailorsNear);
     setLimb(this.extension, helm.extension!.base, helm.extension!.end, 0.026);
-    // Trapeze wire from the hounds to the harness when the crew is out, with the handle on it.
+    // Trapeze wire from the hounds to the harness when the crew is out, with the handle on it and its two pendants.
     this.wire.isVisible = crew.onWire;
     this.handle.setEnabled(crew.onWire);
     if (crew.onWire) {
       const top = RIG["420"].hounds!;
       MeshBuilder.CreateLines("", { points: [new Vector3(top.x, top.y, top.z), new Vector3(crew.harness.x, crew.harness.y, crew.harness.z)], instance: this.wire });
       const g = crew.targets.handle!;
-      setLimb(this.handle, { x: g.x - 0.1, y: g.y, z: g.z }, { x: g.x + 0.1, y: g.y, z: g.z }, 0.025);
+      this.pendantA.x = g.x - 0.1; this.pendantA.y = g.y; this.pendantA.z = g.z;
+      this.pendantB.x = g.x + 0.1; this.pendantB.y = g.y; this.pendantB.z = g.z;
+      setLimb(this.handle, this.pendantA, this.pendantB, 0.032);
+      // The pendants meet on the wire 0.25 m above the bar.
+      const dx = top.x - g.x, dy = top.y - g.y, dz = top.z - g.z, k = 0.25 / (Math.hypot(dx, dy, dz) || 1);
+      this.pendantTop.x = g.x + dx * k; this.pendantTop.y = g.y + dy * k; this.pendantTop.z = g.z + dz * k;
+      this.sheets.set(3, this.pendantA, this.pendantTop, this.pendantTop);
+      this.sheets.set(4, this.pendantB, this.pendantTop, this.pendantTop);
+    } else {
+      this.sheets.hide(3);
+      this.sheets.hide(4);
     }
+    this.drawSheets(s, helm, crew);
     // The hull rocks while either sailor crosses it.
     this.rollHull(Math.abs(helm.hullRoll) > Math.abs(crew.hullRoll) ? helm.hullRoll : crew.hullRoll);
+  }
+
+  /** The main sheet to the Helm's hand, the jib sheet through the leeward fairlead and the spinnaker sheet to the Crew's. */
+  private drawSheets(s: BoatState, helm: Pose, crew: Pose) {
+    const main = helm.targets.sheet ?? MAIN_BLOCK, hand = crew.targets.sheet ?? MAIN_BLOCK;
+    this.main.clewPoint(this.clew);
+    fromTurned(this.clew, this.rig.rotation.y, MAST_STEP, this.clewBody);
+    this.sheets.set(0, this.clewBody, MAIN_BLOCK, main);
+
+    const jibSide = Math.sign(this.jibVisual) || s.jibSide;
+    this.fairlead.x = jibSide * FAIRLEAD_X;
+    this.cleat.x = this.fairlead.x * 0.6;
+    this.jib.clewPoint(this.clew);
+    fromTurned(this.clew, this.jibPivot.rotation.y, this.jibPivot.position, this.clewBody);
+    // With the spinnaker up the Crew's hands are on its sheet: the jib sheet ends in a cleat beside the fairlead.
+    this.sheets.set(1, this.clewBody, this.fairlead, this.spiShown ? this.cleat : hand);
+
+    if (this.spiShown) {
+      this.spiShown.clewPoint(this.clew);
+      fromTurned(this.clew, this.spis.node.rotation.y, MAST_STEP, this.clewBody);
+      this.sheets.set(2, this.clewBody, hand);
+    } else {
+      this.sheets.hide(2);
+    }
+    this.sheets.commit();
   }
 }

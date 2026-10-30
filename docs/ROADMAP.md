@@ -13,6 +13,12 @@
   Rivals and generated sailors in fleets that grow with the level, standings and Season summary, a saved
   Career, then stay in the Optimist or move to the 420 with a Partner; Crew Chemistry moves with results.
   Ages and the Optimist Age limit (15) are stored but not enforced yet.
+- **0.6a New HUD** — the "Sail number" HUD: top strip, compass pill, one message pill, a Standings/map panel,
+  and a thumb deck (tiller bar, vertical sheet slider, context buttons) that works the same on a phone,
+  a laptop and a desktop; a portrait camera and a no-overlap check for the HUD.
+- **0.6b Boats and sailors** — spec #119. Articulated sailors with looks from their id and height from age,
+  animated hiking, trapeze and roll tacks; boat detail: a sail number and class symbol on the mainsail (both faces),
+  visible sheets, toe straps and a trapeze handle (visuals only).
 
 ## How planning works
 This file holds the vision and the order. Details and status live on GitHub: one
@@ -22,10 +28,6 @@ versions, and its issues (5–8 per spec). Don't copy issue lists here.
 ## Next (in order)
 - **0.4.x maintenance** — small tech-debt issues, worked in the background (no spec).
 - **0.5.x Career tuning** — balance and polish of the 0.5 Career (not yet a milestone).
-- **0.6a New HUD** — the "Sail number" HUD: top strip, compass pill, one message pill, a Standings/map panel,
-  and a thumb deck (tiller bar, vertical sheet slider, context buttons) that works the same on a phone,
-  a laptop and a desktop; a portrait camera and a no-overlap check for the HUD.
-- **0.6b Boats and sailors** — detailed boats and sailors, animated hiking, trapeze and roll tacks (visuals only).
 - **0.6c Body weight and planing** — fore-aft and side weight in the physics, Optimist hiking and roll tacks,
   bow up to surf and plane.
 - **0.7 Training** — drills, a coach, player attributes, "sim this race".
@@ -41,5 +43,4 @@ versions, and its issues (5–8 per spec). Don't copy issue lists here.
 - AI starts are often 5–25 s late; occasional AI penalty turns in crowded light-wind beats.
 - Overpowered 420 in 16 kn heels a lot (depower model favours sheeting in).
 - Chemistry has a small effect on spinnaker timing (hoist time dominates).
-- Sailors are simple capsule figures; no animations.
 - Physics tuned for feel, not validated against real polars.

@@ -65,6 +65,26 @@ export function sailGridUvs(nu: number, nv: number): number[] {
   return uvs;
 }
 
+/**
+ * Texture coordinates for a sail that carries a decal (its number): the texture covers the lower `vSpan` of the
+ * luff (the rest repeats its top row), and `mirrored` flips u. The two faces of a sail are separate meshes, and
+ * seen from opposite sides the foot runs opposite ways on screen, so each gets the u that reads correctly.
+ */
+export function decalSailUvs(nu: number, nv: number, vSpan: number, mirrored: boolean): number[] {
+  const uvs: number[] = [];
+  for (let v = 0; v <= nv; v++) {
+    for (let u = 0; u <= nu; u++) uvs.push(mirrored ? 1 - u / nu : u / nu, Math.min(1, v / nv / vSpan));
+  }
+  return uvs;
+}
+
+/** The same triangles wound the other way, so the face that was the back is the front. */
+export function reversedIndices(idx: readonly number[]): number[] {
+  const out: number[] = [];
+  for (let i = 0; i < idx.length; i += 3) out.push(idx[i], idx[i + 2], idx[i + 1]);
+  return out;
+}
+
 /** Writes the grid's vertex positions for `pose` into `pos` ((nu + 1) * (nv + 1) * 3 numbers). */
 export function shapeSail(pos: Float32Array, c: SailCorners, nu: number, nv: number, cut: SailCut, pose: SailPose): void {
   const { tack, clew, headLuff, headLeech } = c;
