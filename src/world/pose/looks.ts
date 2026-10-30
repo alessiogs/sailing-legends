@@ -40,6 +40,12 @@ export function sailorLooks(id: string): SailorLooks {
   return { skin, skinColor: SKIN_TONES[skin], hair, hairColor: HAIR_COLORS[hair], cap, capColor: cap === null ? null : CAP_COLORS[cap] };
 }
 
+/** Who a figure is: the sailor's `id` (their looks) and age (their size; unknown for a sailor with none, as in a quick race). */
+export type FigureWho = { id: string; age?: number };
+
+/** The sailors on a boat: its Helm and, in a two-person class, its Crew. */
+export type BoatCrew = { helm: FigureWho; crew: FigureWho | null };
+
 /** Age with no age given (an AI sailor without one): a teen. */
 export const DEFAULT_FIGURE_AGE = 14;
 const HEIGHT_AT_8 = 1.3, ADULT_HEIGHT = 1.75, ADULT_AGE = 16;
