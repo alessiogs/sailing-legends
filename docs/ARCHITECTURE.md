@@ -61,8 +61,13 @@ src/
              Weather.ts (the wind and seed of each Race of a Regatta), Seeds.ts (`mixSeed`)
   world/     Ocean.ts (Gerstner waves in GLSL), Waves.ts (same waves on CPU), BoatViewBase.ts (what both boat
              visuals share: wave riding, heel, boom swing, rudder, burgee; each class gives its `BoatMotion` and
-             draws its own sails and sailors), BoatView.ts (Optimist), Boat420View.ts, SailorFigure.ts (the sailor
-             figure and its placement on the gunwale), pose/ (Babylon-free sailor pose model: `sailorPose.ts` joint angles, body place and the 1 s side crossing; `reach.ts` the two-bone reach; `looks.ts` `sailorLooks`, `figureHeight`, `sailNumber`), boatMaterials.ts (`boatLook` from the colour table,
+             draws its own sails and sailors; sailors beyond 30 m of the camera are drawn simply), BoatView.ts (Optimist: the
+             sailor posed from `sailorPose`, tiller extension, drawn hull roll while the sailor crosses), Boat420View.ts (the Helm and
+             Crew posed the same way; tiller extension, trapeze wire with its handle), SailorFigure.ts (`SailorFigure`: the
+             articulated figure of instanced cylinders and balls, 13-14 meshes near and 3 far, with `limbMesh`/`setLimb` for rigging), pose/
+             (Babylon-free sailor pose model: `sailorPose.ts` the body's place on the boat, the 1 s side crossing and the skeleton's
+             joints, hands on their targets and feet on the deck; `reach.ts` the two-bone reach; `boatRig.ts` the hull sections, rudder, tiller
+             extension and trapeze dimensions the pose and the views share; `looks.ts` `sailorLooks`, `figureHeight`, `sailNumber`), boatMaterials.ts (`boatLook` from the colour table,
              `boatMaterial`: the one material cache of both boat views, per scene via sceneCache.ts), SailMesh.ts (the
              one sail mesh, for every sail of both classes) and sailShape.ts (its Babylon-free grid maths; a
              `SailCut` per class: the 420's in proportion to the chord, the Optimist's fixed offsets), CourseView.ts
@@ -93,6 +98,7 @@ src/
              Assists; the menu / racing / paused / results / controls / career modes; the Career in progress: new, continue, start a Race,
              record it and save after every Race; one `frame(dt)` per render; plays the
              race feedback's cues). Drives the page through `Screens`.
+             boatCrews.ts (`boatCrews`: the sailors of each boat of a fleet as ids and, in a Career, ages, for the sailor figures; Babylon-free)
              RaceFeedback.ts (countdown beeps, race events as sounds and messages, coaching hints: tack/gybe
              calls, the Partner's calls, the irons hint; returns `Cue`s for the controller to play; DOM/audio-free)
              PlayerControls.ts (the player's input turned into the boat's controls per Role and Control mode:
