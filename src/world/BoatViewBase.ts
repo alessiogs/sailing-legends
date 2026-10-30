@@ -1,4 +1,4 @@
-import { Mesh, MeshBuilder, TransformNode, type Material, type Scene } from "@babylonjs/core";
+import { Mesh, MeshBuilder, TransformNode, type Material, type Scene, type Vector3 } from "@babylonjs/core";
 import { clamp, DEG, lerpAngle } from "../core/math";
 import type { BoatState, Telemetry, TrimState } from "../sailing/BoatPhysics";
 import { surfaceAt, type Wave } from "./Waves";
@@ -20,6 +20,9 @@ export type BoatMotion = {
   /** Rudder angle drawn at full helm (degrees). */
   rudderDeg: number;
 };
+
+/** Distance (m) from the camera within which sailors are drawn in full; a boat that was near stays so a little further out. */
+const NEAR = 30, NEAR_LEAVE = 36;
 
 /** How full and how flapping a sail is drawn: camber 0..1, luff 0..1. */
 export function sailLook(sail: { trimState: TrimState; aoa: number }): { camber: number; luff: number } {
@@ -45,6 +48,8 @@ export abstract class BoatViewBase {
   protected boomVisual = 0;
   /** Sail flutter clock (s), offset per boat so boats don't flap in step. */
   protected flutter = Math.random() * 10;
+  /** Whether the camera is close enough for the sailors to be drawn in full (see `NEAR`). */
+  protected sailorsNear = true;
   private heelVisual = 0;
 
   constructor(scene: Scene, name: string, private readonly motion: BoatMotion) {
@@ -66,7 +71,8 @@ export abstract class BoatViewBase {
     return burgee;
   }
 
-  update(dt: number, time: number, s: BoatState, tel: Telemetry, waves: Wave[]) {
+  /** One frame. `camera` is where the camera is (sailors far from it are drawn simply); without it they are drawn in full. */
+  update(dt: number, time: number, s: BoatState, tel: Telemetry, waves: Wave[], camera?: Vector3) {
     const m = this.motion;
     this.flutter += dt;
     // Ride the waves: height, pitch and roll from the local surface slope.
@@ -90,7 +96,11 @@ export abstract class BoatViewBase {
 
     this.drawSails(dt, s, tel);
     this.rudder.rotation.y = -s.rudder * m.rudderDeg * DEG;
-    this.placeSailors(s, tel);
+    if (camera) {
+      const d = Math.hypot(camera.x - s.x, camera.z - s.z) + Math.abs(camera.y - this.root.position.y) * 0.5;
+      this.sailorsNear = d < (this.sailorsNear ? NEAR_LEAVE : NEAR);
+    }
+    this.placeSailors(dt, s, tel);
 
     // Burgee points where the apparent wind goes.
     this.burgee.rotation.y = lerpAngle(this.burgee.rotation.y, tel.awa, Math.min(1, dt * 8));
@@ -98,8 +108,13 @@ export abstract class BoatViewBase {
 
   /** Shape the sails for this frame (the boom has already swung). */
   protected abstract drawSails(dt: number, s: BoatState, tel: Telemetry): void;
-  /** Put the sailors where they sit or hike this frame. */
-  protected abstract placeSailors(s: BoatState, tel: Telemetry): void;
+  /** Pose the sailors for this frame (`dt` is 0 when the race is paused). */
+  protected abstract placeSailors(dt: number, s: BoatState, tel: Telemetry): void;
+
+  /** Rock the hull while a sailor crosses it (`roll` rad, + to starboard): the drawn heel only, never the physics. */
+  protected rollHull(roll: number) {
+    this.body.rotation.z -= roll;
+  }
 
   dispose() {
     this.root.dispose(false, false);

@@ -28,6 +28,7 @@ import { CourseView } from "../world/CourseView";
 import { Ocean } from "../world/Ocean";
 import { makeWaves, type Wave } from "../world/Waves";
 import type { CameraRig } from "./CameraRig";
+import { boatCrews } from "./boatCrews";
 import { PlayerControls, type Assists } from "./PlayerControls";
 import { RaceFeedback, type Cue } from "./RaceFeedback";
 
@@ -174,9 +175,11 @@ export class GameController {
     if (!this.ocean) this.ocean = new Ocean(scene, this.waves);
     else this.ocean.setWaves(this.waves);
     this.courseView = new CourseView(scene, session.race.course);
+    const crews = boatCrews(fleet, setup ? this.career : null);
     for (const r of session.race.racers) {
       const look = boatLook(boatColors(r.id));
-      this.boats.set(r.id, isTwoPerson(r.sim.cls) ? new Boat420View(scene, r.id, look) : new BoatView(scene, r.id, look));
+      const crew = crews.get(r.id)!;
+      this.boats.set(r.id, isTwoPerson(r.sim.cls) ? new Boat420View(scene, r.id, look, crew) : new BoatView(scene, r.id, look, crew));
     }
     input.reset();
     hud.setBoat(isTwoPerson(this.activeClass), this.activeChoice.role === "crew");
@@ -378,7 +381,7 @@ export class GameController {
       this.play(this.feedback.update(session, this.input.steering));
     }
     const mode = this._mode;
-    for (const r of session.race.racers) this.boats.get(r.id)!.update(mode === "racing" ? dt : 0, this.time, r.sim.state, r.sim.telemetry, this.waves);
+    for (const r of session.race.racers) this.boats.get(r.id)!.update(mode === "racing" ? dt : 0, this.time, r.sim.state, r.sim.telemetry, this.waves, camera.position);
     const p = session.player!;
     const leg = p.leg >= 0 && p.leg < session.race.course.legs.length ? session.race.course.legs[p.leg] : null;
     this.courseView!.setTarget(p.finishTime !== null ? null : leg ? legTarget(leg) : null);
