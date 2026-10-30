@@ -62,7 +62,7 @@ src/
   world/     Ocean.ts (Gerstner waves in GLSL), Waves.ts (same waves on CPU), BoatViewBase.ts (what both boat
              visuals share: wave riding, heel, boom swing, rudder, burgee; each class gives its `BoatMotion` and
              draws its own sails and sailors), BoatView.ts (Optimist), Boat420View.ts, SailorFigure.ts (the sailor
-             figure and its placement on the gunwale), boatMaterials.ts (`boatLook` from the colour table,
+             figure and its placement on the gunwale), pose/ (Babylon-free sailor pose model: `sailorPose.ts` joint angles, body place and the 1 s side crossing; `reach.ts` the two-bone reach; `looks.ts` `sailorLooks`, `figureHeight`, `sailNumber`), boatMaterials.ts (`boatLook` from the colour table,
              `boatMaterial`: the one material cache of both boat views, per scene via sceneCache.ts), SailMesh.ts (the
              one sail mesh, for every sail of both classes) and sailShape.ts (its Babylon-free grid maths; a
              `SailCut` per class: the 420's in proportion to the chord, the Optimist's fixed offsets), CourseView.ts
@@ -117,7 +117,7 @@ tests/       Vitest tests (npm test): smoke.test.ts (every AI-only race finishes
              race-names.test.ts (leg and boat names of every session setup read as before)
              career-scoring.test.ts (low point, OCS/DSQ, Discard, tie-breaks incl. after the Discard, Season ranking)
              career-save.test.ts (save round trip, migrations, unreadable saves never throw, the storage adapter)
-             career-calendar.test.ts (the 0.5 calendars), career-ages.test.ts (ages, `canRace` at 14/15/16)
+             career-calendar.test.ts (the 0.5 calendars), career-ages.test.ts (ages, `canRace` at 14/15/16), sailor-pose.test.ts (crossing, height by age, looks and sail number)
              career-season-close.test.ts (closing a Season: ages, reset, Rival growth by personality, pinned over 3 Seasons)
              career-standings.test.ts (Regatta/Season standings, the Discard, Rival comparison, Season summary),
              rival-text.test.ts (Rival lines in Italian and English)
