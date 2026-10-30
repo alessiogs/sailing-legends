@@ -5,10 +5,13 @@ import type { BoatState, Telemetry } from "../sailing/BoatPhysics";
 import { boatMaterial, type BoatLook } from "./boatMaterials";
 import { BoatViewBase, sailLook, type BoatMotion } from "./BoatViewBase";
 import { SailMesh } from "./SailMesh";
+import { block, fromTurned, LineSet, toeStrap } from "./Rigging";
+import { DECAL, sailNumberMaterial } from "./SailNumber";
 import { OPTIMIST_CUT } from "./sailShape";
 import { limbMesh, setLimb, SailorFigure } from "./SailorFigure";
 import { optimistSection, RIG } from "./pose/boatRig";
-import type { BoatCrew } from "./pose/looks";
+import { sailNumber, type BoatCrew } from "./pose/looks";
+import type { V3 } from "./pose/reach";
 import { sailorPose, type Pose } from "./pose/sailorPose";
 
 // Sail corners in the rig frame (mast at origin, boom along -Z, sail plane = YZ).
@@ -17,6 +20,11 @@ const THROAT = new Vector3(0, 2.32, 0);
 const PEAK = new Vector3(0, 2.78, -1.72);
 const CLEW = new Vector3(0, 0.5, -1.98);
 const NU = 10, NV = 9;
+
+const MAST_STEP: V3 = { x: 0, y: 0, z: RIG.optimist.mastZ };
+// The main sheet runs from the boom's end down to a block on the floor, then to the Helm's hand.
+const SHEET_BLOCK: V3 = { x: 0, y: 0.02, z: -0.8 };
+const SHEET_COLOR = new Color3(0.93, 0.93, 0.88);
 
 const MOTION: BoatMotion = { waveHeight: 0.85, pitch: 0.8, roll: 0.6, heelRate: 3, heel: 0.5, boomRate: 2.6, rudderDeg: RIG.optimist.rudderDeg };
 
@@ -29,6 +37,9 @@ export class BoatView extends BoatViewBase {
   private sailor: SailorFigure;
   private pose: Pose | null = null;
   private extension: InstancedMesh;
+  private sheets: LineSet;
+  private readonly clew: V3 = { x: 0, y: 0, z: 0 };
+  private readonly clewBody: V3 = { x: 0, y: 0, z: 0 };
   private readonly height: number;
 
   constructor(scene: Scene, name: string, look: BoatLook, crew: BoatCrew) {
@@ -126,9 +137,18 @@ export class BoatView extends BoatViewBase {
     sprit.parent = this.rig;
 
     // Sail: a grid re-shaped every frame (camber, twist, luffing flutter), with the sprit sail's fixed offsets.
-    this.sail = new SailMesh(scene, `${name}-sail`, sailMat, this.rig, TACK, CLEW, THROAT, PEAK, NU, NV, OPTIMIST_CUT);
+    // The sail number and class symbol are on its texture, shown on both faces.
+    const numberMat = sailNumberMaterial(scene, "optimist", sailNumber(crew.helm.id, "optimist"), look.sail);
+    this.sail = new SailMesh(scene, `${name}-sail`, sailMat, this.rig, TACK, CLEW, THROAT, PEAK, NU, NV, OPTIMIST_CUT,
+      { material: numberMat, vSpan: DECAL.optimist.vSpan });
 
     this.burgee = this.addBurgee(scene, name, 2.46, 0.78, 0.28, stripeMat);
+
+    // Toe strap along the floor, the sheet block, the main sheet.
+    const strapMat = boatMaterial(scene, "strap", new Color3(0.82, 0.82, 0.78), 0.1);
+    toeStrap(scene, `${name}-strap`, strapMat, this.body, 0.75, 0, -0.03, -0.75);
+    block(scene, `${name}-block`, darkMat, this.body, SHEET_BLOCK.x, SHEET_BLOCK.y, SHEET_BLOCK.z);
+    this.sheets = new LineSet(scene, `${name}-sheets`, this.body, [3], SHEET_COLOR);
 
     // Sailor: sits in the middle or to leeward in light air, on the windward side and hiking as the breeze builds.
     this.sailor = new SailorFigure(scene, `${name}-sailor`, this.body, crew.helm, look.jacket);
@@ -153,6 +173,10 @@ export class BoatView extends BoatViewBase {
     this.sailor.update(this.pose, this.sailorsNear);
     const ext = this.pose.extension!;
     setLimb(this.extension, ext.base, ext.end, 0.022);
+    this.sail.clewPoint(this.clew);
+    fromTurned(this.clew, this.rig.rotation.y, MAST_STEP, this.clewBody);
+    this.sheets.set(0, this.clewBody, SHEET_BLOCK, this.pose.targets.sheet ?? SHEET_BLOCK);
+    this.sheets.commit();
     this.rollHull(this.pose.hullRoll);
   }
 }

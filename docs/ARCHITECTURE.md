@@ -68,8 +68,11 @@ src/
              (Babylon-free sailor pose model: `sailorPose.ts` the body's place on the boat, the 1 s side crossing and the skeleton's
              joints, hands on their targets and feet on the deck; `reach.ts` the two-bone reach; `boatRig.ts` the hull sections, rudder, tiller
              extension and trapeze dimensions the pose and the views share; `looks.ts` `sailorLooks`, `figureHeight`, `sailNumber`), boatMaterials.ts (`boatLook` from the colour table,
-             `boatMaterial`: the one material cache of both boat views, per scene via sceneCache.ts), SailMesh.ts (the
-             one sail mesh, for every sail of both classes) and sailShape.ts (its Babylon-free grid maths; a
+             `boatMaterial`: the one material cache of both boat views, per scene via sceneCache.ts), SailNumber.ts (the
+             mainsail's decal: class symbol and sail number on one small dynamic texture per boat), Rigging.ts (`LineSet`: the
+             sheets and trapeze pendants as one line mesh per boat; shared toe-strap and block instances; `fromTurned`),
+             SailMesh.ts (the one sail mesh, for every sail of both classes; with a decal each face is its own
+             culled mesh so the number reads right on both sides) and sailShape.ts (its Babylon-free grid maths, decal UVs; a
              `SailCut` per class: the 420's in proportion to the chord, the Optimist's fixed offsets), CourseView.ts
   i18n/      index.ts (`t(key, params)`: typed lookup in the active catalog; `setLanguage`), it.ts (Italian catalog,
              the reference: it defines the keys), en.ts (English catalog, typed against it), language.ts (`Language`,
