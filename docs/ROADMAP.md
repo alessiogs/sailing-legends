@@ -19,6 +19,10 @@
 - **0.6b Boats and sailors** — spec #119. Articulated sailors with looks from their id and height from age,
   animated hiking, trapeze and roll tacks; boat detail: a sail number and class symbol on the mainsail (both faces),
   visible sheets, toe straps and a trapeze handle (visuals only).
+- **0.5.x Career tuning** — spec #130. A Sardinian Season: club at Circolo del Mare Fertilia (Alghero), the four
+  Zonale Stages (Olbia, La Caletta, Porto Rotondo, Cagliari), Follonica and Riva del Garda (7 Regattas,
+  17 Races). AI attributes now shape how a sailor sails; fleets, generated sailors and Rivals follow one
+  strength-by-age curve (`career/Strength.ts`), measured with `npm run career-sim`.
 
 ## How planning works
 This file holds the vision and the order. Details and status live on GitHub: one
@@ -27,7 +31,6 @@ versions, and its issues (5–8 per spec). Don't copy issue lists here.
 
 ## Next (in order)
 - **0.4.x maintenance** — small tech-debt issues, worked in the background (no spec).
-- **0.5.x Career tuning** — balance and polish of the 0.5 Career (not yet a milestone).
 - **0.6c Body weight and planing** — fore-aft and side weight in the physics, Optimist hiking and roll tacks,
   bow up to surf and plane.
 - **0.7 Training** — drills, a coach, player attributes, "sim this race".
