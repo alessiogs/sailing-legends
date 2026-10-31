@@ -5,7 +5,9 @@
  */
 import { clamp, rng } from "../core/math";
 import { RIVALS, type SailorProfile } from "../sailors/Sailors";
+import type { RegattaLevel } from "./Calendar";
 import { mixSeed } from "./Seeds";
+import { levelRating, rivalStartRating } from "./Strength";
 
 /** A sailor of the pool: a profile and the age they have in Season 1 (their age later is `ageInSeason(startingAge, season)`). */
 export type PoolSailor = SailorProfile & { startingAge: number };
@@ -30,8 +32,8 @@ export function sailorRating(p: SailorProfile): number {
   return (p.technique + p.tactics + p.speed + p.discipline) / 4;
 }
 
-/** The mean rating of a generated sailor of each of the four levels, club to international. */
-const LEVEL_MEANS: readonly number[] = [0.38, 0.5, 0.62, 0.74];
+/** The four levels the generated sailors are spread over, club to international. */
+const LEVELS: readonly RegattaLevel[] = ["club", "regional", "national", "international"];
 
 const round2 = (v: number) => Math.round(v * 100) / 100;
 
@@ -50,14 +52,21 @@ export function generatePool(seed: number, playerAge: number): PoolSailor[] {
     [names[i], names[j]] = [names[j], names[i]];
   }
 
-  const rivals = RIVALS.map((r): PoolSailor => ({ ...r, startingAge: ageNearPlayer() }));
+  // The Rivals keep their character (the shape of their attributes) but start as the talented kids they are.
+  const rivals = RIVALS.map((r): PoolSailor => {
+    const startingAge = ageNearPlayer();
+    const shift = rivalStartRating(startingAge) - sailorRating(r);
+    const at = (v: number) => round2(clamp(v + shift, 0.1, 0.98));
+    return { ...r, technique: at(r.technique), tactics: at(r.tactics), speed: at(r.speed), discipline: at(r.discipline), startingAge };
+  });
   const generated = names.slice(0, GENERATED_COUNT).map((name, i): PoolSailor => {
-    const mean = LEVEL_MEANS[i % LEVEL_MEANS.length];
+    const startingAge = ageNearPlayer();
+    const mean = levelRating(LEVELS[i % LEVELS.length], startingAge);
     const attribute = () => round2(clamp(mean + (rand() - 0.5) * 0.24, 0.1, 0.98));
     return {
       id: name.toLowerCase(), name,
       technique: attribute(), tactics: attribute(), speed: attribute(), discipline: attribute(),
-      startingAge: ageNearPlayer(),
+      startingAge,
     };
   });
   return [...rivals, ...generated];

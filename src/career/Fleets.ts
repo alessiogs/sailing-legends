@@ -10,14 +10,13 @@ import { CLASSES, isTwoPerson } from "../sailing/BoatClass";
 import { RIVALS, type SailorProfile } from "../sailors/Sailors";
 import { seasonCalendar, type RegattaLevel } from "./Calendar";
 import type { CareerState } from "./CareerSave";
+import { ageInSeason } from "./Ages";
 import { sailorRating } from "./Pool";
+import { levelRating } from "./Strength";
 import { mixSeed } from "./Seeds";
 
 /** The boats of a Regatta's fleet (the player's included) by level, fixed from the frame rate measured with 12 boats. */
 export const FLEET_SIZE: Readonly<Record<RegattaLevel, number>> = { club: 6, regional: 8, national: 10, international: 12 };
-
-/** The rating the generated sailors of a fleet cluster around, by level. */
-const TARGET_RATING: Readonly<Record<RegattaLevel, number>> = { club: 0.38, regional: 0.5, national: 0.62, international: 0.74 };
 
 /** How much a sailor's draw may stray from the level's rating, so that the fleets of two Seasons differ. */
 const JITTER = 0.1;
@@ -42,7 +41,7 @@ export function regattaFleet(state: CareerState, options: FleetOptions = {}): Fl
   const boats = FLEET_SIZE[regatta.level] - 1;
 
   // The rest of the pool, closest to the level's rating first (with a seeded jitter): Helms, then Crews.
-  const target = TARGET_RATING[regatta.level];
+  const target = levelRating(regatta.level, ageInSeason(state.startingAge, state.season));
   const ranked = state.pool
     .filter(s => !isRival(s) && s.id !== partner?.id)
     .map(s => ({ s, key: Math.abs(sailorRating(s) - target) + (rand() - 0.5) * JITTER }))

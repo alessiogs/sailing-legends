@@ -4,6 +4,7 @@
 import { describe, expect, it } from "vitest";
 import { ageInSeason } from "../src/career/Ages";
 import { generatePool, sailorRating } from "../src/career/Pool";
+import { rivalStartRating } from "../src/career/Strength";
 import { CREWS, EXTRA_HELM, RIVALS } from "../src/sailors/Sailors";
 
 const ATTRIBUTES = ["technique", "tactics", "speed", "discipline"] as const;
@@ -16,8 +17,14 @@ describe("sailor pool", () => {
     expect(generatePool(2025, 10).map(s => s.name)).not.toEqual(pool.map(s => s.name));
   });
 
-  it("starts with the three Rivals, unchanged but for their age", () => {
-    expect(pool.slice(0, 3).map(({ startingAge, ...profile }) => profile)).toEqual(RIVALS);
+  it("starts with the three Rivals in character but as talented kids of their age", () => {
+    pool.slice(0, 3).forEach((r, i) => {
+      const adult = RIVALS[i];
+      expect(r.id).toBe(adult.id);
+      expect(sailorRating(r)).toBeCloseTo(rivalStartRating(r.startingAge), 1);
+      // The same shape: each attribute moved by the same amount.
+      expect(r.tactics - r.speed).toBeCloseTo(adult.tactics - adult.speed, 1);
+    });
   });
 
   it("adds 27 generated sailors with Italian names that no roster sailor has, and unique ids", () => {
