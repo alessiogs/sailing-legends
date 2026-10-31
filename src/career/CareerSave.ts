@@ -40,7 +40,7 @@ export type CareerState = {
   seasonsTogether: Record<string, number>;
 };
 
-export const CAREER_VERSION = 1;
+export const CAREER_VERSION = 2;
 
 export type CareerLoad = { ok: true; state: CareerState } | { ok: false };
 
@@ -51,11 +51,33 @@ export function encodeCareer(state: CareerState): string {
 /** One step of a migration: a saved object of version N becomes one of version N + 1. It may throw on bad data. */
 export type CareerMigration = (saved: Record<string, unknown>) => Record<string, unknown>;
 
+/** Where each Regatta of the version 1 calendar (club, regional, national, international) sits in the version 2 one. */
+const V1_REGATTA_SLOT: readonly number[] = [0, 1, 5, 6];
+/** The Races of the version 1 regional Regatta that the first Zonale stage keeps. */
+const ZONALE_STAGE_RACES = 2;
+
 /**
- * Migrations by the version they start from. Empty while 0.5 is unreleased: a field added meanwhile bumps nothing.
- * After the release, a change to the shape raises `CAREER_VERSION` and adds the step from the old version here.
+ * Version 1 had four Regattas; version 2 has seven (the Zonale is four stages). A saved Regatta moves to the slot of its
+ * level, the Races already sailed move with it (the old regional keeps its first two Races, as stage 1), and the Zonale
+ * stages skipped over stay empty. A regional Regatta with two Races sailed is complete now, so the Career moves on.
  */
-export const CAREER_MIGRATIONS: Readonly<Record<number, CareerMigration>> = {};
+const migrateCalendar: CareerMigration = saved => {
+  const { regattaIndex, results } = saved;
+  if (!isInt(regattaIndex, 0) || regattaIndex >= V1_REGATTA_SLOT.length || !Array.isArray(results) || results.length !== regattaIndex + 1) {
+    throw new RangeError("Not a version 1 save");
+  }
+  const moved: unknown[][] = [];
+  results.forEach((races: unknown[], i) => { moved[V1_REGATTA_SLOT[i]] = i === 1 ? races.slice(0, ZONALE_STAGE_RACES) : races; });
+  let index = V1_REGATTA_SLOT[regattaIndex];
+  if (index === 1 && moved[1].length >= ZONALE_STAGE_RACES) { index = 2; moved[2] = []; }
+  return { ...saved, regattaIndex: index, results: Array.from({ length: index + 1 }, (_, i) => moved[i] ?? []) };
+};
+
+/**
+ * Migrations by the version they start from. A change to the shape raises `CAREER_VERSION` and adds the step from the
+ * old version here.
+ */
+export const CAREER_MIGRATIONS: Readonly<Record<number, CareerMigration>> = { 1: migrateCalendar };
 
 const STATUSES: readonly string[] = ["finished", "ocs", "dsq", "dnf"];
 
@@ -96,13 +118,13 @@ function isHistory(v: unknown, pool: PoolSailor[]): v is Record<string, number> 
   return isRecord(v) && Object.entries(v).every(([id, n]) => isInt(n, 1) && pool.some(s => s.id === id));
 }
 
-/** The Races of the Regattas begun so far: one list per Regatta up to `regattaIndex`, earlier ones complete. */
+/** The Races of the Regattas begun so far: one list per Regatta up to `regattaIndex`, earlier ones complete (or empty: skipped by a migration). */
 function isResults(v: unknown, classId: ClassId, regattaIndex: number): v is RaceEntry[][][] {
   const calendar = seasonCalendar(classId);
   if (regattaIndex >= calendar.length || !Array.isArray(v) || v.length !== regattaIndex + 1) return false;
   return v.every((races: unknown, i) =>
     Array.isArray(races)
-    && (i < regattaIndex ? races.length === calendar[i].races : races.length <= calendar[i].races)
+    && (i < regattaIndex ? races.length === calendar[i].races || races.length === 0 : races.length <= calendar[i].races)
     && races.every(race => Array.isArray(race) && race.length > 0 && race.every(isEntry)));
 }
 

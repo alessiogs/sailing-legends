@@ -1,6 +1,6 @@
 import { t } from "../i18n";
 import { ageInSeason, DEFAULT_STARTING_AGE, MAX_STARTING_AGE, MIN_STARTING_AGE } from "../career/Ages";
-import { seasonCalendar } from "../career/Calendar";
+import { seasonCalendar, venueName } from "../career/Calendar";
 import type { CareerState } from "../career/CareerSave";
 import { FLEET_SIZE } from "../career/Fleets";
 import { isSeasonOver } from "../career/RecordRace";
@@ -131,8 +131,8 @@ export class CareerScreen {
       return h("li", { class: current ? "current" : done ? "done" : "" },
         h("span", { class: "n" }, String(i + 1)),
         h("span", {},
-          h("b", {}, t("career.calendar.regatta", { number: i + 1, venue: r.venue })),
-          h("small", {}, `${t(`career.level.${r.level}`)} · ${t("career.calendar.detail", { boatClass: CLASSES[r.classId].name, boats: FLEET_SIZE[r.level], races: r.races })}`)),
+          h("b", {}, t("career.calendar.regatta", { number: i + 1, venue: venueName(r) })),
+          h("small", {}, `${r.stage ? t("career.calendar.stage", { stage: r.stage.number, stages: r.stage.of }) : t(`career.level.${r.level}`)} · ${t("career.calendar.detail", { boatClass: CLASSES[r.classId].name, boats: FLEET_SIZE[r.level], races: r.races })}`)),
         h("span", { class: "s" }, status));
     });
     return [

@@ -36,26 +36,26 @@ describe("Regatta standings", () => {
     expect(lastCompleteRegatta(state)).toBe(0);
     expect(report.regattaId).toBe("optimist-club");
     expect(report.regatta.map(s => s.id).slice(0, 2)).toEqual(["luca", PLAYER_ID]);
-    expect(report.regatta[0].points).toBe(3);
-    expect(report.regatta[1].points).toBe(6);
+    expect(report.regatta[0].points).toBe(2);
+    expect(report.regatta[1].points).toBe(4);
     expect(report.season[0].id).toBe("luca");
     expect(report.season[0].points).toBe(1);
     expect(report.regatta).toHaveLength(6);
   });
 
   it("leaves out the worst Race only in a Regatta whose calendar entry has the Discard", () => {
-    let state = startCareer({ seed: 3 });
-    state = sailRaces(state, 6, [PLAYER_ID]);
-    expect(regattaReport(state, 1)!.regatta.find(s => s.id === PLAYER_ID)!.discarded).toBeNull();
-    // Regatta 3 (index 2) has the Discard: the player wins two Races and is last in the third.
-    state = sailRaces(state, 2, [PLAYER_ID]);
+    // The club Regatta has the Discard: the player wins two Races and is last in the third.
+    let state = sailRaces(startCareer({ seed: 3 }), 2, [PLAYER_ID]);
     const fleet = nextRaceSetup(state)!.fleet.opponents.map(o => o.helm.id);
     const worst: RaceEntry[] = [...fleet.map((id, i) => ({ id, status: "finished" as const, place: i + 1 })),
       { id: PLAYER_ID, status: "finished", place: fleet.length + 1 }];
     state = recordRace(state, worst);
-    const me = regattaReport(state, 2)!.regatta.find(s => s.id === PLAYER_ID)!;
+    const me = regattaReport(state, 0)!.regatta.find(s => s.id === PLAYER_ID)!;
     expect(me.discarded).toBe(2);
     expect(me.points).toBe(2);
+    // A Zonale stage (two Races) has none.
+    state = sailRaces(state, 2, [PLAYER_ID]);
+    expect(regattaReport(state, 1)!.regatta.find(s => s.id === PLAYER_ID)!.discarded).toBeNull();
   });
 });
 
@@ -63,7 +63,7 @@ describe("Rival comparison", () => {
   it("gives the point gap and who is ahead", () => {
     const state = sailRaces(startCareer({ seed: 3 }), 3, ["luca", PLAYER_ID]);
     const luca = regattaReport(state, 0)!.regattaRivals.find(r => r.rivalId === "luca")!;
-    expect(luca).toEqual({ rivalId: "luca", rivalPlace: 1, playerPlace: 2, rivalAhead: true, gap: 3 });
+    expect(luca).toEqual({ rivalId: "luca", rivalPlace: 1, playerPlace: 2, rivalAhead: true, gap: 2 });
     const giulia = regattaReport(state, 0)!.regattaRivals.find(r => r.rivalId === "giulia")!;
     expect(giulia.rivalAhead).toBe(false);
   });
@@ -81,17 +81,17 @@ describe("Rival comparison", () => {
 });
 
 describe("Season summary", () => {
-  it("is there only after the fourth Regatta", () => {
-    const state = sailRaces(startCareer({ seed: 3 }), 9, [PLAYER_ID]);
+  it("is there only after the last Regatta", () => {
+    const state = sailRaces(startCareer({ seed: 3 }), 14, [PLAYER_ID]);
     expect(seasonSummary(state)).toBeNull();
   });
 
   it("ranks the Season by the sum of Regatta places", () => {
-    const state = sailRaces(startCareer({ seed: 3 }), 12, [PLAYER_ID]);
+    const state = sailRaces(startCareer({ seed: 3 }), 17, [PLAYER_ID]);
     const summary = seasonSummary(state)!;
     expect(summary.standings[0].id).toBe(PLAYER_ID);
-    expect(summary.player).toMatchObject({ place: 1, points: 4, regattaPlaces: [1, 1, 1, 1] });
+    expect(summary.player).toMatchObject({ place: 1, points: 7, regattaPlaces: [1, 1, 1, 1, 1, 1, 1] });
     expect(summary.rivals.every(r => !r.rivalAhead)).toBe(true);
-    expect(lastCompleteRegatta(state)).toBe(3);
+    expect(lastCompleteRegatta(state)).toBe(6);
   });
 });
