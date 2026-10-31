@@ -56,6 +56,7 @@ src/
              Pool.ts (the sailor pool: the Rivals plus 27 generated sailors with Italian names, drawn once from the
              Career seed and stored in the save; `sailorRating`)
              Fleets.ts (`regattaFleet`: a Regatta's fleet from the pool by level, 6 to 12 boats, Rivals always in)
+             Strength.ts (`levelRating`: each level's strength by age, kids weaker, adult at 16; `rivalStartRating`)
              RecordRace.ts (`raceEntries`: a race's outcome as Career entries, racer ids mapped to sailor ids;
              `recordRace`: adds a Race and moves to the next Regatta; `isSeasonOver`)
              Weather.ts (the wind and seed of each Race of a Regatta), Seeds.ts (`mixSeed`)
