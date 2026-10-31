@@ -1,6 +1,6 @@
 /** The Career's standings sheets: the Regatta and Season rankings with the Rival lines, and the Season summary. */
 import { t } from "../i18n";
-import { seasonCalendar } from "../career/Calendar";
+import { seasonCalendar, venueName } from "../career/Calendar";
 import type { CareerState } from "../career/CareerSave";
 import { PLAYER_ID } from "../career/RecordRace";
 import type { RegattaStanding, SeasonStanding } from "../career/Scoring";
@@ -44,7 +44,7 @@ export function standingsSheet(state: CareerState, report: RegattaReport): (HTML
   const name = namer(state);
   const regatta = seasonCalendar(state.classId)[report.regattaIndex];
   return [
-    h("div", { class: "brand" }, t("career.standings.title", { number: report.regattaIndex + 1, venue: regatta.venue })),
+    h("div", { class: "brand" }, t("career.standings.title", { number: report.regattaIndex + 1, venue: venueName(regatta) })),
     h("h3", {}, t("career.standings.regatta")),
     table(report.regatta.map(s => ({ id: s.id, place: s.place, detail: raceScores(s), points: s.points })), name, "career-regatta-table"),
     rivalLines(report.regattaRivals, name, "career-regatta-rivals"),

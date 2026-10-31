@@ -31,7 +31,7 @@ describe("a Career Regatta of AI-only Races", () => {
       expect(decodeCareer(encodeCareer(state))).toEqual({ ok: true, state });
     }
     expect(state.regattaIndex).toBe(1);
-    expect(nextRaceSetup(state)!.regattaId).toBe("optimist-regional");
+    expect(nextRaceSetup(state)!.regattaId).toBe("optimist-regional-1");
 
     const standing = scoreRegatta(state.results[0], false);
     expect(standing).toHaveLength(FLEET_SIZE.club);
