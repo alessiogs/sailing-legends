@@ -156,7 +156,7 @@ export class RacingAI {
       this.debug = steer.debug;
     } else {
       const leg = c.legs[r.leg];
-      let target = aimPoint(leg, s.x, s.z, 2.5 * this.k);
+      let target = aimPoint(leg, s.x, s.z, 6 * this.k);
       if (leg.kind === "mark")
         target = this.orbitPoint(
           leg.mark,

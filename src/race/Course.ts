@@ -78,7 +78,7 @@ export function legTarget(leg: Leg): Point {
 }
 
 /**
- * Where a boat at (x, z) should aim on a leg: the mark, or on a finish line the nearest point of it, kept `inset`
+ * Where a boat at (x, z) should aim on a leg: the mark, or on a finish line the nearest point of it, kept at least `inset` (and 22% of the line)
  * away from both ends so the boat finishes where it arrives without touching the committee boat or the pin.
  */
 export function aimPoint(leg: Leg, x: number, z: number, inset = 0): Point {
@@ -88,7 +88,7 @@ export function aimPoint(leg: Leg, x: number, z: number, inset = 0): Point {
     dz = b.z - a.z;
   const len = Math.hypot(dx, dz);
   if (len < 1e-9) return a;
-  const lo = Math.min(inset, len / 2);
+  const lo = Math.min(Math.max(inset, 0.22 * len), len / 2);
   const t = Math.max(
     lo,
     Math.min(len - lo, ((x - a.x) * dx + (z - a.z) * dz) / len),
