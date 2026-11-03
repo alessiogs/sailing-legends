@@ -13,6 +13,7 @@ import { legTarget } from "../race/Course";
 import { HELM, type PlayerChoice } from "../race/PlayerChoice";
 import type { Racer } from "../race/Race";
 import { makeFleet } from "../race/Fleet";
+import type { Build } from "../sailors/BodyWeight";
 import { FIXED_DT, RaceSession } from "../race/RaceSession";
 import { CLASSES, isTwoPerson, type BoatClass } from "../sailing/BoatClass";
 import { RIVALS, type SailorProfile } from "../sailors/Sailors";
@@ -210,9 +211,9 @@ export class GameController {
     this.setMode("career");
   }
 
-  /** Starts a new Career at `startingAge`, saves it and shows its calendar. */
-  newCareer(startingAge: number) {
-    this.career = startCareer({ seed: Math.floor(Math.random() * 2 ** 31), startingAge });
+  /** Starts a new Career at `startingAge` with the player's `build`, saves it and shows its calendar. */
+  newCareer(startingAge: number, build: Build) {
+    this.career = startCareer({ seed: Math.floor(Math.random() * 2 ** 31), startingAge, build });
     saveCareer(this.careerStorage, this.career);
     this.showCalendar();
   }

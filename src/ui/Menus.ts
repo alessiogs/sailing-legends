@@ -34,7 +34,7 @@ export class Menus implements Screens {
   };
   private game!: GameController;
   private readonly career = new CareerScreen({
-    start: age => this.game.newCareer(age),
+    start: (age, build) => this.game.newCareer(age, build),
     startRace: () => this.game.startCareerRace(),
     showCalendar: () => this.game.showCalendar(),
     showStandings: index => this.game.showStandings(index),

@@ -4,7 +4,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { ageInSeason } from "../src/career/Ages";
-import { startCareer } from "../src/career/Career";
+import { nextRaceSetup, startCareer } from "../src/career/Career";
 import { CAREER_VERSION, decodeCareer, encodeCareer } from "../src/career/CareerSave";
 import { generatePool } from "../src/career/Pool";
 
@@ -13,11 +13,18 @@ describe("start a Career", () => {
     const state = startCareer({ seed: 77, startingAge: 12 });
     expect(state).toEqual({
       version: CAREER_VERSION, seed: 77, startingAge: 12, season: 1,
-      classId: "optimist", regattaIndex: 0, results: [[]], pool: generatePool(77, 12),
+      classId: "optimist", build: "average", regattaIndex: 0, results: [[]], pool: generatePool(77, 12),
       partnerId: null, choice: { role: "helm", control: "playerCareer" }, chemistry: null, seasonsTogether: {},
     });
     expect(state.pool.length).toBe(30);
     expect(ageInSeason(state.startingAge, state.season)).toBe(12);
+  });
+  it("keeps the chosen Build and weighs the player's boat by it", () => {
+    const kg = (build: "light" | "average" | "heavy") => nextRaceSetup(startCareer({ seed: 1, startingAge: 11, build }))!.fleet.player!.kg!.helmKg;
+    expect(startCareer({ seed: 1, build: "heavy" }).build).toBe("heavy");
+    expect(kg("average")).toBe(42);
+    expect(kg("light")).toBeCloseTo(35.7, 5);
+    expect(kg("heavy")).toBeCloseTo(48.3, 5);
   });
   it("starts at age 10 when no age is chosen", () => {
     expect(startCareer({ seed: 1 }).startingAge).toBe(10);

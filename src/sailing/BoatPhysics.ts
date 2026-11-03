@@ -1,5 +1,5 @@
-import { clamp, DEG, wrapPi } from "../core/math";
-import type { BoatClass, SailSpec } from "./BoatClass";
+import { clamp, DEG, KNOTS, wrapPi } from "../core/math";
+import { referenceWeights, type BoatClass, type SailSpec, type SailorWeights } from "./BoatClass";
 import type { WindField } from "./Wind";
 
 /**
@@ -224,8 +224,8 @@ export function optimalSheetFor(spec: SailSpec, awa: number, aws: number, cap: n
 }
 
 /** Kept for code that only cares about the mainsail (Optimist, AI, HUD). */
-export function optimalSheet(cls: BoatClass, awa: number, aws: number): number {
-  return optimalSheetFor(cls.main, awa, aws, mainCap(cls));
+export function optimalSheet(cls: BoatClass, awa: number, aws: number, rightingScale = 1): number {
+  return optimalSheetFor(cls.main, awa, aws, mainCap(cls) * rightingScale);
 }
 
 function mainCap(cls: BoatClass) {
@@ -235,17 +235,19 @@ function mainCap(cls: BoatClass) {
 }
 
 /** Crew righting force for a weight position 0 (in) .. 0.5 (hiking) .. 1 (trapeze). */
-export function crewForce(cls: BoatClass, out: number): number {
+export function crewForce(cls: BoatClass, out: number, scale = 1): number {
   const c = cls.crewRighting;
   if (!c) return 0;
   const o = clamp(out, 0, 1);
-  return o <= 0.5 ? c.inForce + (c.hikeForce - c.inForce) * (o / 0.5) : c.hikeForce + (c.trapezeForce - c.hikeForce) * ((o - 0.5) / 0.5);
+  const f = o <= 0.5 ? c.inForce + (c.hikeForce - c.inForce) * (o / 0.5) : c.hikeForce + (c.trapezeForce - c.hikeForce) * ((o - 0.5) / 0.5);
+  return f * scale;
 }
 
 /** Inverse of crewForce: the weight position that gives `force` (clamped). */
-export function crewOutFor(cls: BoatClass, force: number): number {
+export function crewOutFor(cls: BoatClass, forceIn: number, scale = 1): number {
   const c = cls.crewRighting;
   if (!c) return 0;
+  const force = forceIn / scale;
   if (force <= c.inForce) return 0;
   if (force <= c.hikeForce) return 0.5 * (force - c.inForce) / (c.hikeForce - c.inForce);
   return Math.min(1, 0.5 + 0.5 * (force - c.hikeForce) / (c.trapezeForce - c.hikeForce));
@@ -261,7 +263,22 @@ export class BoatSim {
   state: BoatState;
   telemetry: Telemetry;
   private started = false;
-  constructor(public cls: BoatClass, state: BoatState) {
+  /** Righting force (N) of the Helm hiking fully, and the Crew's force factor: both scale with body weight. */
+  private readonly helmHike: number;
+  private readonly crewScale: number;
+  /** How much more (or less) total righting the sailors give than the reference, for the sheet limit. */
+  private readonly rightingScale: number;
+  /** Boat plus sailors, kg. */
+  private readonly mass: number;
+  /** Hull resistance factor: wetted area grows with displacement, so a heavier boat is slower in light air. */
+  private readonly dragScale: number;
+  constructor(public cls: BoatClass, state: BoatState, public weights: SailorWeights = referenceWeights(cls)) {
+    const ref = referenceWeights(cls);
+    this.helmHike = cls.hikeForce * weights.helmKg / ref.helmKg;
+    this.rightingScale = (weights.helmKg + weights.crewKg) / (ref.helmKg + ref.crewKg);
+    this.crewScale = ref.crewKg > 0 ? weights.crewKg / ref.crewKg : 1;
+    this.mass = cls.mass + weights.helmKg + weights.crewKg - ref.helmKg - ref.crewKg;
+    this.dragScale = Math.pow(this.mass / cls.mass, 0.5);
     this.state = state;
     this.telemetry = {
       speed: 0, sog: 0, leewayDeg: 0, tws: 0, twa: 0, aws: 0, awa: 0, boomAngle: 0, aoa: 0,
@@ -332,12 +349,16 @@ export class BoatSim {
     drive += windage * -Math.cos(awa);
     side += windage * -Math.sin(awa);
 
+    // Weight is power in a breeze: heavier sailors hold the boat flatter and carry more sail, lighter ones less (fades out below ~9 kn).
+    const breeze = clamp((w.speed * KNOTS - 9) / 4, 0, 1);
+    drive *= 1 + 0.5 * (this.rightingScale - 1) * breeze;
+
     // Righting: Crew weight (if any) plus the Helm hiking as much as needed.
     const rawSide = side;
     const need = Math.abs(side);
     const crewOnWindward = s.crewSide === -leeward;
-    const crewF = cls.crewRighting ? crewForce(cls, s.crewOut) * (crewOnWindward ? 1 : -1) : 0;
-    const helmF = clamp(need - crewF, 0, cls.hikeForce);
+    const crewF = cls.crewRighting ? crewForce(cls, s.crewOut, this.crewScale) * (crewOnWindward ? 1 : -1) : 0;
+    const helmF = clamp(need - crewF, 0, this.helmHike);
     const balance = need - crewF - helmF; // > 0 overpowered, < 0 too much weight to windward
     let overpowered = false;
     if (balance > 0 && need > 0) {
@@ -354,10 +375,10 @@ export class BoatSim {
     // Hull resistance (forward) and rudder drag.
     const au = Math.abs(u);
     const wave = Math.max(0, au - cls.hullSpeed);
-    const resist = Math.sign(u) * (cls.hullDrag * u * u + cls.waveDrag * wave * wave + 6 * au) + 8 * u * u * s.rudder * s.rudder * Math.sign(u);
-    u += ((drive - resist) / cls.mass) * dt;
+    const resist = Math.sign(u) * (this.dragScale * (cls.hullDrag * u * u + 6 * au) + cls.waveDrag * wave * wave) + 8 * u * u * s.rudder * s.rudder * Math.sign(u);
+    u += ((drive - resist) / this.mass) * dt;
     // Side force pushes the boat sideways; the hull itself damps lateral motion a little.
-    v += ((side - 30 * v * Math.abs(v) - 8 * v) / cls.mass) * dt;
+    v += ((side - 30 * v * Math.abs(v) - 8 * v) / this.mass) * dt;
 
     // Centreboard: while moving forward it acts as a foil and rotates the velocity back toward
     // the heading (grip grows with speed). Turning the velocity vector costs a bit of speed, so hard
@@ -405,13 +426,13 @@ export class BoatSim {
     } else {
       t.heelDeg = clamp(Math.abs(rawSide) * cls.heelPerN * 0.55, 0, 32) * -Math.sign(awa || 1);
     }
-    t.optimalSheet = optimalSheet(cls, awa, aws);
+    t.optimalSheet = optimalSheet(cls, awa, aws, this.rightingScale);
     const irons = Math.abs(twa) < 36 * DEG && u < 1.2;
     t.trimState = irons ? "irons" : trimStateFor(s.sheet, t.optimalSheet, awa);
 
     if (cls.jib && jib) {
       const total = cls.main.area + cls.jib.area;
-      const cap = (cls.hikeForce + (cls.crewRighting?.trapezeForce ?? 0)) * (cls.jib.area / total);
+      const cap = (cls.hikeForce + (cls.crewRighting?.trapezeForce ?? 0)) * this.rightingScale * (cls.jib.area / total);
       const opt = optimalSheetFor(cls.jib, awa, aws, cap);
       const backed = s.jibSide !== leeward && Math.abs(awa) < 150 * DEG;
       t.jib = { angle: jib.angle, aoa: jib.aoa, optimal: opt, backed, trimState: irons ? "irons" : trimStateFor(s.jibSheet, opt, awa) };
@@ -427,7 +448,7 @@ export class BoatSim {
     }
     if (cls.crewRighting) {
       // Ideal: the Helm hikes at ~80%, the Crew provides the rest.
-      t.crew = { ideal: crewOutFor(cls, need - cls.hikeForce * 0.8), onWindward: crewOnWindward, balance };
+      t.crew = { ideal: crewOutFor(cls, need - this.helmHike * 0.8, this.crewScale), onWindward: crewOnWindward, balance };
     }
   }
 }
