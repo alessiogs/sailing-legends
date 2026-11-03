@@ -30,7 +30,8 @@ export type TackSteer = {
 /**
  * The Racing AI's tacking: turning through the wind is a committed tack (without commitment the AI
  * dithers into irons). Too slow to tack, it bears away round (a gybe). It waits before tacking near
- * another boat (rule 13), but at most 6 s. Stuck head to wind, it bears away to recover.
+ * another boat (rule 13), but at most 6 s. Stuck head to wind, it bears away to recover, trimming again once the
+ * bow is off the wind.
  */
 export class TackStateMachine {
   mode: TackMode = "sail";
@@ -84,7 +85,8 @@ export class TackStateMachine {
       this.mode = "recover";
     if (this.mode === "recover") {
       desired = wrapPi(fromDir - (Math.sign(twaNow) || 1) * 75 * DEG);
-      easeSheet = true;
+      // Head to wind the sail only flogs: ease it right out. Once the bow is off the wind, trim and build speed.
+      easeSheet = Math.abs(twaNow) < 30 * DEG;
       this.beat.leaveBeat();
       if (Math.abs(twaNow) > 60 * DEG) this.mode = "sail";
     }
