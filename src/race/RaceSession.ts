@@ -1,7 +1,7 @@
 import { dirX, dirZ } from "../core/math";
 import { CrewAI } from "../ai/CrewAI";
 import { RacingAI } from "../ai/RacingAI";
-import { isTwoPerson, type BoatClass } from "../sailing/BoatClass";
+import { isTwoPerson, type BoatClass, type SailorWeights } from "../sailing/BoatClass";
 import { BoatSim, createBoat, type Controls } from "../sailing/BoatPhysics";
 import { WindField } from "../sailing/Wind";
 import { courseObstacles, hullRadius, hullSegment, overlapObstacle, pushOut, separateHulls } from "./Collisions";
@@ -57,7 +57,7 @@ export class RaceSession {
     // Every AI is seeded from the session's seed and its place in the fleet, so a seed always sails the same race.
     const p = fleet.player;
     if (p) {
-      this.player = this.race.add(p.id, { helm: sailor(p.helm), crew: p.crew && sailor(p.crew) }, boatAt(cls, course, p.start), true);
+      this.player = this.race.add(p.id, { helm: sailor(p.helm), crew: p.crew && sailor(p.crew) }, boatAt(cls, course, p.start, p.kg), true);
       if (p.helm !== "player") {
         this.partnerHelm = new RacingAI(this.player, p.helm, this.race, seed * 17, startSlot(fleet.opponents.length, boats));
       } else if (p.crew && p.crew !== "player") {
@@ -66,7 +66,7 @@ export class RaceSession {
       }
     }
     fleet.opponents.forEach((b, i) => {
-      const racer = this.race.add(b.id, { helm: sailor(b.helm), crew: b.crew && sailor(b.crew) }, boatAt(cls, course, b.start));
+      const racer = this.race.add(b.id, { helm: sailor(b.helm), crew: b.crew && sailor(b.crew) }, boatAt(cls, course, b.start, b.kg));
       const ai = new RacingAI(racer, b.helm, this.race, seed * 31 + i * 7, startSlot(i, boats));
       ai.placeAtStart();
       this.ais.push(ai);
@@ -148,8 +148,8 @@ export class RaceSession {
 }
 
 /** A boat of the class placed at its starting spot on the course. */
-function boatAt(cls: BoatClass, course: Course, start: StartSpot): BoatSim {
+function boatAt(cls: BoatClass, course: Course, start: StartSpot, kg?: SailorWeights): BoatSim {
   const d = start.downwind;
   const p = { x: -dirX(course.windDir) * d, z: -dirZ(course.windDir) * d };
-  return new BoatSim(cls, createBoat(p.x + start.across, p.z, course.windDir + start.heading));
+  return new BoatSim(cls, createBoat(p.x + start.across, p.z, course.windDir + start.heading), kg);
 }

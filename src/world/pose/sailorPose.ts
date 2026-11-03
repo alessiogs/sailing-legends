@@ -17,6 +17,8 @@ export type PoseInput = {
   /** The side the sailor is on (the windward side): `BoatState.crewSide`. */
   crewSide: number;
   crewOut: number;
+  /** The Helm's weight (`BoatState.helmOut`): 0 sitting in .. 1 fully out, below 0 to leeward (420). Unset: from the side force. */
+  helmOut?: number;
   boomSide: number;
   spiHoist: number;
   heelDeg: number;
@@ -86,6 +88,15 @@ type Spot = { pelvis: V3; lean: number; seated: boolean; foot: V3; forward: numb
 function spotOf(i: PoseInput, h: number, hoist: number): Spot {
   const H = i.height;
   const half = PELVIS_HALF * H;
+  if (i.classId === "optimist" && i.helmOut !== undefined) {
+    // Never crouched in the middle: the innermost place is the windward side deck, leaning in; out is over the gunwale.
+    const hh = clamp(i.helmOut, 0, 1);
+    const g = sectionAt("optimist", -0.55);
+    const x = lerp(g.wg - 0.24, g.wg - 0.04, smooth(hh));
+    const y = lerp(g.yg + 0.9 * half, g.yg + 0.6 * half, hh);
+    const foot = mix({ x: 0.1, y: 0.02, z: -0.55 + 0.5 }, { x: 0.1, y: 0.02, z: -0.55 + 0.3 }, hh);
+    return { pelvis: { x, y, z: -0.55 }, lean: 0.2 + hh * 0.6, seated: false, foot, forward: 0 };
+  }
   if (i.classId === "optimist") {
     // Light air: in the middle, on the floor. As the side force builds: to the side, then on the gunwale, feet under the strap.
     const z = -0.55;
@@ -100,6 +111,15 @@ function spotOf(i: PoseInput, h: number, hoist: number): Spot {
   if (i.role === "helm") {
     const z = -1.25;
     const g = sectionAt("420", z);
+    if (i.helmOut !== undefined && i.helmOut < 0) {
+      // To leeward, sitting upright across the boat (broad reach and run).
+      const t = smooth(-i.helmOut / 0.4);
+      return {
+        pelvis: { x: lerp(g.wg - 0.12, -0.3, t), y: g.yg + 0.01 + 0.8 * half, z }, lean: lerp(0.15, 0.02, t), seated: t > 0.5,
+        foot: { x: lerp(0.3, -0.1, t), y: 0.0, z: z + 0.5 }, forward: 0,
+      };
+    }
+    if (i.helmOut !== undefined) h = clamp(i.helmOut, 0, 1);
     // On the side deck, over the edge when hiking.
     return {
       pelvis: { x: g.wg - 0.12 + 0.1 * h, y: g.yg + 0.01 + 0.8 * half, z }, lean: 0.15 + h * 0.7, seated: false,

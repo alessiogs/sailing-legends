@@ -24,8 +24,13 @@ export type BoatClass = {
   name: string;
   /** The oldest age at which a sailor may race this class (the Age limit); absent when there is none. */
   ageLimit?: number;
-  /** Boat + sailors mass incl. added mass of water, kg. */
+  /** Boat + sailors mass incl. added mass of water, kg, with the sailors at their reference weight (`sailorKg`). */
   mass: number;
+  /**
+   * The reference body weights (kg) of the Helm and the Crew that `mass`, `hikeForce` and `crewRighting` are tuned for:
+   * a sailor of this weight makes the class's polar. Heavier sailors add mass and righting force, lighter ones less.
+   */
+  sailorKg: { helm: number; crew: number };
   length: number; // m (LOA)
   beam: number; // m
   /** Mainsail (every class has one). */
@@ -46,6 +51,12 @@ export type BoatClass = {
   turnLength: number;
   /** Max sideways sail force the Helm can hold by hiking (N). Above this the boat heels and spills power. */
   hikeForce: number;
+  /**
+   * Where the Helm's weight goes by `helmOut` (0 sitting in .. 1 fully out): sitting in still puts `inFrac` of `hikeForce` to
+   * windward, the least a Helm of this class ever does when `windwardOnly` (the Optimist Helm sits on the side deck, leaning in);
+   * otherwise `leewardMin` < 0 is how far below "in" the Helm may go, sitting to leeward.
+   */
+  helmRighting: { inFrac: number; windwardOnly: boolean; leewardMin: number };
   /** Two-person classes: righting force from the Crew sitting in, hiking, and on the trapeze (N). */
   crewRighting?: { inForce: number; hikeForce: number; trapezeForce: number };
   /** Visual heel angle per Newton of unbalanced side force (deg/N). */
@@ -57,6 +68,7 @@ export const OPTIMIST: BoatClass = {
   name: "Optimist",
   ageLimit: 15,
   mass: 88,
+  sailorKg: { helm: 42, crew: 0 },
   length: 2.31,
   beam: 1.13,
   main: { area: 3.3, minSheetDeg: 12, maxSheetDeg: 88, clMax: 1.45, stallDeg: 21, cd0: 0.09 },
@@ -68,6 +80,7 @@ export const OPTIMIST: BoatClass = {
   rudderMaxDeg: 34,
   turnLength: 1.25,
   hikeForce: 120,
+  helmRighting: { inFrac: 0.15, windwardOnly: true, leewardMin: 0 },
   heelPerN: 0.11,
 };
 
@@ -76,6 +89,7 @@ export const I420: BoatClass = {
   id: "420",
   name: "420",
   mass: 245,
+  sailorKg: { helm: 60, crew: 60 },
   length: 4.2,
   beam: 1.63,
   main: { area: 7.45, minSheetDeg: 5, maxSheetDeg: 85, clMax: 1.55, stallDeg: 20, cd0: 0.07 },
@@ -89,9 +103,18 @@ export const I420: BoatClass = {
   rudderMaxDeg: 32,
   turnLength: 2.2,
   hikeForce: 190,
+  helmRighting: { inFrac: 0.15, windwardOnly: false, leewardMin: -0.4 },
   crewRighting: { inForce: 40, hikeForce: 220, trapezeForce: 420 },
   heelPerN: 0.06,
 };
+
+/** The body weights (kg) of the sailors aboard one boat; `crewKg` is 0 in a single-handed class. */
+export type SailorWeights = { helmKg: number; crewKg: number };
+
+/** The weights a class is tuned for: an average Helm (and Crew). */
+export function referenceWeights(cls: BoatClass): SailorWeights {
+  return { helmKg: cls.sailorKg.helm, crewKg: cls.sailorKg.crew };
+}
 
 /** True for classes sailed by a Pair (a Helm and a Crew), false for single-handers. */
 export function isTwoPerson(cls: BoatClass): boolean {

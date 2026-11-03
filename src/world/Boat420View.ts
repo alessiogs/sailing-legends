@@ -233,7 +233,7 @@ export class Boat420View extends BoatViewBase {
   protected placeSailors(dt: number, s: BoatState, tel: Telemetry) {
     // Both sailors are on the crew's side (the windward side once the crew has moved across).
     const common: Omit<PoseInput, "role" | "height"> = {
-      classId: "420", crewSide: s.crewSide, crewOut: s.crewOut, boomSide: s.boomSide, spiHoist: s.spiHoist,
+      classId: "420", crewSide: s.crewSide, crewOut: s.crewOut, helmOut: s.helmOut, boomSide: s.boomSide, spiHoist: s.spiHoist,
       heelDeg: tel.heelDeg, sideForce: tel.sideForce, tiller: -s.rudder,
     };
     const helm = this.helmPose = sailorPose({ ...common, role: "helm", height: this.helm.height }, this.helmPose, dt);

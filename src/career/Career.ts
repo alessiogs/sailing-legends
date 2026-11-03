@@ -11,19 +11,20 @@ import { generatePool } from "./Pool";
 import { raceSeed, raceWindKn } from "./Weather";
 import type { Fleet } from "../race/Fleet";
 import { HELM } from "../race/PlayerChoice";
+import type { Build } from "../sailors/BodyWeight";
 
 /**
  * Starts a Career: Season 1 in the Optimist at `startingAge` (8..12, 10 by default), at the first Regatta with
  * nothing sailed. `seed` seeds everything generated for this Career. Throws a RangeError for an age outside 8..12 or
- * a seed that is not a whole number from 0; the menu only offers valid ones.
+ * a seed that is not a whole number from 0; the menu only offers valid ones. The player's `build` is average unless given.
  */
-export function startCareer({ seed, startingAge = DEFAULT_STARTING_AGE }: { seed: number; startingAge?: number }): CareerState {
+export function startCareer({ seed, startingAge = DEFAULT_STARTING_AGE, build = "average" }: { seed: number; startingAge?: number; build?: Build }): CareerState {
   if (!Number.isInteger(seed) || seed < 0) throw new RangeError(`Career seed must be a whole number from 0, got ${seed}`);
   if (!Number.isInteger(startingAge) || startingAge < MIN_STARTING_AGE || startingAge > MAX_STARTING_AGE) {
     throw new RangeError(`Career starting age must be ${MIN_STARTING_AGE}..${MAX_STARTING_AGE}, got ${startingAge}`);
   }
   return {
-    version: CAREER_VERSION, seed, startingAge, season: 1, classId: "optimist", regattaIndex: 0, results: [[]],
+    version: CAREER_VERSION, seed, startingAge, season: 1, classId: "optimist", build, regattaIndex: 0, results: [[]],
     pool: generatePool(seed, startingAge),
     partnerId: null, choice: HELM, chemistry: null, seasonsTogether: {},
   };

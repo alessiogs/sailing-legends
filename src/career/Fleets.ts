@@ -4,13 +4,14 @@
  * Races of a Regatta share a fleet, and the same Career always gets the same one.
  */
 import { rng } from "../core/math";
-import { makeFleet, type Fleet, type OpponentSeats } from "../race/Fleet";
+import { makeFleet, type Aboard, type Fleet, type OpponentSeats } from "../race/Fleet";
 import { HELM, type PlayerChoice } from "../race/PlayerChoice";
 import { CLASSES, isTwoPerson } from "../sailing/BoatClass";
+import { BUILD_FACTOR, bodyWeightKg, buildFactorOf } from "../sailors/BodyWeight";
 import { RIVALS, type SailorProfile } from "../sailors/Sailors";
 import { seasonCalendar, type RegattaLevel } from "./Calendar";
 import type { CareerState } from "./CareerSave";
-import { ageInSeason } from "./Ages";
+import { ageInSeason, DEFAULT_STARTING_AGE as DEFAULT_AGE } from "./Ages";
 import { sailorRating } from "./Pool";
 import { levelRating } from "./Strength";
 import { mixSeed } from "./Seeds";
@@ -58,7 +59,19 @@ export function regattaFleet(state: CareerState, options: FleetOptions = {}): Fl
     const j = Math.floor(rand() * (i + 1));
     [seats[i], seats[j]] = [seats[j], seats[i]];
   }
-  return makeFleet({
+  const fleet = makeFleet({
     boatClass: cls, choice: options.choice ?? HELM, ...(partner ? { partner } : {}), opponents: seats,
   });
+  return withWeights(fleet, state);
+}
+
+/** `fleet` with every boat's body weights from the sailors' ages (in the pool) and Builds (the player's own, an AI's from its id). */
+function withWeights(fleet: Fleet, state: CareerState): Fleet {
+  const kgOf = (a: Aboard): number => {
+    if (a === "player") return bodyWeightKg(ageInSeason(state.startingAge, state.season), BUILD_FACTOR[state.build]);
+    const pooled = state.pool.find(s => s.id === a.id);
+    return bodyWeightKg(pooled ? ageInSeason(pooled.startingAge, state.season) : DEFAULT_AGE, buildFactorOf(a.id));
+  };
+  const weigh = <B extends { helm: Aboard; crew: Aboard | null }>(b: B): B => ({ ...b, kg: { helmKg: kgOf(b.helm), crewKg: b.crew ? kgOf(b.crew) : 0 } });
+  return { ...fleet, player: fleet.player && weigh(fleet.player), opponents: fleet.opponents.map(weigh) };
 }

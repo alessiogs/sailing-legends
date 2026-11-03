@@ -1,4 +1,5 @@
 import { t } from "../i18n";
+import { BUILDS, type Build } from "../sailors/BodyWeight";
 import { ageInSeason, DEFAULT_STARTING_AGE, MAX_STARTING_AGE, MIN_STARTING_AGE } from "../career/Ages";
 import { seasonCalendar, venueName } from "../career/Calendar";
 import type { CareerState } from "../career/CareerSave";
@@ -23,7 +24,7 @@ export type CareerView =
 /** What the Career overlay's buttons do; the game implements them. */
 export interface CareerActions {
   /** Starts a new Career at this starting age. */
-  start(age: number): void;
+  start(age: number, build: Build): void;
   /** Starts the next Race of the Season. */
   startRace(): void;
   /** Shows the calendar of the Career in progress. */
@@ -79,14 +80,22 @@ export class CareerScreen {
       b.addEventListener("click", () => { age = a; for (const o of buttons) o.classList.toggle("on", o === b); });
       return b;
     });
+    let build: Build = "average";
+    const builds = BUILDS.map(b => {
+      const el = h("button", { "data-v": b, class: b === build ? "on" : "" }, t(`career.build.${b}`));
+      el.addEventListener("click", () => { build = b; for (const o of builds) o.classList.toggle("on", o === el); });
+      return el;
+    });
     return [
       h("div", { class: "brand" }, t("career.age.title")),
       h("p", { class: "lede" }, t("career.age.help")),
       h("div", { class: "seg", id: "career-age" }, ...buttons),
+      h("p", { class: "lede" }, t("career.build.help")),
+      h("div", { class: "seg", id: "career-build" }, ...builds),
       ...(replaces ? [h("p", { class: "muted" }, t("career.age.replaces"))] : []),
       h("div", { class: "row-btns" },
         this.button("ghost", t("career.back"), () => this.actions.mainMenu(), "career-back"),
-        this.button("primary", t("career.age.start"), () => this.actions.start(age), "career-begin")),
+        this.button("primary", t("career.age.start"), () => this.actions.start(age, build), "career-begin")),
     ];
   }
 

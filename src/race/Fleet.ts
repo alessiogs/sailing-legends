@@ -1,5 +1,5 @@
 import { DEG } from "../core/math";
-import { isTwoPerson, OPTIMIST, type BoatClass } from "../sailing/BoatClass";
+import { isTwoPerson, OPTIMIST, type BoatClass, type SailorWeights } from "../sailing/BoatClass";
 import { opponentCrew, opponentHelms, RIVALS, type SailorProfile } from "../sailors/Sailors";
 import { HELM, type PlayerChoice } from "./PlayerChoice";
 
@@ -26,6 +26,8 @@ type FleetBoat<Seat> = {
   /** `null` in a single-handed class. */
   crew: Seat | null;
   start: StartSpot;
+  /** The sailors' body weights; unset means the class's reference weights (an average Helm and Crew). */
+  kg?: SailorWeights;
 };
 
 /** The player's boat (id `player`): the player in their Role, the Partner in the other seat. */

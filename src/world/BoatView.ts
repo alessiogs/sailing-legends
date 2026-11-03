@@ -167,7 +167,7 @@ export class BoatView extends BoatViewBase {
 
   protected placeSailors(dt: number, s: BoatState, tel: Telemetry) {
     this.pose = sailorPose({
-      classId: "optimist", role: "helm", crewSide: -s.boomSide, crewOut: s.crewOut, boomSide: s.boomSide, spiHoist: 0,
+      classId: "optimist", role: "helm", crewSide: -s.boomSide, crewOut: s.crewOut, helmOut: s.helmOut, boomSide: s.boomSide, spiHoist: 0,
       heelDeg: tel.heelDeg, sideForce: tel.sideForce, tiller: -s.rudder, height: this.height,
     }, this.pose, dt);
     this.sailor.update(this.pose, this.sailorsNear);

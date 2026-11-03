@@ -81,6 +81,12 @@
           </div>
         </div>
 
+        <div class="slider hidden" id="hike-zone" data-hud>
+          <span class="slider-end" data-i18n="hud.slider.hikeOut"></span>
+          <div class="slider-bar"><div class="slider-track" id="hike-track"><div id="hike-opt" class="trim-opt"></div><div id="hike-cur" class="trim-cur"></div></div></div>
+          <span class="slider-end" data-i18n="hud.slider.hikeIn"></span>
+        </div>
+
         <div class="slider" id="trim-zone" data-hud>
           <span class="slider-end" data-i18n="hud.slider.in"></span>
           <div class="slider-bar"><div class="slider-track" id="trim-track"><div id="trim-opt" class="trim-opt"></div><div id="trim-cur" class="trim-cur"></div></div></div>
@@ -97,6 +103,7 @@
             <div><kbd>W</kbd> / <kbd>↑</kbd><span data-i18n="controls.action.sheetIn"></span></div>
             <div><kbd>S</kbd> / <kbd>↓</kbd><span data-i18n="controls.action.sheetOut"></span></div>
             <div><kbd>T</kbd><span data-i18n="controls.action.autoTrim"></span></div>
+            <div><kbd>Q</kbd><kbd>Z</kbd><span data-i18n="controls.action.hike"></span> <kbd>G</kbd><span data-i18n="controls.action.autoHike"></span></div>
             <div><kbd>C</kbd><span data-i18n="menu.keys.camera"></span></div>
             <div><kbd>P</kbd><span data-i18n="controls.action.pause"></span> <kbd>R</kbd><span data-i18n="controls.action.restart"></span> <kbd>V</kbd><span data-i18n="menu.keys.audio"></span></div>
             <div class="pad" data-i18n="menu.keys.gamepad"></div>
@@ -123,6 +130,7 @@
               <div id="steer-summary" class="steer-help"></div>
             </div>
             <label class="opt check"><input type="checkbox" id="auto-trim-opt" /> <span data-i18n="menu.autoTrim"></span></label>
+            <label class="opt check"><input type="checkbox" id="auto-hike-opt" checked /> <span data-i18n="menu.autoHike"></span></label>
           </div>
           <div id="pair-block" class="pair-block hidden">
             <div class="opt">
@@ -210,6 +218,8 @@
             <tr><td data-i18n="controls.action.sheetIn"></td><td><kbd>W</kbd> <kbd>↑</kbd></td><td>RT</td></tr>
             <tr><td data-i18n="controls.action.sheetOut"></td><td><kbd>S</kbd> <kbd>↓</kbd></td><td>LT</td></tr>
             <tr><td data-i18n="controls.action.autoTrim"></td><td><kbd>T</kbd></td><td>X</td></tr>
+            <tr><td data-i18n="controls.action.autoHike"></td><td><kbd>G</kbd></td><td>—</td></tr>
+            <tr><td data-i18n="controls.action.hike"></td><td><kbd>Q</kbd> <kbd>Z</kbd> · <kbd>Shift</kbd></td><td>RB / LB</td></tr>
             <tr><td data-i18n="controls.action.camera"></td><td><kbd>C</kbd></td><td>Y</td></tr>
             <tr><td data-i18n="controls.action.pause"></td><td><kbd>P</kbd> <kbd>Esc</kbd></td><td>Start</td></tr>
             <tr><td data-i18n="controls.action.restart"></td><td><kbd>R</kbd></td><td>Back</td></tr>
