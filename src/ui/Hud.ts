@@ -24,7 +24,7 @@ const fmtClock = (t: number) => {
 export class Hud {
   private el = {
     hud: $("hud"), clock: $("clock"), place: $("place"), boats: $("boats"), leg: $("leg"), target: $("target"),
-    standings: $("standings"), speed: $("speed"), pillLine: $("pill-line"), twa: $("twa"), tws: $("tws"), heel: $("heel"),
+    standings: $("standings"), speed: $("speed"), planing: $("planing"), pillLine: $("pill-line"), twa: $("twa"), tws: $("tws"), heel: $("heel"),
     leeway: $("leeway"), shift: $("shift"), trimOpt: $("trim-opt"), trimCur: $("trim-cur"), trimState: $("trim-state"),
     trimPill: $("trim-pill"), panel: $("panel"), panelToggle: $("panel-toggle"), line: $("leg").parentElement!,
     toast: $("toast"), tags: $("tags"), tillerPos: $("tiller-pos"),
@@ -158,6 +158,7 @@ export class Hud {
       this.el.hikeOpt.style.height = `${(Math.min(1, ideal + 0.06) - Math.max(0, ideal - 0.06)) * 100}%`;
       this.el.hikeCur.style.top = `${(1 - clamp01(hike.value)) * 100}%`;
     }
+    this.el.planing.classList.toggle("hidden", !panel.planing);
     this.el.call.classList.toggle("hidden", !panel.call);
     if (panel.call) this.el.call.textContent = panel.call;
     this.el.partnerLine.classList.toggle("hidden", !panel.partnerLine);

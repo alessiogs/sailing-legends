@@ -26,7 +26,7 @@ const MAST_STEP: V3 = { x: 0, y: 0, z: RIG.optimist.mastZ };
 const SHEET_BLOCK: V3 = { x: 0, y: 0.02, z: -0.8 };
 const SHEET_COLOR = new Color3(0.93, 0.93, 0.88);
 
-const MOTION: BoatMotion = { waveHeight: 0.85, pitch: 0.8, roll: 0.6, heelRate: 3, heel: 0.5, boomRate: 2.6, rudderDeg: RIG.optimist.rudderDeg };
+const MOTION: BoatMotion = { waveHeight: 0.85, pitch: 0.8, roll: 0.6, heelRate: 3, heel: 0.5, boomRate: 2.6, rudderDeg: RIG.optimist.rudderDeg, bowLift: 0.03, bowZ: 1.1 };
 
 /** Visual of an Optimist: pram hull, sprit rig with a cambered sail that luffs, an articulated sailor, foils. */
 export class BoatView extends BoatViewBase {

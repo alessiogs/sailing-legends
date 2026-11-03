@@ -24,7 +24,7 @@ const FAIRLEAD_X = 0.62, FAIRLEAD_Y = 0.46, FAIRLEAD_Z = 0.1;
 const SHEET_COLOR = new Color3(0.93, 0.93, 0.88);
 const MAST_STEP: V3 = { x: 0, y: 0, z: MAST_Z };
 
-const MOTION: BoatMotion = { waveHeight: 0.7, pitch: 0.6, roll: 0.4, heelRate: 2.5, heel: 0.8, boomRate: 2.4, rudderDeg: RIG["420"].rudderDeg };
+const MOTION: BoatMotion = { waveHeight: 0.7, pitch: 0.6, roll: 0.4, heelRate: 2.5, heel: 0.8, boomRate: 2.4, rudderDeg: RIG["420"].rudderDeg, bowLift: 0.08, bowZ: 2.0 };
 
 /** Visual of a 420: sloop rig (main + jib), spinnaker on a pole, an articulated Helm hiking and Crew on the trapeze. */
 export class Boat420View extends BoatViewBase {

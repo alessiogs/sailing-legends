@@ -172,6 +172,8 @@ export const italian = {
   "call.spiDrop": ({ name }: { name: string }) => `${name}: «Ammaina!» → Spazio`,
   "call.hikeOut": ({ name }: { name: string }) => `${name}: «Fuori! Siamo sbandati» → D / →`,
   "call.comeIn": ({ name }: { name: string }) => `${name}: «Dentro! Ci rovesciamo sopravvento» → A / ←`,
+  "call.flatten": ({ name }: { name: string }) => `${name}: «Appiattisci! Allenta la randa» → S / ↓`,
+  "call.easeHike": ({ name }: { name: string }) => `${name}: «Allenta e vai fuori!» → S / ↓ e Q`,
 
   // HUD: race card, instruments, bottom panel.
   "hud.label.position": "POSIZIONE",
@@ -206,6 +208,7 @@ export const italian = {
   "hud.gauge.right": "DX ▶",
   "hud.gauge.weight": ({ position }: { position: string }) => `${position.toUpperCase()}`,
   "hud.gauge.hike": "PESO TIMONIERE",
+  "hud.planing": "PLANATA",
   "hud.gauge.leeward": "◀ SOTTOVENTO",
   "hud.gauge.in": "◀ DENTRO",
   "hud.gauge.out": "FUORI ▶",
@@ -304,6 +307,7 @@ export const italian = {
     `Chiudi la stagione al ${place}° posto con ${plural(points, { one: `${points} punto`, other: `${points} punti` })}.`,
   "career.summary.places": "Posizioni nelle regate",
   "career.summary.rivals": "Contro i tuoi rivali",
+  "career.summary.outgrown": ({ kg }: { kg: number }) => `Con ${kg} kg stai crescendo oltre il peso ideale dell'Optimist (circa 35-50 kg): il 420 ti aspetta.`,
   "career.summary.next": "Prossima stagione",
   "career.next.title": ({ season }: { season: number }) => `Stagione ${season}: come prosegui?`,
   "career.next.help": "Resti in Optimist o passi al 420, in due con un compagno che hai incontrato in regata?",
@@ -311,6 +315,11 @@ export const italian = {
   "career.next.move": "Passa al 420",
   "career.next.partner": "Scegli il tuo compagno tra i velisti che hai incontrato. L'intesa cresce con le stagioni passate a regatare insieme.",
   "career.next.chemistry": ({ chemistry }: { chemistry: number }) => `Intesa ${chemistry}/100`,
+  "career.next.weight": ({ kg }: { kg: number }) => `${kg} kg`,
+  "career.next.pair": ({ kg, hint }: { kg: number; hint: string }) => `Equipaggio ${kg} kg · ${hint}`,
+  "career.next.hint.light": "leggero",
+  "career.next.hint.ideal": "peso ideale",
+  "career.next.hint.heavy": "pesante",
   "career.next.start": "Inizia la stagione",
 
   // Touch wording: on a touch screen `t` and `lookup` read "<key>.touch" instead of "<key>" when it exists
@@ -327,6 +336,8 @@ export const italian = {
   "call.spiDrop.touch": ({ name }: { name: string }) => `${name}: «Ammaina!» → tocca Spi`,
   "call.hikeOut.touch": ({ name }: { name: string }) => `${name}: «Fuori! Siamo sbandati» → trascina il peso a destra`,
   "call.comeIn.touch": ({ name }: { name: string }) => `${name}: «Dentro! Ci rovesciamo sopravvento» → trascina il peso a sinistra`,
+  "call.flatten.touch": ({ name }: { name: string }) => `${name}: «Appiattisci! Allenta la randa» → trascina la randa su LASCA`,
+  "call.easeHike.touch": ({ name }: { name: string }) => `${name}: «Allenta e vai fuori!» → lasca la randa e trascina il peso su FUORI`,
   "coach.partnerTack.touch": ({ name }: { name: string }) => `${name}: «Viro!» — tocca Cambio lato`,
   "coach.partnerGybe.touch": ({ name }: { name: string }) => `${name}: «Strambo!» — tocca Cambio lato`,
   "coach.irons.tiller.touch": "Sei fermo prua al vento: lasca la vela e spingi la barra per poggiare",

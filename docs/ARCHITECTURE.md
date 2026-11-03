@@ -7,7 +7,7 @@ Every source file and test, one line each. AGENTS.md has the short version; upda
 src/
   core/      math.ts (angles, RNG, segment tests), Input.ts (keyboard/gamepad/drag, tiller vs boat-direction
              steering, what the keys move per Role; DOM-free: `dragGauge`, `dragSheet`, `press` are called by the UI), ControlSettings.ts (the Commands menu settings and their
-             defaults; DOM-free), Sound.ts (WebAudio synthesis, no assets)
+             defaults; DOM-free), Sound.ts (WebAudio synthesis, no assets; the water rush is louder while planing)
   sailing/   BoatClass.ts (class data: Optimist, I420, keyed by the closed `ClassId` union; `isTwoPerson` =
              sailed by a Pair, which has `crewRighting`),
              BoatPhysics.ts (the model), Wind.ts (shifts + puffs), BoatStates.ts (Crew weight in/hiking/trapeze
@@ -32,10 +32,12 @@ src/
              StartPlanning.ts (the Helm's start: line point, holding spot, start bias, timing the run to the line,
              OCS return; borrows the rest of the Helm's steering through `CourseSteering`),
              angles.ts (`CLOSE_HAULED`, shared by the AI parts),
+             hiking.ts (how well an AI sailor hikes and rolls by technique: `rollQuality`, the hiking error; its own RNG stream),
              CrewAI.ts (the Crew: jib/spi trim, weight, side switch, spinnaker; `crewOnWrongSide` is the one
              wrong-side check, shared by the Crew AI, the browser autopilot and the HUD). Both read sailor profiles
   sailors/   Sailors.ts (sailor profiles, the Rival roster, the opponents' Crews, the extra Helm, the autopilot
-             Helm, the Crew Chemistry formula; sailors are matched by `id`, never by name)
+             Helm, the Crew Chemistry formula; sailors are matched by `id`, never by name),
+             BodyWeight.ts (`bodyWeightKg` from age and Build, `Build`, `buildFactorOf` an AI sailor's Build from their id)
   career/    Scoring.ts (low-point Race Points, Regatta ranking with the Discard and sailing tie-breaks, Season
              ranking; pure data in and out, ids and numbers, no text)
              CareerSave.ts (`CareerState`, the versioned save codec `encodeCareer`/`decodeCareer` with migrations by
@@ -59,9 +61,10 @@ src/
              Strength.ts (`levelRating`: each level's strength by age, kids weaker, adult at 16; `rivalStartRating`)
              RecordRace.ts (`raceEntries`: a race's outcome as Career entries, racer ids mapped to sailor ids;
              `recordRace`: adds a Race and moves to the next Regatta; `isSeasonOver`)
+             Weight.ts (the Pair's weight hint light / ideal / heavy around 110-130 kg, `outgrownOptimist` above 50 kg, the player's kg; data only),
              Weather.ts (the wind and seed of each Race of a Regatta), Seeds.ts (`mixSeed`)
-  world/     Ocean.ts (Gerstner waves in GLSL), Waves.ts (same waves on CPU), BoatViewBase.ts (what both boat
-             visuals share: wave riding, heel, boom swing, rudder, burgee; each class gives its `BoatMotion` and
+  world/     Ocean.ts (Gerstner waves in GLSL), Waves.ts (same waves on CPU), BowSpray.ts (a few drops thrown from the bow of a planing boat, made only for a boat within the sailor LOD distance), BoatViewBase.ts (what both boat
+             visuals share: wave riding, bow lift while planing, heel, boom swing, rudder, burgee; each class gives its `BoatMotion` and
              draws its own sails and sailors; sailors beyond 30 m of the camera are drawn simply), BoatView.ts (Optimist: the
              sailor posed from `sailorPose`, tiller extension, drawn hull roll while the sailor crosses), Boat420View.ts (the Helm and
              Crew posed the same way; tiller extension, trapeze wire with its handle), SailorFigure.ts (`SailorFigure`: the
@@ -83,7 +86,7 @@ src/
              spinnaker, side switch; the last three are the context buttons, shown when the boat has them),
              Hud.ts (the "Sail number" HUD: top strip, compass pill and speed, messages as one pill, status pills, the
              Standings/map panel, the tiller and sheet handles, tags; `style.css` places its boxes, each marked
-             `data-hud`), hudPanel.ts (`buildPanel`: the Role-driven gauge, sail trim, Partner call and lines built from
+             `data-hud`), hudPanel.ts (`buildPanel`: the Role-driven gauge, hike gauge, Planing tag, sail trim, Partner call and lines built from
              the race and the player's choices; pure, DOM-free), standingsRows.ts (which boats the standings list
              shows: all, or the first three and those around the player; pure),
              pageText.ts (fills index.html's data-i18n text from the catalog at startup), raceEventText.ts (words race events from their data),
@@ -144,7 +147,11 @@ tests/       Vitest tests (npm test): smoke.test.ts (every AI-only race finishes
              chase-view.test.ts (the chase camera is farther and higher on a portrait screen)
              preferences.test.ts (saved preferences still load; saving keeps the `sl-prefs` format; the language is optional; a stored null, number or array loads the defaults)
              player-controls.test.ts (what the player's input does per Role and Control mode, Auto-trim, autopilot)
-             hud-panel.test.ts (the HUD panel's lines per Role and Control mode, as the HUD shows them)
+             hud-panel.test.ts (the HUD panel's lines per Role and Control mode, as the HUD shows them: hike gauge, Planing tag, the Partner's calls to the Helm)
+             body-weight.test.ts (kg from age and Build), sailor-weight.test.ts (light is quicker in light air, heavy in a breeze)
+             helm-hike.test.ts (`helmOut`: over-hiking heels to windward, the Optimist's inner limit, the 420 Helm to leeward)
+             roll-tack.test.ts (a good roll loses less speed; fades above 10 kn), ai-hiking.test.ts (AI hike error and rolls by technique)
+             career-weight.test.ts (Partner weight, the Pair hint, the outgrown-Optimist note)
              race-feedback.test.ts (which sounds, messages and hints the race gives, and when)
              planing.test.ts (420 planing and Optimist bow-up gates and targets),
              boat-class.test.ts (class ids: a misspelt id is a type error; every class keyed by its own id)

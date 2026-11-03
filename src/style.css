@@ -49,6 +49,7 @@ strong { font-weight: 650; font-variant-numeric: tabular-nums; }
 .pill-text { min-width: 0; }
 .pill-speed strong { font-family: var(--cond); font-weight: 800; font-size: 24px; line-height: .9; }
 .pill-speed em { font-size: 12px; font-weight: 600; opacity: .7; margin-left: 3px; }
+.planing-tag { margin-left: 5px; padding: 1px 4px; border-radius: 4px; background: var(--boat); color: #081622; font-size: 8.5px; font-weight: 800; letter-spacing: .04em; vertical-align: 3px; }
 .pill-line { margin-top: 1px; font-size: 9.5px; font-weight: 600; opacity: .8; white-space: nowrap; }
 
 #round-buttons { position: absolute; top: 58px; right: 8px; display: flex; flex-direction: column; gap: 6px; }
@@ -136,6 +137,8 @@ strong { font-weight: 650; font-variant-numeric: tabular-nums; }
 .partner.on { background: rgba(255,138,69,.14); border-color: var(--boat); }
 .partner b { font-size: 14px; }
 .partner small { margin: 0; font-size: 10.5px; letter-spacing: .02em; color: #cfe2ea; }
+.partner .hint.ideal { color: #8fe0a8; }
+.partner .hint.light, .partner .hint.heavy { color: #ffd08a; }
 .meter { display: block; height: 5px; border-radius: 3px; background: rgba(255,255,255,.12); overflow: hidden; }
 .meter i { display: block; height: 100%; background: var(--good); }
 @media (max-width: 560px) { .partners { grid-template-columns: 1fr; } }

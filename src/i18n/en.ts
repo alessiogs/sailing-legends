@@ -176,6 +176,8 @@ export const english: Catalog = {
   "call.spiDrop": ({ name }) => `${name}: “Drop it!” → Space`,
   "call.hikeOut": ({ name }) => `${name}: “Hike out! We're heeling” → D / →`,
   "call.comeIn": ({ name }) => `${name}: “In! We'll capsize to windward” → A / ←`,
+  "call.flatten": ({ name }) => `${name}: “Flatten! Ease the main” → S / ↓`,
+  "call.easeHike": ({ name }) => `${name}: “Ease and hike!” → S / ↓ and Q`,
 
   // HUD: race card, instruments, bottom panel.
   "hud.label.position": "POSITION",
@@ -210,6 +212,7 @@ export const english: Catalog = {
   "hud.gauge.right": "STBD ▶",
   "hud.gauge.weight": ({ position }) => `${position.toUpperCase()}`,
   "hud.gauge.hike": "HELM WEIGHT",
+  "hud.planing": "PLANING",
   "hud.gauge.leeward": "◀ LEEWARD",
   "hud.gauge.in": "◀ IN",
   "hud.gauge.out": "OUT ▶",
@@ -305,6 +308,7 @@ export const english: Catalog = {
     `You finish the Season in ${ordinal(place)} place with ${plural(points, { one: `${points} point`, other: `${points} points` })}.`,
   "career.summary.places": "Regatta places",
   "career.summary.rivals": "Against your Rivals",
+  "career.summary.outgrown": ({ kg }) => `At ${kg} kg you are growing out of the Optimist's sweet spot (about 35-50 kg): the 420 awaits.`,
   "career.summary.next": "Next Season",
   "career.next.title": ({ season }) => `Season ${season}: what next?`,
   "career.next.help": "Stay in the Optimist, or move to the 420 with a Partner you have raced against?",
@@ -312,6 +316,11 @@ export const english: Catalog = {
   "career.next.move": "Move to the 420",
   "career.next.partner": "Pick your Partner among the sailors you raced against. Chemistry grows with the Seasons raced together.",
   "career.next.chemistry": ({ chemistry }) => `Chemistry ${chemistry}/100`,
+  "career.next.weight": ({ kg }) => `${kg} kg`,
+  "career.next.pair": ({ kg, hint }) => `Pair ${kg} kg · ${hint}`,
+  "career.next.hint.light": "light",
+  "career.next.hint.ideal": "ideal weight",
+  "career.next.hint.heavy": "heavy",
   "career.next.start": "Start the Season",
 
   // Touch wording: on a touch screen `t` and `lookup` read "<key>.touch" instead of "<key>" when it exists
@@ -328,6 +337,8 @@ export const english: Catalog = {
   "call.spiDrop.touch": ({ name }) => `${name}: “Drop it!” → tap Spi`,
   "call.hikeOut.touch": ({ name }) => `${name}: “Hike out! We're heeling” → drag your weight right`,
   "call.comeIn.touch": ({ name }) => `${name}: “In! We'll capsize to windward” → drag your weight left`,
+  "call.flatten.touch": ({ name }) => `${name}: “Flatten! Ease the main” → drag the sheet to EASE`,
+  "call.easeHike.touch": ({ name }) => `${name}: “Ease and hike!” → ease the main and drag your weight to OUT`,
   "coach.partnerTack.touch": ({ name }) => `${name}: “Tacking!” — tap Switch sides`,
   "coach.partnerGybe.touch": ({ name }) => `${name}: “Gybing!” — tap Switch sides`,
   "coach.irons.tiller.touch": "You're stuck head to wind: ease the sheet and push the tiller to bear away",

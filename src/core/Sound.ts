@@ -69,8 +69,8 @@ export class Sound {
     if (this.ctx) this.master.gain.setTargetAtTime(m ? 0 : 0.8, this.ctx.currentTime, 0.05);
   }
 
-  /** Continuous sounds, once per frame. aws in m/s, speed in m/s, luff 0..1, active = racing. */
-  update(dt: number, aws: number, speed: number, luff: number, active: boolean) {
+  /** Continuous sounds, once per frame. aws in m/s, speed in m/s, luff 0..1, active = racing, planeLevel 0..1 (the water rushes louder and higher while planing). */
+  update(dt: number, aws: number, speed: number, luff: number, active: boolean, planeLevel = 0) {
     const ctx = this.ctx;
     if (!ctx) return;
     const t = ctx.currentTime;
@@ -79,8 +79,8 @@ export class Sound {
     this.wind.gain.setTargetAtTime(0.22 * w * w * k, t, 0.3);
     this.whistle.gain.setTargetAtTime(0.03 * Math.max(0, w - 0.55) * k, t, 0.5);
     const v = Math.min(1, Math.abs(speed) / 2.2);
-    this.water.gain.setTargetAtTime(0.5 * Math.pow(v, 1.4) * k, t, 0.2);
-    this.waterFilter.frequency.setTargetAtTime(350 + 700 * v, t, 0.3);
+    this.water.gain.setTargetAtTime(0.5 * Math.pow(v, 1.4) * (1 + 0.9 * planeLevel) * k, t, 0.2);
+    this.waterFilter.frequency.setTargetAtTime(350 + 700 * v + 600 * planeLevel, t, 0.3);
     // Flutter at ~7-11 Hz, faster in more wind.
     this.flapPhase += dt * (7 + 4 * w) * Math.PI * 2;
     const flutter = 0.5 + 0.5 * Math.sin(this.flapPhase);

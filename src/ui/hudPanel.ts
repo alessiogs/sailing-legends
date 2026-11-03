@@ -20,7 +20,9 @@ export type Panel = {
   /** The Helm's hike gauge (0 = in or sitting to leeward, 1 = fully out) while the player hikes by hand, else absent. */
   hike?: Gauge;
   sail: { label: string; sheet: number; optimal: number; state: TrimState; autoTrim: boolean; text?: string };
-  /** A call from the Partner the player should act on (as Crew), or null. */
+  /** True while the player's boat planes (the HUD shows a tag by the speed); absent otherwise. */
+  planing?: true;
+  /** A call from the Partner the player should act on (the Helm's to the Crew, or the Crew's to the Helm), or null. */
   call: string | null;
   /** One-line status of the Partner on board, or null. */
   partnerLine: string | null;
@@ -69,6 +71,7 @@ export function buildPanel({ session, role, control, twoPerson: two, tiller, aut
       sail: { label: spiUp ? t("hud.sail.spinnaker") : t("hud.sail.jib"), sheet, optimal: sailTel.optimal, state: sailTel.trimState, autoTrim,
         text: tel.jib!.backed && !spiUp ? t("trim.jibBacked") : spiUp && tel.spi!.collapsed ? t("trim.spiCollapsed") : undefined },
       call, partnerLine: t("hud.partnerLine.helm", { name, spi }), chem,
+      ...(tel.planing ? { planing: true as const } : {}),
     };
   }
   const tillerGauge = { label: t("hud.gauge.tiller"), value: tiller, centered: true, ends: [t("hud.gauge.left"), t("hud.gauge.right")] as [string, string] };
@@ -80,6 +83,12 @@ export function buildPanel({ session, role, control, twoPerson: two, tiller, aut
     partnerLine = t(control === "fullBoat" ? "hud.partnerLine.crewOnCall" : "hud.partnerLine.crew", { name, weight, spi });
   }
   const panel: Panel = { gauge: tillerGauge, sail, call: null, partnerLine, chem };
+  if (tel.planing) panel.planing = true;
+  // The Crew's call to a Helm who is over-heeling in the 420: flatten with the main, and hike too if the Helm's own weight is short.
+  if (two && control === "playerCareer" && tel.crew && tel.crew.balance > 60) {
+    const short = !autoHike && tel.helm !== undefined && tel.helm.ideal - s.helmOut > 0.25;
+    panel.call = t(short ? "call.easeHike" : "call.flatten", { name });
+  }
   if (!autoHike) {
     // Along the gauge: from the class's lowest weight position (sitting to leeward in the 420) to fully out.
     const low = p.sim.cls.helmRighting.leewardMin, along = (out: number) => (out - low) / (1 - low);
