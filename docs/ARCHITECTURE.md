@@ -146,6 +146,7 @@ tests/       Vitest tests (npm test): smoke.test.ts (every AI-only race finishes
              player-controls.test.ts (what the player's input does per Role and Control mode, Auto-trim, autopilot)
              hud-panel.test.ts (the HUD panel's lines per Role and Control mode, as the HUD shows them)
              race-feedback.test.ts (which sounds, messages and hints the race gives, and when)
+             planing.test.ts (420 planing and Optimist bow-up gates and targets),
              boat-class.test.ts (class ids: a misspelt id is a type error; every class keyed by its own id)
              start-planning.test.ts (the AI's holding spot, line point, RNG draws and start decisions)
              racing-ai-parts.test.ts (the AI's avoidance, beat tactics and tack state machine on their own)

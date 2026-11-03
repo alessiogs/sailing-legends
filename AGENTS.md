@@ -88,6 +88,8 @@ use neither Babylon nor browser APIs. They also run in Node.
 - **Physics** (`BoatPhysics.ts`): target speeds at 11 kn:
   - Optimist: about 2.3 kn upwind, 3.9 reaching, 3.5 running.
   - 420: about 4 kn upwind, 6.5 reaching, 6–7 with the spinnaker.
+  - At 16 kn the 420 planes (weight aft, flat, reach to broad reach, from 12–13 kn): about 8–9 kn reaching, 9–10 with the
+    spinnaker. The Optimist gains 3–5% downwind from 12 kn with its bow up. Upwind and 11 kn do not change.
 
   After a physics change, run `polar` and `npm test`, and check that a tack from close-hauled still gets through
   the wind.

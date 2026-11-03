@@ -44,6 +44,11 @@ export type BoatClass = {
   hullDrag: number;
   hullSpeed: number; // m/s where wave drag rises steeply
   waveDrag: number;
+  /**
+   * Weight aft in a breeze (12-13 kn and up) with the boat flat cuts wave drag by `waveCut` (0..1) on a reach to a run: a `planes`
+   * class (the 420) gets up on the plane, one that doesn't (the Optimist) only lifts its bow.
+   */
+  planing: { waveCut: number; planes: boolean };
   /** Lateral resistance from the centreboard, per m/s of forward speed (1/m). */
   boardGrip: number;
   /** Max rudder deflection (deg) and effective turning length (m). */
@@ -76,6 +81,7 @@ export const OPTIMIST: BoatClass = {
   hullDrag: 9,
   hullSpeed: 1.75,
   waveDrag: 260,
+  planing: { waveCut: 0.34, planes: false },
   boardGrip: 7,
   rudderMaxDeg: 34,
   turnLength: 1.25,
@@ -99,6 +105,7 @@ export const I420: BoatClass = {
   hullDrag: 10,
   hullSpeed: 2.7,
   waveDrag: 95,
+  planing: { waveCut: 0.3, planes: true },
   boardGrip: 6,
   rudderMaxDeg: 32,
   turnLength: 2.2,
