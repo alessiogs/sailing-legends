@@ -60,7 +60,8 @@ export class RacingAI {
     this.k = Math.min(1.6, Math.max(1, racer.sim.cls.length / 2.31));
     // The start draws its numbers first: keep it constructed before anything else uses `rand`.
     this.startPlan = new StartPlanning(race, profile, this.k, this.rand, slot);
-    this.beat = new BeatTactics(profile, () => this.time);
+    // The beat's narrowest lane: about 24 m wide in an Optimist, scaled with the boat.
+    this.beat = new BeatTactics(profile, () => this.time, 12 * this.k);
     this.tackMachine = new TackStateMachine(this.beat, this.k);
     const p = rng(seed ^ 0x5eed);
     this.phase = [p(), p(), p(), p()].map((v) => v * 2 * Math.PI);

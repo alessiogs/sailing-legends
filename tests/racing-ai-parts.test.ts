@@ -162,6 +162,22 @@ describe("beat tactics: steering toward a point", () => {
     );
   });
 
+  it("near the target it keeps a lane of at least `lane` metres, then tacks on the layline", () => {
+    let time = 20;
+    const beat = new BeatTactics(RIVALS[0], () => time, 12);
+    // 20 m away, 30° right of the wind: far away the port tack would win, close in the boat holds starboard.
+    const near = { x: Math.sin(30 * DEG) * 20, z: Math.cos(30 * DEG) * 20 };
+    expect(close(beat.headingToward(near, WIND_FROM, 0, 0, STBD), STBD)).toBe(
+      true,
+    );
+    // On the port layline (the target dead ahead on port) it tacks.
+    time += 12;
+    const laid = { x: Math.sin(PORT) * 10, z: Math.cos(PORT) * 10 };
+    expect(close(beat.headingToward(laid, WIND_FROM, 0, 0, STBD), PORT)).toBe(
+      true,
+    );
+  });
+
   it("a committed tack sets the beat's tack and restarts the tack timer", () => {
     const { beat, advance } = setup();
     const upwind = { x: 0, z: 100 };
@@ -262,6 +278,16 @@ describe("tack state machine", () => {
     expect(machine.mode).toBe("sail");
     machine.steer(busy);
     expect(machine.mode).toBe("tack");
+  });
+
+  it("recovering with the bow already off the wind, it trims instead of easing right out", () => {
+    const { machine } = setup();
+    machine.steer(at({ heading: 0, desired: 0, speed: 0.1 }));
+    const steer = machine.steer(
+      at({ heading: -40 * DEG, desired: 0, speed: 0.1 }),
+    );
+    expect(machine.mode).toBe("recover");
+    expect(steer.easeSheet).toBe(false);
   });
 
   it("stuck head to wind, it eases the sheet and bears away to recover", () => {
