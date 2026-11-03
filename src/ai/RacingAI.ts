@@ -1,10 +1,11 @@
-import { angleDiff, bearingTo, clamp, DEG, rng, wrapPi } from "../core/math";
+import { angleDiff, bearingTo, clamp, DEG, KNOTS, rng, wrapPi } from "../core/math";
 import type { Controls } from "../sailing/BoatPhysics";
 import type { WindField } from "../sailing/Wind";
 import { distanceTo, legTarget, type Point } from "../race/Course";
 import type { Race, Racer } from "../race/Race";
 import type { SailorProfile } from "../sailors/Sailors";
 import { boatWithin, giveWay } from "./Avoidance";
+import { hikeError, hikeLag, hikeScale, rollQuality } from "./hiking";
 import { BeatTactics } from "./BeatTactics";
 import { StartPlanning } from "./StartPlanning";
 import { TackStateMachine } from "./TackStateMachine";
@@ -26,7 +27,14 @@ export class RacingAI {
   private keepClear: { until: number; desired: number; sheet: number } | null = null;
   /** Phases of the slow wanders (helming, pointing, wind reading), drawn from their own stream so `rand` keeps its order. */
   private readonly phase: readonly number[];
-  controls: Controls = { rudder: 0, sheet: 0.5 };
+  /** The Helm's hiking and roll draws: their own stream, so `rand` (the start plan first) keeps its order. */
+  private readonly hikeRand: () => number;
+  private hikeTimer = 0;
+  private hikeBiasTimer = 0;
+  private hikeTarget = 0;
+  private hikeBias = 0;
+  private boomSide = 0;
+  controls: Controls = { rudder: 0, sheet: 0.5, roll: 0.5 };
   debug = "";
 
   /** Size factor: distances (holding spot, rounding radius, look-ahead) scale with boat length. */
@@ -41,6 +49,28 @@ export class RacingAI {
     this.tackMachine = new TackStateMachine(this.beat, this.k);
     const p = rng(seed ^ 0x5eed);
     this.phase = [p(), p(), p(), p()].map(v => v * 2 * Math.PI);
+    this.hikeRand = rng(seed ^ 0x41ce);
+  }
+
+  /** The Helm's weight: the ideal for the wind, seen late (more so the lower the technique) and with a wandering error; and a roll quality per tack or gybe. */
+  private hike(dt: number) {
+    const { technique } = this.profile;
+    const s = this.racer.sim.state, tel = this.racer.sim.telemetry;
+    this.hikeTimer -= dt;
+    if (this.hikeTimer <= 0) {
+      this.hikeTimer = hikeLag(technique);
+      this.hikeTarget = tel.helm ? tel.helm.ideal : 0;
+    }
+    this.hikeBiasTimer -= dt;
+    if (this.hikeBiasTimer <= 0) {
+      this.hikeBiasTimer = 2 + this.hikeRand() * 3;
+      this.hikeBias = hikeError(technique, this.hikeRand());
+    }
+    this.controls.helmOut = clamp(this.hikeTarget + this.hikeBias * hikeScale(tel.puff, tel.tws * KNOTS), this.racer.sim.cls.helmRighting.leewardMin, 1);
+    if (s.boomSide !== this.boomSide) {
+      this.boomSide = s.boomSide;
+      this.controls.roll = rollQuality(technique, this.hikeRand());
+    }
   }
 
   /** A smooth wander in -1..1 with periods of tens of seconds (`i` picks the phase). */
@@ -64,6 +94,7 @@ export class RacingAI {
     const tel = r.sim.telemetry;
     const w = wind.sample(s.x, s.z);
     const { technique, tactics, speed } = this.profile;
+    this.hike(dt);
     // Imperfect wind reading: lower tactics = a wider, slowly wandering error in the wind direction (wrong side,
     // tacking on a lift, overstanding).
     const fromDir = w.fromDir + this.wander(0, 0.11) * (1 - tactics) * 26 * DEG;

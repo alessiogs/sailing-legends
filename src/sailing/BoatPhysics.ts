@@ -37,6 +37,11 @@ export type Controls = {
    * hikes exactly as needed (Auto-hike).
    */
   helmOut?: number;
+  /**
+   * How well the Helm rolls a tack or gybe, 0 (late or none) .. 1 (hard on the new side just after the boom crosses);
+   * 0.5 is average. Unset, a manual Helm is judged by their own `helmOut` and Auto-hike rolls an average one. The AI sets it.
+   */
+  roll?: number;
   /** One-shot: the Crew moves jib, spinnaker and their weight to the new side (after a tack/gybe). */
   switchSide?: boolean;
 };
@@ -106,6 +111,8 @@ export type Telemetry = {
 };
 
 const AIR = 1.225;
+/** Roll tack: seconds after the boom crosses in which the roll counts, how long its effect lasts, and its peak push (m/s^2). */
+const ROLL_WINDOW = 1.2, ROLL_SPAN = 2.2, ROLL_ACCEL = 0.1;
 
 export function createBoat(x: number, z: number, heading: number): BoatState {
   return {
@@ -298,6 +305,10 @@ export class BoatSim {
   private readonly mass: number;
   /** Hull resistance factor: wetted area grows with displacement, so a heavier boat is slower in light air. */
   private readonly dragScale: number;
+  /** Roll tack: seconds since the boom last crossed (infinite before the first), the quality sampled over its first second, and the result. */
+  private rollT = Infinity;
+  private rollSum = 0;
+  private rollQ = 0.5;
   /** Where the sailors' weight sits fore-aft, 0 aft .. 1 forward. Automatic: the ideal for the wind (not a player control). */
   private weightFore = 1;
   /** How far the boat is planing (or has its bow up), 0..1; builds slowly and is lost quickly. */
@@ -318,6 +329,24 @@ export class BoatSim {
       speed: 0, sog: 0, leewayDeg: 0, tws: 0, twa: 0, aws: 0, awa: 0, boomAngle: 0, aoa: 0,
       trimState: "luffing", optimalSheet: 0.5, drive: 0, sideForce: 0, heelDeg: 0, overpowered: false, puff: 0, planing: false, planeLevel: 0,
     };
+  }
+
+  /**
+   * Roll tack or gybe: the quality is sampled over the first ROLL_WINDOW s after the boom crosses; then, for ROLL_SPAN s, an
+   * average roll changes nothing, a good one gives a push and a late or missing one a drag. It fades out from 6 to 10 kn.
+   */
+  private rollAccel(dt: number, controls: Controls, kn: number): number {
+    if (this.rollT === Infinity) return 0;
+    this.rollT += dt;
+    if (this.rollT <= ROLL_WINDOW) {
+      const q = controls.roll ?? (controls.helmOut === undefined ? 0.5 : clamp(this.state.helmOut, 0, 1));
+      this.rollSum += q * dt;
+      if (this.rollT + dt > ROLL_WINDOW) this.rollQ = this.rollSum / ROLL_WINDOW;
+      return 0;
+    }
+    const x = (this.rollT - ROLL_WINDOW) / ROLL_SPAN;
+    if (x >= 1) { this.rollT = Infinity; return 0; }
+    return ROLL_ACCEL * 2 * (this.rollQ - 0.5) * clamp((10 - kn) / 4, 0, 1) * Math.sin(Math.PI * x) * dt;
   }
 
   step(dt: number, controls: Controls, wind: WindField) {
@@ -356,7 +385,10 @@ export class BoatSim {
       s.crewSide = -leeward;
       this.started = true;
     }
-    if (leeward !== s.boomSide && (Math.abs(awa) < 170 * DEG || Math.abs(awa) < 2 * DEG)) s.boomSide = leeward;
+    if (leeward !== s.boomSide && (Math.abs(awa) < 170 * DEG || Math.abs(awa) < 2 * DEG)) {
+      s.boomSide = leeward;
+      this.rollT = 0; this.rollSum = 0;
+    }
     if (controls.switchSide) {
       s.jibSide = s.spiSide = leeward;
       s.crewSide = -leeward;
@@ -435,7 +467,7 @@ export class BoatSim {
     this.plane += clamp(planeTarget - this.plane, -dt * 1.0, dt * 0.4);
     const wave = Math.max(0, au - cls.hullSpeed);
     const resist = Math.sign(u) * (this.dragScale * (cls.hullDrag * u * u + 6 * au) + cls.waveDrag * (1 - cls.planing.waveCut * this.plane) * wave * wave) + 8 * u * u * s.rudder * s.rudder * Math.sign(u);
-    u += ((drive - resist) / this.mass) * dt;
+    u += ((drive - resist) / this.mass) * dt + this.rollAccel(dt, controls, w.speed * KNOTS);
     // Side force pushes the boat sideways; the hull itself damps lateral motion a little.
     v += ((side - 30 * v * Math.abs(v) - 8 * v) / this.mass) * dt;
 

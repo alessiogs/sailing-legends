@@ -104,6 +104,8 @@ export class RaceSession {
         const c = this.partnerHelm.update(dt, this.wind);
         pc.rudder = c.rudder;
         pc.sheet = c.sheet;
+        pc.helmOut = c.helmOut;
+        pc.roll = c.roll;
       }
       this.partnerCrew?.update(dt, pc);
       this.player.sim.step(dt, pc, this.wind);
