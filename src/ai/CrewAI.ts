@@ -3,6 +3,7 @@ import { distanceTo, legTarget } from "../race/Course";
 import type { Race, Racer } from "../race/Race";
 import { isTwoPerson } from "../sailing/BoatClass";
 import type { BoatState, Controls, Telemetry } from "../sailing/BoatPhysics";
+import { hikeError } from "./hiking";
 import { crewChemistry, type SailorProfile } from "../sailors/Sailors";
 
 /**
@@ -50,10 +51,15 @@ export class CrewAI {
   private trimTimer = 0;
   private weightTarget = 0.3;
   private weightTimer = 0;
+  /** The hiking error's draws: their own stream, so `rand` keeps its order. */
+  private readonly hikeRand: () => number;
+  private hikeBias = 0;
+  private hikeBiasTimer = 0;
   readonly chem: number;
 
   constructor(public racer: Racer, public profile: SailorProfile, private race: Race, seed: number) {
     this.rand = rng(seed);
+    this.hikeRand = rng(seed ^ 0xc4e3);
     this.chem = crewChemistry(profile);
     // Better chemistry: faster reactions to the Helm and steadier trimming.
     this.reaction = 1.9 - this.chem * 0.015 + (1 - profile.technique) * 0.3;
@@ -92,6 +98,11 @@ export class CrewAI {
       this.weightTimer = 0.25 + (1 - this.precision) * 0.6;
       this.weightTarget = t.crew ? t.crew.ideal : 0;
     }
-    c.crewOut = this.weightTarget;
+    this.hikeBiasTimer -= dt;
+    if (this.hikeBiasTimer <= 0) {
+      this.hikeBiasTimer = 2 + this.hikeRand() * 3;
+      this.hikeBias = hikeError(this.profile.technique, this.hikeRand());
+    }
+    c.crewOut = clamp(this.weightTarget + this.hikeBias, 0, 1);
   }
 }
