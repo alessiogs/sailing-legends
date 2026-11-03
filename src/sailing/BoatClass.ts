@@ -81,7 +81,7 @@ export const OPTIMIST: BoatClass = {
   hullDrag: 9,
   hullSpeed: 1.75,
   waveDrag: 260,
-  planing: { waveCut: 0.3, planes: false },
+  planing: { waveCut: 0.34, planes: false },
   boardGrip: 7,
   rudderMaxDeg: 34,
   turnLength: 1.25,

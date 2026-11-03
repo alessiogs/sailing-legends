@@ -302,7 +302,11 @@ export class BoatSim {
   private weightFore = 1;
   /** How far the boat is planing (or has its bow up), 0..1; builds slowly and is lost quickly. */
   private plane = 0;
-  constructor(public cls: BoatClass, state: BoatState, public weights: SailorWeights = referenceWeights(cls)) {
+  /**
+   * `foreAftSkill` 0..1 is the Helm's technique at moving the weight aft (the player's boat is always 1): a lower skill gets the
+   * weight aft later and not so far, so the boat planes later or not at all. No randomness.
+   */
+  constructor(public cls: BoatClass, state: BoatState, public weights: SailorWeights = referenceWeights(cls), public foreAftSkill = 1) {
     const ref = referenceWeights(cls);
     this.helmHike = cls.hikeForce * weights.helmKg / ref.helmKg;
     this.rightingScale = (weights.helmKg + weights.crewKg) / (ref.helmKg + ref.crewKg);
@@ -424,7 +428,8 @@ export class BoatSim {
     const tKn = w.speed * KNOTS, absTwa = Math.abs(twa);
     const breezy = clamp(tKn - 12, 0, 1); // 0 at 12 kn, 1 at 13 kn: nothing at 11 kn
     const downwind = clamp((absTwa - 75 * DEG) / (15 * DEG), 0, 1) * (cls.planing.planes ? clamp((172 * DEG - absTwa) / (10 * DEG), 0, 1) : 1);
-    this.weightFore += clamp((breezy * downwind > 0.5 ? 0 : 1) - this.weightFore, -dt * 0.6, dt * 0.6);
+    const aftRate = dt * 0.6 * (0.3 + 0.7 * this.foreAftSkill);
+    this.weightFore += clamp((breezy * downwind > 0.5 ? 0.6 * (1 - this.foreAftSkill) : 1) - this.weightFore, -aftRate, aftRate);
     const flat = Math.abs(this.telemetry.heelDeg) < 6 && !this.telemetry.overpowered;
     const planeTarget = breezy * downwind * (this.weightFore < 0.35 && flat ? 1 : 0);
     this.plane += clamp(planeTarget - this.plane, -dt * 1.0, dt * 0.4);
