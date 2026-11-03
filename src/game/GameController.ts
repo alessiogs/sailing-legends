@@ -407,7 +407,7 @@ export class GameController {
     hud.update(dt, session.race, p, session.wind, this.panel(session));
     const tel = p.sim.telemetry;
     const luff = tel.trimState === "luffing" || tel.trimState === "irons" ? Math.max(0.3, 1 - tel.aoa / (6 * DEG)) : 0;
-    this.sound.update(dt, tel.aws, tel.speed, mode === "racing" ? luff : 0, mode === "racing");
+    this.sound.update(dt, tel.aws, tel.speed, mode === "racing" ? luff : 0, mode === "racing", tel.planeLevel);
     scene.render();
     const { projMat, tmp } = this;
     projMat.copyFrom(scene.getTransformMatrix());

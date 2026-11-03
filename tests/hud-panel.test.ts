@@ -157,3 +157,37 @@ describe("HUD panel as Crew", () => {
     expect(panel().call).toBe("Giulia: «Ammaina!» → Spazio");
   });
 });
+
+describe("HUD planing tag", () => {
+  it("is set only while the boat planes", () => {
+    const { tel, panel } = setup(HELM);
+    tel.planing = false;
+    expect(panel().planing).toBe(undefined);
+    tel.planing = true;
+    expect(panel().planing).toBe(true);
+  });
+});
+
+describe("HUD Partner calls to the Helm", () => {
+  it("flattens the boat when the Helm is overpowered and the weight is right", () => {
+    const { tel, panel } = setup(HELM);
+    tel.crew!.balance = 20;
+    expect(panel().call).toBe(null);
+    tel.crew!.balance = 80;
+    expect(panel().call).toBe("Giulia: «Appiattisci! Allenta la randa» → S / ↓");
+  });
+  it("asks to ease and hike when the Helm hikes by hand and is not out enough", () => {
+    const { s, tel, panel } = setup(HELM);
+    tel.crew!.balance = 80; tel.helm!.ideal = 0.9; s.helmOut = 0.3;
+    expect(panel(0, false, false).call).toBe("Giulia: «Allenta e vai fuori!» → S / ↓ e Q");
+    s.helmOut = 0.85;
+    expect(panel(0, false, false).call).toBe("Giulia: «Appiattisci! Allenta la randa» → S / ↓");
+  });
+  it("stays quiet in a single-hander and in Full Boat Control", () => {
+    const o = setup(HELM, OPTIMIST);
+    expect(o.panel().call).toBe(null);
+    const f = setup(FULL_BOAT);
+    f.tel.crew!.balance = 80;
+    expect(f.panel().call).toBe(null);
+  });
+});

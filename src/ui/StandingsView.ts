@@ -5,6 +5,7 @@ import type { CareerState } from "../career/CareerSave";
 import { PLAYER_ID } from "../career/RecordRace";
 import type { RegattaStanding, SeasonStanding } from "../career/Scoring";
 import type { RegattaReport, RivalComparison, SeasonSummary } from "../career/Standings";
+import { outgrownOptimist, playerKgNow } from "../career/Weight";
 import { RIVALS } from "../sailors/Sailors";
 import { h } from "./dom";
 import { rivalLine } from "./rivalText";
@@ -67,5 +68,7 @@ export function summarySheet(state: CareerState, summary: SeasonSummary): (HTMLE
     table(summary.standings.map(seasonRow), name, "career-summary-table"),
     h("h3", {}, t("career.summary.rivals")),
     rivalLines(summary.rivals, name, "career-summary-rivals"),
+    ...(state.classId === "optimist" && outgrownOptimist(playerKgNow(state))
+      ? [h("p", { class: "muted", id: "career-summary-outgrown" }, t("career.summary.outgrown", { kg: Math.round(playerKgNow(state)) }))] : []),
   ];
 }

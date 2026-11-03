@@ -8,6 +8,8 @@ import type { CareerState } from "./CareerSave";
 import { startingChemistry } from "./Chemistry";
 import { growSailor, growthSeed } from "./Growth";
 import { PLAYER_ID } from "./PlayerId";
+import { bodyWeightKg, buildFactorOf } from "../sailors/BodyWeight";
+import { pairWeightHint, playerKgNow, type PairHint } from "./Weight";
 
 /** The sailors the player raced with this Season: every boat they sailed against, and their Partner. */
 function sailedWith(state: CareerState): Set<string> {
@@ -41,15 +43,21 @@ export function partnerCandidates(state: CareerState): string[] {
   return state.pool.map(s => s.id).filter(id => sailedWith(state).has(id));
 }
 
-/** A Partner to choose and the Crew Chemistry they would start with (the current Partner keeps theirs). */
-export type PartnerOffer = { id: string; chemistry: number };
+/**
+ * A Partner to choose, the Crew Chemistry they would start with (the current Partner keeps theirs), their body weight
+ * next Season, the Pair's combined weight with the player's and how it sits against the 420's ideal.
+ */
+export type PartnerOffer = { id: string; chemistry: number; kg: number; pairKg: number; hint: PairHint };
 
 /** The Partners to choose from, with the Chemistry each would start with next Season. Call it on the state of the Season just sailed. */
 export function partnerOffers(state: CareerState): PartnerOffer[] {
   const closed = closeSeason(state);
   return partnerCandidates(state).map(id => {
     const kept = state.chemistry !== null && state.partnerId === id;
-    return { id, chemistry: kept ? state.chemistry! : startingChemistry(closed.pool.find(s => s.id === id)!, closed.seasonsTogether[id] ?? 0) };
+    const partner = closed.pool.find(s => s.id === id)!;
+    const kg = bodyWeightKg(ageInSeason(partner.startingAge, closed.season), buildFactorOf(id));
+    const pairKg = kg + playerKgNow(closed);
+    return { id, chemistry: kept ? state.chemistry! : startingChemistry(partner, closed.seasonsTogether[id] ?? 0), kg, pairKg, hint: pairWeightHint(pairKg) };
   });
 }
 

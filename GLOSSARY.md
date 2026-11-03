@@ -69,6 +69,11 @@ The Assist that sets the player's sail trim automatically.
 _it_: Regolazione vela automatica
 _Avoid_: Auto-sail, auto-sheet
 
+**Auto-hike**:
+The Assist that sets the player's own weight (the Helm's, or the Crew's) as the boat needs it. On by default for the Helm
+and Full Boat Control, off for the Crew; toggled in a race with G.
+_it_: Peso automatico
+
 ## Career
 
 **Career**:
@@ -179,3 +184,23 @@ _it_: Trapezio
 **Hiking**:
 Leaning out over the side, feet under the straps, to hold the boat flat.
 _it_: Uscire in cinghia
+
+**Hike**:
+The player's control of their own weight out over the side (Q out, Z in); the verb for what **Hiking** is. The Helm's
+hike is `helmOut`, the Crew's is `crewOut`. In the 420 the Helm's lowest step is sitting to leeward.
+_it_: Peso fuori / dentro
+
+**Roll tack**:
+A tack or gybe where the sailors roll the boat: hiking hard on the new side within about a second of the boom
+crossing. It loses less speed, and in very light air gives a small burst; the effect fades above about 10 kn.
+_it_: Virata con rollio
+
+**Planing**:
+The 420 lifting onto its own bow wave and running well above hull speed: from about 12-13 kn of wind on a reach to broad
+reach, flat, with the weight aft. The HUD shows a Planing tag. The Optimist only gets a small bow-up gain downwind.
+_it_: Planata
+
+**Build**:
+A sailor's body shape: light, average or heavy, which scales their body weight by up to 15% either side of the average
+for their age. The player picks theirs when starting a Career; an AI sailor's comes from their id.
+_it_: Corporatura
