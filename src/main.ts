@@ -16,6 +16,8 @@ import {
 } from "./i18n";
 import { Sound } from "./core/Sound";
 import { GameController } from "./game/GameController";
+import { FramePacer, IDLE_FPS, PHONE_FPS } from "./core/FramePacer";
+import { isPhone } from "./game/device";
 import { CameraRig } from "./game/CameraRig";
 import { loadPrefs, savePrefs } from "./game/Preferences";
 import { installTestHook } from "./game/testHook";
@@ -41,12 +43,16 @@ fillPageText();
 
 // ---------- Engine & scene ----------
 const canvas = document.querySelector<HTMLCanvasElement>("#game")!;
+const phone = isPhone();
 const engine = new Engine(canvas, true, {
   stencil: false,
   antialias: true,
-  powerPreference: "high-performance",
+  powerPreference: phone ? "default" : "high-performance",
 });
-engine.setHardwareScalingLevel(1 / Math.min(window.devicePixelRatio || 1, 1.5));
+// Phones run warm: lower resolution, no GPU preference and a 60 fps cap (see the render loop).
+engine.setHardwareScalingLevel(
+  1 / Math.min(window.devicePixelRatio || 1, phone ? 1.25 : 1.5),
+);
 const scene = new Scene(engine);
 scene.clearColor = new Color4(0.72, 0.83, 0.9, 1);
 scene.skipPointerMovePicking = true;
@@ -102,9 +108,16 @@ const game = new GameController({
 menus.attach(game);
 
 // ---------- Main loop ----------
-engine.runRenderLoop(() =>
-  game.frame(Math.min(engine.getDeltaTime() / 1000, 0.1)),
-);
+// Frames are skipped, not slowed: the time of the skipped ones is added to the next, so the simulation keeps its pace.
+const pacer = new FramePacer();
+engine.runRenderLoop(() => {
+  const racing = game.mode === "racing";
+  const dt = pacer.tick(
+    engine.getDeltaTime() / 1000,
+    racing ? (phone ? PHONE_FPS : 0) : IDLE_FPS,
+  );
+  if (dt !== null) game.frame(Math.min(dt, 0.1));
+});
 
 // Menu background: show the course with AI boats idling until the player starts.
 game.showMenuBackground();
