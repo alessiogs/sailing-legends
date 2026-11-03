@@ -1,5 +1,5 @@
 /**
- * The HUD's tap buttons for the race actions that have keys: pause, camera, Auto-trim, the spinnaker and the side
+ * The HUD's tap buttons for the race actions that have keys: pause, camera, Auto-trim, Auto-hike, the spinnaker and the side
  * switch. They are in the page (`index.html`, every one with a `data-action`) and a tap or click is the key's action,
  * pressed through `Input`. The context buttons (Auto-trim, spinnaker, side switch) show only when they apply to the boat.
  */
@@ -19,6 +19,11 @@ export function showTouchButtons(twoPerson: boolean, crew: boolean) {
   const container = document.getElementById("context-buttons")!;
   container.classList.toggle("two", twoPerson);
   container.classList.toggle("crew", twoPerson && crew);
+}
+
+/** Shows whether Auto-hike is on in its button (under the hike slider). */
+export function showTouchAutoHike(on: boolean) {
+  document.getElementById("touch-auto-hike")!.classList.toggle("on", on);
 }
 
 /** Shows whether Auto-trim is on in its button. */

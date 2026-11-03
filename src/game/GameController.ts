@@ -21,6 +21,7 @@ import { boatColors } from "../ui/boatColors";
 import type { CareerView } from "../ui/CareerScreen";
 import type { Hud } from "../ui/Hud";
 import { buildPanel } from "../ui/hudPanel";
+import { showTouchAutoHike } from "../ui/TouchButtons";
 import { Boat420View } from "../world/Boat420View";
 import { boatLook } from "../world/boatMaterials";
 import { BoatView } from "../world/BoatView";
@@ -87,7 +88,7 @@ export class GameController {
   partner: SailorProfile = RIVALS[1];
   windKn = 11;
   /** The Assists the player has switched on. */
-  readonly assists: Assists = { autoTrim: false, autoHike: true };
+  readonly assists: Assists = { autoTrim: true, autoHike: true };
 
   // ---------- Career ----------
   /** The Career being played, or `null` in Quick race and before one is started or continued. */
@@ -405,6 +406,7 @@ export class GameController {
     this.cameraRig.follow(dt, p.sim.state, isTwoPerson(this.activeClass));
     this.ocean!.update(this.time, camera, session.wind);
     hud.update(dt, session.race, p, session.wind, this.panel(session));
+    showTouchAutoHike(this.assists.autoHike);
     const tel = p.sim.telemetry;
     const luff = tel.trimState === "luffing" || tel.trimState === "irons" ? Math.max(0.3, 1 - tel.aoa / (6 * DEG)) : 0;
     this.sound.update(dt, tel.aws, tel.speed, mode === "racing" ? luff : 0, mode === "racing", tel.planing ? tel.planeLevel : 0);

@@ -350,6 +350,7 @@ export const italian = {
   "touch.pause": "Pausa",
   "touch.camera": "Camera",
   "touch.autoTrim": "Auto-vela",
+  "touch.autoHike": "Auto-peso",
   "touch.spinnaker": "Spi",
   "touch.switchSide": "Cambio lato",
   "touch.restart": "Ricomincia",
