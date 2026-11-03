@@ -5,7 +5,11 @@
  */
 import { describe, expect, it } from "vitest";
 import { startCareer } from "../src/career/Career";
-import { outgrownOptimist, pairWeightHint, playerKgNow } from "../src/career/Weight";
+import {
+  outgrownOptimist,
+  pairWeightHint,
+  playerKgNow,
+} from "../src/career/Weight";
 import { partnerOffers } from "../src/career/SeasonClose";
 import { BUILD_FACTOR, bodyWeightKg } from "../src/sailors/BodyWeight";
 
@@ -27,15 +31,32 @@ describe("outgrown the Optimist", () => {
   });
   it("follows the player's age and Build", () => {
     // average at 14 (age 12 in Season 3) is 52 kg; at 11 it is 42 kg; a heavy 11-year-old is 48.3 kg
-    expect(outgrownOptimist(playerKgNow({ ...startCareer({ seed: 1, startingAge: 12 }), season: 3 }))).toBe(true);
-    expect(outgrownOptimist(playerKgNow(startCareer({ seed: 1, startingAge: 11 })))).toBe(false);
-    expect(playerKgNow({ ...startCareer({ seed: 1, startingAge: 11 }), build: "heavy" })).toBeCloseTo(42 * BUILD_FACTOR.heavy, 5);
+    expect(
+      outgrownOptimist(
+        playerKgNow({
+          ...startCareer({ seed: 1, startingAge: 12 }),
+          season: 3,
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      outgrownOptimist(playerKgNow(startCareer({ seed: 1, startingAge: 11 }))),
+    ).toBe(false);
+    expect(
+      playerKgNow({
+        ...startCareer({ seed: 1, startingAge: 11 }),
+        build: "heavy",
+      }),
+    ).toBeCloseTo(42 * BUILD_FACTOR.heavy, 5);
   });
 });
 
 describe("Partner offers carry weights", () => {
   it("give the Partner's weight next Season, the Pair's, and the hint", () => {
-    const state = { ...startCareer({ seed: 5, startingAge: 11 }), build: "average" as const };
+    const state = {
+      ...startCareer({ seed: 5, startingAge: 11 }),
+      build: "average" as const,
+    };
     // the offers are for next Season, when the player is 12
     const me = bodyWeightKg(12);
     const offers = partnerOffers(withAllRaced(state));
@@ -50,5 +71,8 @@ describe("Partner offers carry weights", () => {
 
 /** A state whose Season raced against every pool sailor, so each is on offer. */
 function withAllRaced(state: ReturnType<typeof startCareer>) {
-  return { ...state, results: [[state.pool.map(s => ({ id: s.id })) as never]] as never };
+  return {
+    ...state,
+    results: [[state.pool.map((s) => ({ id: s.id })) as never]] as never,
+  };
 }

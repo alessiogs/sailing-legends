@@ -1,6 +1,7 @@
 # Roadmap
 
 ## Done
+
 - **0.1** (ChatGPT) — scene, simple boat, animated water, HUD.
 - **0.2** — Optimist physics (apparent wind, no-go zone, lift/drag, inertia, leeway, tacks/gybes), wind
   shifts and puffs, full windward/leeward race with start, OCS, roundings, finish; AI rivals with profiles;
@@ -30,11 +31,13 @@
   weight and Pair hint in the Career, the "Planing" tag, bow lift, bow spray and a louder water rush.
 
 ## How planning works
+
 This file holds the vision and the order. Details and status live on GitHub: one
 [milestone](https://github.com/alessiogs/sailing-legends/milestones) per version, a spec issue for big
 versions, and its issues (5–8 per spec). Don't copy issue lists here.
 
 ## Next (in order)
+
 - **0.4.x maintenance** — small tech-debt issues, worked in the background (no spec).
 - **0.7 Training** — drills, a coach, player attributes, "sim this race".
 - **0.8 Race tactics** — mark-room (rule 18), rule 16, protests, AI covering/splitting.
@@ -46,6 +49,7 @@ versions, and its issues (5–8 per spec). Don't copy issue lists here.
 - **Later, no milestone:** multiplayer (online).
 
 ## Known issues
+
 - AI starts are often 5–25 s late; occasional AI penalty turns in crowded light-wind beats.
 - Overpowered 420 in 16 kn heels a lot (depower model favours sheeting in).
 - Chemistry has a small effect on spinnaker timing (hoist time dominates).

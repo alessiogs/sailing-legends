@@ -2,7 +2,11 @@
  * Body weight: kg from age and build. Expected values are the spec's, written out by hand.
  */
 import { describe, expect, it } from "vitest";
-import { BUILD_FACTOR, bodyWeightKg, buildFactorOf } from "../src/sailors/BodyWeight";
+import {
+  BUILD_FACTOR,
+  bodyWeightKg,
+  buildFactorOf,
+} from "../src/sailors/BodyWeight";
 
 describe("bodyWeightKg", () => {
   it("follows the age curve for an average build", () => {
@@ -29,10 +33,21 @@ describe("builds", () => {
   it("an AI sailor's build comes from the id, within range and always the same", () => {
     const f = buildFactorOf("luca");
     expect(f).toBe(buildFactorOf("luca"));
-    for (const id of ["luca", "giulia", "marco", "s1", "s2", "s3", "s4", "s5"]) {
+    for (const id of [
+      "luca",
+      "giulia",
+      "marco",
+      "s1",
+      "s2",
+      "s3",
+      "s4",
+      "s5",
+    ]) {
       expect(buildFactorOf(id)).toBeGreaterThanOrEqual(0.85);
       expect(buildFactorOf(id)).toBeLessThanOrEqual(1.15);
     }
-    expect(new Set(["s1", "s2", "s3", "s4", "s5"].map(buildFactorOf)).size).toBeGreaterThan(1);
+    expect(
+      new Set(["s1", "s2", "s3", "s4", "s5"].map(buildFactorOf)).size,
+    ).toBeGreaterThan(1);
   });
 });

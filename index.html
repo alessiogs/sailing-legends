@@ -2,7 +2,10 @@
 <html lang="it">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
     <title>Sailing Legends</title>
   </head>
   <body>
@@ -13,30 +16,112 @@
       <section id="hud" class="off">
         <header id="strip" data-hud>
           <i class="strip-bar"></i>
-          <div class="strip-place" id="position" role="group" data-i18n-aria-label="hud.label.position"><strong id="place">–</strong><span id="boats"></span></div>
+          <div
+            class="strip-place"
+            id="position"
+            role="group"
+            data-i18n-aria-label="hud.label.position"
+          >
+            <strong id="place">–</strong><span id="boats"></span>
+          </div>
           <div class="strip-main">
             <strong id="clock">-0:45</strong>
-            <span class="strip-line"><span id="leg"></span> · <span id="target"></span></span>
+            <span class="strip-line"
+              ><span id="leg"></span> · <span id="target"></span
+            ></span>
           </div>
-          <button id="touch-pause" class="strip-pause" type="button" data-action="pause" data-i18n-aria-label="touch.pause">
-            <svg width="18" height="18" viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3v10M11 3v10" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round"/></svg>
+          <button
+            id="touch-pause"
+            class="strip-pause"
+            type="button"
+            data-action="pause"
+            data-i18n-aria-label="touch.pause"
+          >
+            <svg width="18" height="18" viewBox="0 0 16 16" aria-hidden="true">
+              <path
+                d="M5 3v10M11 3v10"
+                stroke="currentColor"
+                stroke-width="2.4"
+                fill="none"
+                stroke-linecap="round"
+              />
+            </svg>
           </button>
         </header>
 
         <div id="pill" data-hud>
-          <canvas id="compass" width="216" height="216" data-i18n-aria-label="hud.compass"></canvas>
+          <canvas
+            id="compass"
+            width="216"
+            height="216"
+            data-i18n-aria-label="hud.compass"
+          ></canvas>
           <div class="pill-text">
-            <div class="pill-speed"><strong id="speed">0.0</strong><em>kn</em><b id="planing" class="planing-tag hidden" data-i18n="hud.planing"></b></div>
+            <div class="pill-speed">
+              <strong id="speed">0.0</strong><em>kn</em
+              ><b
+                id="planing"
+                class="planing-tag hidden"
+                data-i18n="hud.planing"
+              ></b>
+            </div>
             <div id="pill-line" class="pill-line"></div>
           </div>
         </div>
 
         <div id="round-buttons">
-          <button id="touch-camera" class="round" type="button" data-hud data-action="camera" data-i18n-aria-label="touch.camera">
-            <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><rect x="2" y="6" width="16" height="11" rx="2" stroke="currentColor" stroke-width="1.8" fill="none"/><circle cx="10" cy="11.5" r="3" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M7 6l1.5-2.5h3L13 6" stroke="currentColor" stroke-width="1.8" fill="none"/></svg>
+          <button
+            id="touch-camera"
+            class="round"
+            type="button"
+            data-hud
+            data-action="camera"
+            data-i18n-aria-label="touch.camera"
+          >
+            <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">
+              <rect
+                x="2"
+                y="6"
+                width="16"
+                height="11"
+                rx="2"
+                stroke="currentColor"
+                stroke-width="1.8"
+                fill="none"
+              />
+              <circle
+                cx="10"
+                cy="11.5"
+                r="3"
+                stroke="currentColor"
+                stroke-width="1.8"
+                fill="none"
+              />
+              <path
+                d="M7 6l1.5-2.5h3L13 6"
+                stroke="currentColor"
+                stroke-width="1.8"
+                fill="none"
+              />
+            </svg>
           </button>
-          <button id="panel-toggle" class="round" type="button" data-hud aria-pressed="false" data-i18n-aria-label="hud.panelToggle">
-            <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 15V9M10 15V4M16 15v-4" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round"/></svg>
+          <button
+            id="panel-toggle"
+            class="round"
+            type="button"
+            data-hud
+            aria-pressed="false"
+            data-i18n-aria-label="hud.panelToggle"
+          >
+            <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">
+              <path
+                d="M4 15V9M10 15V4M16 15v-4"
+                stroke="currentColor"
+                stroke-width="2.4"
+                fill="none"
+                stroke-linecap="round"
+              />
+            </svg>
           </button>
         </div>
 
@@ -44,7 +129,9 @@
           <div id="toast"></div>
           <div id="stack">
             <div id="status">
-              <div id="trim-pill" class="status-pill" data-hud><span id="sail-label"></span> · <span id="trim-state">—</span></div>
+              <div id="trim-pill" class="status-pill" data-hud>
+                <span id="sail-label"></span> · <span id="trim-state">—</span>
+              </div>
               <div id="shift" class="status-pill" data-hud></div>
               <div id="call" class="status-pill warn hidden" data-hud></div>
               <div id="penalty" class="status-pill bad hidden" data-hud>
@@ -54,12 +141,23 @@
             </div>
             <section id="panel" class="hidden" data-hud>
               <div class="panel-stats">
-                <div class="stat"><small data-i18n="hud.label.trueWind"></small><strong id="twa">0°</strong><em id="tws">11 kn</em></div>
-                <div class="stat"><small data-i18n="hud.label.heel"></small><strong id="heel">0°</strong><em id="leeway"></em></div>
+                <div class="stat">
+                  <small data-i18n="hud.label.trueWind"></small
+                  ><strong id="twa">0°</strong><em id="tws">11 kn</em>
+                </div>
+                <div class="stat">
+                  <small data-i18n="hud.label.heel"></small
+                  ><strong id="heel">0°</strong><em id="leeway"></em>
+                </div>
               </div>
               <div class="panel-body">
                 <ol id="standings"></ol>
-                <canvas id="minimap" width="400" height="460" data-i18n-aria-label="hud.minimap.label"></canvas>
+                <canvas
+                  id="minimap"
+                  width="400"
+                  height="460"
+                  data-i18n-aria-label="hud.minimap.label"
+                ></canvas>
               </div>
               <div id="chem" class="panel-line hidden"></div>
               <div id="partner-line" class="panel-line hidden"></div>
@@ -69,44 +167,115 @@
         </div>
 
         <div class="tiller" id="gauge-zone" data-hud>
-          <div class="tiller-ends"><span id="gauge-left" data-i18n="hud.gauge.left"></span><small id="gauge-label" data-i18n="hud.gauge.tiller"></small><span id="gauge-right" data-i18n="hud.gauge.right"></span></div>
-          <div class="tiller-bar"><div class="tiller-track" id="tiller-track"><b id="gauge-center"></b><u id="gauge-ideal"></u><i id="tiller-pos"></i></div></div>
+          <div class="tiller-ends">
+            <span id="gauge-left" data-i18n="hud.gauge.left"></span
+            ><small id="gauge-label" data-i18n="hud.gauge.tiller"></small
+            ><span id="gauge-right" data-i18n="hud.gauge.right"></span>
+          </div>
+          <div class="tiller-bar">
+            <div class="tiller-track" id="tiller-track">
+              <b id="gauge-center"></b><u id="gauge-ideal"></u
+              ><i id="tiller-pos"></i>
+            </div>
+          </div>
         </div>
 
         <div id="deck-right">
           <div id="context-buttons">
-            <button id="touch-auto-trim" class="ctx" type="button" data-hud data-action="autoTrim" data-i18n="touch.autoTrim"></button>
-            <button id="touch-spi" class="ctx only-two" type="button" data-hud data-action="spi" data-i18n="touch.spinnaker"></button>
-            <button id="touch-switch" class="ctx only-crew" type="button" data-hud data-action="switch" data-i18n="touch.switchSide"></button>
+            <button
+              id="touch-auto-trim"
+              class="ctx"
+              type="button"
+              data-hud
+              data-action="autoTrim"
+              data-i18n="touch.autoTrim"
+            ></button>
+            <button
+              id="touch-spi"
+              class="ctx only-two"
+              type="button"
+              data-hud
+              data-action="spi"
+              data-i18n="touch.spinnaker"
+            ></button>
+            <button
+              id="touch-switch"
+              class="ctx only-crew"
+              type="button"
+              data-hud
+              data-action="switch"
+              data-i18n="touch.switchSide"
+            ></button>
           </div>
         </div>
 
         <div class="slider hidden" id="hike-zone" data-hud>
           <span class="slider-end" id="hike-top"></span>
-          <div class="slider-bar"><div class="slider-track" id="hike-track"><div id="hike-opt" class="trim-opt"></div><div id="hike-cur" class="trim-cur"></div></div></div>
+          <div class="slider-bar">
+            <div class="slider-track" id="hike-track">
+              <div id="hike-opt" class="trim-opt"></div>
+              <div id="hike-cur" class="trim-cur"></div>
+            </div>
+          </div>
           <span class="slider-end" id="hike-bottom"></span>
         </div>
-        <button id="touch-auto-hike" class="ctx" type="button" data-hud data-action="autoHike" data-i18n="touch.autoHike"></button>
+        <button
+          id="touch-auto-hike"
+          class="ctx"
+          type="button"
+          data-hud
+          data-action="autoHike"
+          data-i18n="touch.autoHike"
+        ></button>
 
         <div class="slider" id="trim-zone" data-hud>
           <span class="slider-end" data-i18n="hud.slider.in"></span>
-          <div class="slider-bar"><div class="slider-track" id="trim-track"><div id="trim-opt" class="trim-opt"></div><div id="trim-cur" class="trim-cur"></div></div></div>
+          <div class="slider-bar">
+            <div class="slider-track" id="trim-track">
+              <div id="trim-opt" class="trim-opt"></div>
+              <div id="trim-cur" class="trim-cur"></div>
+            </div>
+          </div>
           <span class="slider-end" data-i18n="hud.slider.ease"></span>
         </div>
       </section>
 
       <section id="menu" class="overlay">
         <div class="sheet">
-          <div class="brand lg">SAILING <b>LEGENDS</b><span id="version-chip"></span></div>
-          <p class="lede"><span id="lede-class" data-i18n="menu.lede.single"></span> · <span data-i18n="menu.lede.course"></span></p>
+          <div class="brand lg">
+            SAILING <b>LEGENDS</b><span id="version-chip"></span>
+          </div>
+          <p class="lede">
+            <span id="lede-class" data-i18n="menu.lede.single"></span> ·
+            <span data-i18n="menu.lede.course"></span>
+          </p>
           <div class="controls">
-            <div><kbd>A</kbd><kbd>D</kbd> / <kbd>←</kbd><kbd>→</kbd><span data-i18n="menu.keys.tiller"></span></div>
-            <div><kbd>W</kbd> / <kbd>↑</kbd><span data-i18n="controls.action.sheetIn"></span></div>
-            <div><kbd>S</kbd> / <kbd>↓</kbd><span data-i18n="controls.action.sheetOut"></span></div>
-            <div><kbd>T</kbd><span data-i18n="controls.action.autoTrim"></span></div>
-            <div><kbd>Q</kbd><kbd>Z</kbd><span data-i18n="controls.action.hike"></span> <kbd>G</kbd><span data-i18n="controls.action.autoHike"></span></div>
+            <div>
+              <kbd>A</kbd><kbd>D</kbd> / <kbd>←</kbd><kbd>→</kbd
+              ><span data-i18n="menu.keys.tiller"></span>
+            </div>
+            <div>
+              <kbd>W</kbd> / <kbd>↑</kbd
+              ><span data-i18n="controls.action.sheetIn"></span>
+            </div>
+            <div>
+              <kbd>S</kbd> / <kbd>↓</kbd
+              ><span data-i18n="controls.action.sheetOut"></span>
+            </div>
+            <div>
+              <kbd>T</kbd><span data-i18n="controls.action.autoTrim"></span>
+            </div>
+            <div>
+              <kbd>Q</kbd><kbd>Z</kbd
+              ><span data-i18n="controls.action.hike"></span> <kbd>G</kbd
+              ><span data-i18n="controls.action.autoHike"></span>
+            </div>
             <div><kbd>C</kbd><span data-i18n="menu.keys.camera"></span></div>
-            <div><kbd>P</kbd><span data-i18n="controls.action.pause"></span> <kbd>R</kbd><span data-i18n="controls.action.restart"></span> <kbd>V</kbd><span data-i18n="menu.keys.audio"></span></div>
+            <div>
+              <kbd>P</kbd><span data-i18n="controls.action.pause"></span>
+              <kbd>R</kbd><span data-i18n="controls.action.restart"></span>
+              <kbd>V</kbd><span data-i18n="menu.keys.audio"></span>
+            </div>
             <div class="pad" data-i18n="menu.keys.gamepad"></div>
           </div>
           <div class="options">
@@ -121,25 +290,48 @@
               <small data-i18n="menu.label.wind"></small>
               <div class="seg" id="wind-opt">
                 <button data-v="7" data-i18n="menu.wind.light"></button>
-                <button data-v="11" class="on" data-i18n="menu.wind.medium"></button>
+                <button
+                  data-v="11"
+                  class="on"
+                  data-i18n="menu.wind.medium"
+                ></button>
                 <button data-v="15" data-i18n="menu.wind.strong"></button>
               </div>
             </div>
             <div class="opt">
               <small data-i18n="menu.label.controls"></small>
-              <button id="open-controls" class="ghost" data-i18n="menu.openControls"> <span>K</span></button>
+              <button
+                id="open-controls"
+                class="ghost"
+                data-i18n="menu.openControls"
+              >
+                <span>K</span>
+              </button>
               <div id="steer-summary" class="steer-help"></div>
             </div>
-            <label class="opt check"><input type="checkbox" id="auto-trim-opt" checked /> <span data-i18n="menu.autoTrim"></span></label>
-            <label class="opt check"><input type="checkbox" id="auto-hike-opt" checked /> <span data-i18n="menu.autoHike"></span></label>
+            <label class="opt check"
+              ><input type="checkbox" id="auto-trim-opt" checked />
+              <span data-i18n="menu.autoTrim"></span
+            ></label>
+            <label class="opt check"
+              ><input type="checkbox" id="auto-hike-opt" checked />
+              <span data-i18n="menu.autoHike"></span
+            ></label>
           </div>
           <div id="pair-block" class="pair-block hidden">
             <div class="opt">
               <small data-i18n="menu.label.role"></small>
               <div class="seg" id="role-opt">
-                <button data-v="helm" class="on" data-i18n="menu.role.helm"></button>
+                <button
+                  data-v="helm"
+                  class="on"
+                  data-i18n="menu.role.helm"
+                ></button>
                 <button data-v="crew" data-i18n="menu.role.crew"></button>
-                <button data-v="fullBoat" data-i18n="menu.role.fullBoat"></button>
+                <button
+                  data-v="fullBoat"
+                  data-i18n="menu.role.fullBoat"
+                ></button>
               </div>
               <div id="role-help" class="steer-help"></div>
             </div>
@@ -158,7 +350,9 @@
               <li data-i18n="menu.tips.rightOfWay"></li>
             </ul>
           </div>
-          <button id="start-btn" class="primary" data-i18n="menu.start"> <span data-i18n="key.enter"></span></button>
+          <button id="start-btn" class="primary" data-i18n="menu.start">
+            <span data-i18n="key.enter"></span>
+          </button>
         </div>
       </section>
 
@@ -166,9 +360,19 @@
         <div class="sheet small">
           <div class="brand" data-i18n="pause.title"></div>
           <div class="stack">
-            <button id="resume-btn" class="primary" data-i18n="pause.resume"> <span>P</span></button>
-            <button id="pause-controls" class="ghost" data-i18n="pause.controls"> <span>K</span></button>
-            <button id="pause-menu" class="ghost" data-i18n="pause.mainMenu"> <span>M</span></button>
+            <button id="resume-btn" class="primary" data-i18n="pause.resume">
+              <span>P</span>
+            </button>
+            <button
+              id="pause-controls"
+              class="ghost"
+              data-i18n="pause.controls"
+            >
+              <span>K</span>
+            </button>
+            <button id="pause-menu" class="ghost" data-i18n="pause.mainMenu">
+              <span>M</span>
+            </button>
           </div>
           <p class="muted" data-i18n="pause.restartHint"></p>
         </div>
@@ -179,23 +383,38 @@
           <div class="brand" data-i18n="controls.title"></div>
           <div class="settings">
             <div class="setting">
-              <div class="setting-label"><b data-i18n="controls.steering.label"></b>
-                <span id="steer-help" class="steer-help"></span></div>
+              <div class="setting-label">
+                <b data-i18n="controls.steering.label"></b>
+                <span id="steer-help" class="steer-help"></span>
+              </div>
               <div class="seg" id="steer-opt">
-                <button data-v="tiller" data-i18n="controls.steering.tiller"></button>
-                <button data-v="boat" data-i18n="controls.steering.boat"></button>
+                <button
+                  data-v="tiller"
+                  data-i18n="controls.steering.tiller"
+                ></button>
+                <button
+                  data-v="boat"
+                  data-i18n="controls.steering.boat"
+                ></button>
               </div>
             </div>
             <div class="setting">
-              <div class="setting-label"><b data-i18n="controls.autoCenter.label"></b>
-                <span class="steer-help" data-i18n="controls.autoCenter.help"></span></div>
+              <div class="setting-label">
+                <b data-i18n="controls.autoCenter.label"></b>
+                <span
+                  class="steer-help"
+                  data-i18n="controls.autoCenter.help"
+                ></span>
+              </div>
               <div class="seg" id="center-opt">
                 <button data-v="1" data-i18n="controls.autoCenter.on"></button>
                 <button data-v="0" data-i18n="controls.autoCenter.off"></button>
               </div>
             </div>
             <div class="setting">
-              <div class="setting-label"><b data-i18n="controls.tillerSpeed"></b></div>
+              <div class="setting-label">
+                <b data-i18n="controls.tillerSpeed"></b>
+              </div>
               <div class="seg" id="tspeed-opt">
                 <button data-v="0.6" data-i18n="controls.speed.slow"></button>
                 <button data-v="1" data-i18n="controls.speed.normal"></button>
@@ -203,7 +422,9 @@
               </div>
             </div>
             <div class="setting">
-              <div class="setting-label"><b data-i18n="controls.sheetSpeed"></b></div>
+              <div class="setting-label">
+                <b data-i18n="controls.sheetSpeed"></b>
+              </div>
               <div class="seg" id="sspeed-opt">
                 <button data-v="0.6" data-i18n="controls.speed.slow"></button>
                 <button data-v="1" data-i18n="controls.speed.normal"></button>
@@ -212,28 +433,112 @@
             </div>
           </div>
           <table class="keys">
-            <tr><th data-i18n="controls.table.action"></th><th data-i18n="controls.table.keyboard"></th><th data-i18n="controls.table.gamepad"></th></tr>
-            <tr><td id="key-left-label"></td><td><kbd>A</kbd> <kbd>←</kbd></td><td data-i18n="controls.pad.leftStick"></td></tr>
-            <tr><td id="key-right-label"></td><td><kbd>D</kbd> <kbd>→</kbd></td><td data-i18n="controls.pad.leftStick"></td></tr>
-            <tr><td data-i18n="controls.action.fineTiller"></td><td><kbd>Shift</kbd> + <span data-i18n="key.arrows"></span></td><td>—</td></tr>
-            <tr><td data-i18n="controls.action.sheetIn"></td><td><kbd>W</kbd> <kbd>↑</kbd></td><td>RT</td></tr>
-            <tr><td data-i18n="controls.action.sheetOut"></td><td><kbd>S</kbd> <kbd>↓</kbd></td><td>LT</td></tr>
-            <tr><td data-i18n="controls.action.autoTrim"></td><td><kbd>T</kbd></td><td>X</td></tr>
-            <tr><td data-i18n="controls.action.autoHike"></td><td><kbd>G</kbd></td><td>—</td></tr>
-            <tr><td data-i18n="controls.action.hike"></td><td><kbd>Q</kbd> <kbd>Z</kbd> · <kbd>Shift</kbd></td><td>RB / LB</td></tr>
-            <tr><td data-i18n="controls.action.camera"></td><td><kbd>C</kbd></td><td>Y</td></tr>
-            <tr><td data-i18n="controls.action.pause"></td><td><kbd>P</kbd> <kbd>Esc</kbd></td><td>Start</td></tr>
-            <tr><td data-i18n="controls.action.restart"></td><td><kbd>R</kbd></td><td>Back</td></tr>
-            <tr><td colspan="3" class="keys-sub" data-i18n="controls.table.crew420"></td></tr>
-            <tr><td data-i18n="controls.action.crewWeight"></td><td><kbd>A</kbd> <kbd>D</kbd> · <kbd>←</kbd> <kbd>→</kbd></td><td data-i18n="controls.pad.leftStick"></td></tr>
-            <tr><td data-i18n="controls.action.crewSheet"></td><td><kbd>W</kbd> <kbd>S</kbd></td><td>RT / LT</td></tr>
-            <tr><td data-i18n="controls.action.switchSide"></td><td><kbd>E</kbd></td><td>B</td></tr>
-            <tr><td data-i18n="controls.action.spinnaker"></td><td><kbd data-i18n="key.space"></kbd></td><td>A</td></tr>
-            <tr><td data-i18n="controls.action.menus"></td><td><kbd>V</kbd> <kbd>K</kbd> <kbd>M</kbd></td><td>—</td></tr>
+            <tr>
+              <th data-i18n="controls.table.action"></th>
+              <th data-i18n="controls.table.keyboard"></th>
+              <th data-i18n="controls.table.gamepad"></th>
+            </tr>
+            <tr>
+              <td id="key-left-label"></td>
+              <td><kbd>A</kbd> <kbd>←</kbd></td>
+              <td data-i18n="controls.pad.leftStick"></td>
+            </tr>
+            <tr>
+              <td id="key-right-label"></td>
+              <td><kbd>D</kbd> <kbd>→</kbd></td>
+              <td data-i18n="controls.pad.leftStick"></td>
+            </tr>
+            <tr>
+              <td data-i18n="controls.action.fineTiller"></td>
+              <td><kbd>Shift</kbd> + <span data-i18n="key.arrows"></span></td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td data-i18n="controls.action.sheetIn"></td>
+              <td><kbd>W</kbd> <kbd>↑</kbd></td>
+              <td>RT</td>
+            </tr>
+            <tr>
+              <td data-i18n="controls.action.sheetOut"></td>
+              <td><kbd>S</kbd> <kbd>↓</kbd></td>
+              <td>LT</td>
+            </tr>
+            <tr>
+              <td data-i18n="controls.action.autoTrim"></td>
+              <td><kbd>T</kbd></td>
+              <td>X</td>
+            </tr>
+            <tr>
+              <td data-i18n="controls.action.autoHike"></td>
+              <td><kbd>G</kbd></td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td data-i18n="controls.action.hike"></td>
+              <td><kbd>Q</kbd> <kbd>Z</kbd> · <kbd>Shift</kbd></td>
+              <td>RB / LB</td>
+            </tr>
+            <tr>
+              <td data-i18n="controls.action.camera"></td>
+              <td><kbd>C</kbd></td>
+              <td>Y</td>
+            </tr>
+            <tr>
+              <td data-i18n="controls.action.pause"></td>
+              <td><kbd>P</kbd> <kbd>Esc</kbd></td>
+              <td>Start</td>
+            </tr>
+            <tr>
+              <td data-i18n="controls.action.restart"></td>
+              <td><kbd>R</kbd></td>
+              <td>Back</td>
+            </tr>
+            <tr>
+              <td
+                colspan="3"
+                class="keys-sub"
+                data-i18n="controls.table.crew420"
+              ></td>
+            </tr>
+            <tr>
+              <td data-i18n="controls.action.crewWeight"></td>
+              <td><kbd>A</kbd> <kbd>D</kbd> · <kbd>←</kbd> <kbd>→</kbd></td>
+              <td data-i18n="controls.pad.leftStick"></td>
+            </tr>
+            <tr>
+              <td data-i18n="controls.action.crewSheet"></td>
+              <td><kbd>W</kbd> <kbd>S</kbd></td>
+              <td>RT / LT</td>
+            </tr>
+            <tr>
+              <td data-i18n="controls.action.switchSide"></td>
+              <td><kbd>E</kbd></td>
+              <td>B</td>
+            </tr>
+            <tr>
+              <td data-i18n="controls.action.spinnaker"></td>
+              <td><kbd data-i18n="key.space"></kbd></td>
+              <td>A</td>
+            </tr>
+            <tr>
+              <td data-i18n="controls.action.menus"></td>
+              <td><kbd>V</kbd> <kbd>K</kbd> <kbd>M</kbd></td>
+              <td>—</td>
+            </tr>
           </table>
           <div class="row-btns">
-            <button id="controls-reset" class="ghost" data-i18n="controls.reset"></button>
-            <button id="controls-back" class="primary" data-i18n="controls.done"> <span>Esc</span></button>
+            <button
+              id="controls-reset"
+              class="ghost"
+              data-i18n="controls.reset"
+            ></button>
+            <button
+              id="controls-back"
+              class="primary"
+              data-i18n="controls.done"
+            >
+              <span>Esc</span>
+            </button>
           </div>
         </div>
       </section>

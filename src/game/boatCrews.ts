@@ -12,11 +12,15 @@ import type { BoatCrew, FigureWho } from "../world/pose/looks";
 export const PLAYER_FIGURE_ID = "player";
 
 /** The sailors of every boat of `fleet`, by racer id; `career` gives the ages when the race is a Career Race. */
-export function boatCrews(fleet: Fleet, career: CareerState | null): Map<string, BoatCrew> {
+export function boatCrews(
+  fleet: Fleet,
+  career: CareerState | null,
+): Map<string, BoatCrew> {
   const ageOf = (id: string): number | undefined => {
     if (!career) return undefined;
-    if (id === PLAYER_FIGURE_ID) return ageInSeason(career.startingAge, career.season);
-    const s = career.pool.find(p => p.id === id);
+    if (id === PLAYER_FIGURE_ID)
+      return ageInSeason(career.startingAge, career.season);
+    const s = career.pool.find((p) => p.id === id);
     return s && ageInSeason(s.startingAge, career.season);
   };
   const who = (a: Aboard): FigureWho => {
@@ -24,7 +28,10 @@ export function boatCrews(fleet: Fleet, career: CareerState | null): Map<string,
     return { id, age: ageOf(id) };
   };
   const crews = new Map<string, BoatCrew>();
-  for (const b of [...(fleet.player ? [fleet.player] : []), ...fleet.opponents]) {
+  for (const b of [
+    ...(fleet.player ? [fleet.player] : []),
+    ...fleet.opponents,
+  ]) {
     crews.set(b.id, { helm: who(b.helm), crew: b.crew && who(b.crew) });
   }
   return crews;

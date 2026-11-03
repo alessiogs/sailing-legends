@@ -14,14 +14,20 @@ import { OPTIMIST } from "../src/sailing/BoatClass";
 import { BoatSim, createBoat } from "../src/sailing/BoatPhysics";
 import { RIVALS, type SailorProfile } from "../src/sailors/Sailors";
 
-const WIND_FROM = 0, WIND_SPEED = 4;
+const WIND_FROM = 0,
+  WIND_SPEED = 4;
 const SAILOR: SailorProfile = RIVALS[0];
-const STBD = wrapPi(WIND_FROM - CLOSE_HAULED), PORT = wrapPi(WIND_FROM + CLOSE_HAULED);
+const STBD = wrapPi(WIND_FROM - CLOSE_HAULED),
+  PORT = wrapPi(WIND_FROM + CLOSE_HAULED);
 
 /** A fresh race with one Optimist at (x, z); `draws` are the numbers the planner gets from its RNG. */
 function setup(x = -40, z = -30, heading = STBD, draws = [0.5, 0.5], slot = 0) {
   const race = new Race(makeWindwardLeeward(WIND_FROM));
-  const racer = race.add("ai0", { helm: { kind: "ai", name: SAILOR.name }, crew: null }, new BoatSim(OPTIMIST, createBoat(x, z, heading)));
+  const racer = race.add(
+    "ai0",
+    { helm: { kind: "ai", name: SAILOR.name }, crew: null },
+    new BoatSim(OPTIMIST, createBoat(x, z, heading)),
+  );
   let drawn = 0;
   const rand = () => draws[drawn++];
   const planning = new StartPlanning(race, SAILOR, 1, rand, slot);
@@ -33,9 +39,14 @@ function steering(sinceTack = 99) {
   const asked: Point[] = [];
   let tacks = 0;
   const steer: CourseSteering = {
-    headingToward: p => { asked.push(p); return 1.234; },
+    headingToward: (p) => {
+      asked.push(p);
+      return 1.234;
+    },
     sinceTack: () => sinceTack,
-    tackNow: () => { tacks++; },
+    tackNow: () => {
+      tacks++;
+    },
   };
   return { steer, asked, tacks: () => tacks };
 }
@@ -44,7 +55,13 @@ function steering(sinceTack = 99) {
 const near = (p: Point, q: Point) => Math.hypot(p.x - q.x, p.z - q.z) < 1e-6;
 
 const prestart = (planning: StartPlanning, racer: Racer, s: CourseSteering) =>
-  planning.prestart(s, racer.sim.state, racer.sim.telemetry, WIND_SPEED, WIND_FROM);
+  planning.prestart(
+    s,
+    racer.sim.state,
+    racer.sim.telemetry,
+    WIND_SPEED,
+    WIND_FROM,
+  );
 
 describe("start planning: where the boat waits", () => {
   it("draws two numbers: the first places the line point, the second sets the start bias", () => {
@@ -52,7 +69,9 @@ describe("start planning: where the boat waits", () => {
     expect(drawn()).toBe(2);
     // Slot 1 aims 45% along the line from the pin.
     expect(near(planning.linePoint, { x: -24 + 50 * 0.45, z: 0 })).toBe(true);
-    expect(planning.startBias).toBe((1 - SAILOR.discipline) * 5 + (0.9 - 0.5) * 2.5);
+    expect(planning.startBias).toBe(
+      (1 - SAILOR.discipline) * 5 + (0.9 - 0.5) * 2.5,
+    );
   });
 
   it("waits 15 m below and 13 m to the right of its line point (scaled by boat length)", () => {
@@ -79,7 +98,9 @@ describe("start planning: before the gun", () => {
     const steer = prestart(planning, racer, steering().steer);
     expect(steer.debug).toBe("hold");
     expect(steer.desired).toBe(wrapPi(WIND_FROM - 75 * DEG));
-    expect(steer.sheet).toBe(Math.min(1, racer.sim.telemetry.optimalSheet + 0.18));
+    expect(steer.sheet).toBe(
+      Math.min(1, racer.sim.telemetry.optimalSheet + 0.18),
+    );
   });
 
   it("sails to the holding spot through the rest of the Helm when away from it", () => {
@@ -115,14 +136,28 @@ describe("start planning: after the gun, not started yet", () => {
     racer.ocs = true;
     racer.clearedBack = false;
     racer.sim.telemetry.twa = 0.5;
-    const steer = planning.afterGun(steering().steer, racer, racer.sim.telemetry, WIND_FROM);
-    expect(steer).toEqual({ desired: wrapPi(WIND_FROM + Math.PI - 0.35), sheet: 1, debug: "ocs return" });
+    const steer = planning.afterGun(
+      steering().steer,
+      racer,
+      racer.sim.telemetry,
+      WIND_FROM,
+    );
+    expect(steer).toEqual({
+      desired: wrapPi(WIND_FROM + Math.PI - 0.35),
+      sheet: 1,
+      debug: "ocs return",
+    });
   });
 
   it("tacks onto the tack that fetches the line, when the tack timer allows", () => {
     const { planning, racer } = setup(20, -15, PORT);
     const s = steering(10);
-    const steer = planning.afterGun(s.steer, racer, racer.sim.telemetry, WIND_FROM);
+    const steer = planning.afterGun(
+      s.steer,
+      racer,
+      racer.sim.telemetry,
+      WIND_FROM,
+    );
     expect(steer.debug).toBe("restart");
     expect(steer.desired).toBe(STBD);
     expect(s.tacks()).toBe(1);
@@ -131,7 +166,12 @@ describe("start planning: after the gun, not started yet", () => {
   it("heads for the middle of the line instead of tacking again too soon", () => {
     const { planning, racer } = setup(20, -15, PORT);
     const s = steering(3);
-    const steer = planning.afterGun(s.steer, racer, racer.sim.telemetry, WIND_FROM);
+    const steer = planning.afterGun(
+      s.steer,
+      racer,
+      racer.sim.telemetry,
+      WIND_FROM,
+    );
     expect(steer.desired).toBe(1.234);
     expect(s.asked.length === 1 && near(s.asked[0], { x: 1, z: 0 })).toBe(true);
     expect(s.tacks()).toBe(0);

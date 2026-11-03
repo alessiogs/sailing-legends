@@ -76,7 +76,14 @@ export const OPTIMIST: BoatClass = {
   sailorKg: { helm: 42, crew: 0 },
   length: 2.31,
   beam: 1.13,
-  main: { area: 3.3, minSheetDeg: 12, maxSheetDeg: 88, clMax: 1.45, stallDeg: 21, cd0: 0.09 },
+  main: {
+    area: 3.3,
+    minSheetDeg: 12,
+    maxSheetDeg: 88,
+    clMax: 1.45,
+    stallDeg: 21,
+    cd0: 0.09,
+  },
   windage: 0.35,
   hullDrag: 9,
   hullSpeed: 1.75,
@@ -98,9 +105,32 @@ export const I420: BoatClass = {
   sailorKg: { helm: 60, crew: 60 },
   length: 4.2,
   beam: 1.63,
-  main: { area: 7.45, minSheetDeg: 5, maxSheetDeg: 85, clMax: 1.55, stallDeg: 20, cd0: 0.07 },
-  jib: { area: 2.8, minSheetDeg: 8, maxSheetDeg: 55, clMax: 1.6, stallDeg: 19, cd0: 0.06 },
-  spinnaker: { area: 9, minSheetDeg: 30, maxSheetDeg: 100, clMax: 1.5, stallDeg: 28, cd0: 0.18, hoistTime: 3.5, dropTime: 2.5 },
+  main: {
+    area: 7.45,
+    minSheetDeg: 5,
+    maxSheetDeg: 85,
+    clMax: 1.55,
+    stallDeg: 20,
+    cd0: 0.07,
+  },
+  jib: {
+    area: 2.8,
+    minSheetDeg: 8,
+    maxSheetDeg: 55,
+    clMax: 1.6,
+    stallDeg: 19,
+    cd0: 0.06,
+  },
+  spinnaker: {
+    area: 9,
+    minSheetDeg: 30,
+    maxSheetDeg: 100,
+    clMax: 1.5,
+    stallDeg: 28,
+    cd0: 0.18,
+    hoistTime: 3.5,
+    dropTime: 2.5,
+  },
   windage: 0.55,
   hullDrag: 10,
   hullSpeed: 2.7,
@@ -129,7 +159,10 @@ export function isTwoPerson(cls: BoatClass): boolean {
 }
 
 /** Every class, keyed by its id. */
-export const CLASSES: Record<ClassId, BoatClass> = { optimist: OPTIMIST, "420": I420 };
+export const CLASSES: Record<ClassId, BoatClass> = {
+  optimist: OPTIMIST,
+  "420": I420,
+};
 
 /** True when `id` names a class, e.g. a value read back from the page. */
 export function isClassId(id: string | undefined): id is ClassId {

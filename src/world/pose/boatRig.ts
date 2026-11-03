@@ -23,7 +23,8 @@ export function optimistSection(t: number): Section {
 /** The 420's section at `t` (0 stern to 1 bow). */
 export function section420(t: number): Section {
   const base = 0.6 + 0.2 * Math.sin((Math.PI / 2) * Math.min(t / 0.7, 1));
-  const taper = t > 0.5 ? Math.sqrt(Math.max(0, 1 - Math.pow((t - 0.5) / 0.5, 2))) : 1;
+  const taper =
+    t > 0.5 ? Math.sqrt(Math.max(0, 1 - Math.pow((t - 0.5) / 0.5, 2))) : 1;
   return {
     z: -2.1 + t * 4.2,
     wg: Math.max(0.012, base * taper),
@@ -61,29 +62,58 @@ export type RigDims = {
 
 export const RIG: Record<ClassId, RigDims> = {
   // Tiller box at (0, 0.2, 0.4) in the rudder frame, 0.85 long.
-  optimist: { rudderPivot: { x: 0, y: 0.1, z: -1.18 }, tillerTip: { x: 0, y: 0.2, z: 0.825 }, rudderDeg: 30, extension: 0.7, hounds: null, mastZ: 0.78 },
+  optimist: {
+    rudderPivot: { x: 0, y: 0.1, z: -1.18 },
+    tillerTip: { x: 0, y: 0.2, z: 0.825 },
+    rudderDeg: 30,
+    extension: 0.7,
+    hounds: null,
+    mastZ: 0.78,
+  },
   // Tiller box at (0, 0.25, 0.55) in the rudder frame, 1.1 long.
-  "420": { rudderPivot: { x: 0, y: 0.3, z: -2.12 }, tillerTip: { x: 0, y: 0.25, z: 1.1 }, rudderDeg: 28, extension: 0.9, hounds: { x: 0, y: 5.0, z: 0.45 }, mastZ: 0.45 },
+  "420": {
+    rudderPivot: { x: 0, y: 0.3, z: -2.12 },
+    tillerTip: { x: 0, y: 0.25, z: 1.1 },
+    rudderDeg: 28,
+    extension: 0.9,
+    hounds: { x: 0, y: 5.0, z: 0.45 },
+    mastZ: 0.45,
+  },
 };
 
 /** The tiller tip on the body for a tiller pushed `tiller` (+1 to starboard; the rudder turns the other way). */
 export function tillerTip(classId: ClassId, tiller: number): V3 {
   const r = RIG[classId];
   const a = clamp(tiller, -1, 1) * r.rudderDeg * DEG; // the rudder's rotation.y is -rudder * rudderDeg, and rudder = -tiller
-  const c = Math.cos(a), s = Math.sin(a);
+  const c = Math.cos(a),
+    s = Math.sin(a);
   const t = r.tillerTip;
-  return { x: r.rudderPivot.x + t.x * c + t.z * s, y: r.rudderPivot.y + t.y, z: r.rudderPivot.z - t.x * s + t.z * c };
+  return {
+    x: r.rudderPivot.x + t.x * c + t.z * s,
+    y: r.rudderPivot.y + t.y,
+    z: r.rudderPivot.z - t.x * s + t.z * c,
+  };
 }
 
 /**
  * The tiller extension: hinged at the tiller's tip and `extension` long, pointing at `toward` (where the Helm's hand
  * wants it). `end` is its free end, `grip` the place along it the hand holds (`toward` itself when it is in reach).
  */
-export function tillerExtension(classId: ClassId, tiller: number, toward: V3): { base: V3; end: V3; grip: V3 } {
+export function tillerExtension(
+  classId: ClassId,
+  tiller: number,
+  toward: V3,
+): { base: V3; end: V3; grip: V3 } {
   const base = tillerTip(classId, tiller);
-  const dx = toward.x - base.x, dy = toward.y - base.y, dz = toward.z - base.z;
+  const dx = toward.x - base.x,
+    dy = toward.y - base.y,
+    dz = toward.z - base.z;
   const d = Math.hypot(dx, dy, dz) || 1;
   const L = RIG[classId].extension;
-  const at = (len: number): V3 => ({ x: base.x + (dx / d) * len, y: base.y + (dy / d) * len, z: base.z + (dz / d) * len });
+  const at = (len: number): V3 => ({
+    x: base.x + (dx / d) * len,
+    y: base.y + (dy / d) * len,
+    z: base.z + (dz / d) * len,
+  });
   return { base, end: at(L), grip: at(Math.min(L, d)) };
 }

@@ -12,14 +12,27 @@ import { crewWeight, spinnakerState } from "../sailing/BoatStates";
 import { crewChemistry } from "../sailors/Sailors";
 import { crewWeightText, spinnakerText } from "./boatStateText";
 
-type Gauge = { label: string; value: number; centered: boolean; ideal?: number; ends: [string, string] };
+type Gauge = {
+  label: string;
+  value: number;
+  centered: boolean;
+  ideal?: number;
+  ends: [string, string];
+};
 
 /** What the bottom panel shows; depends on the player's Role on board. */
 export type Panel = {
   gauge: Gauge;
   /** The Helm's hike gauge (0 = in or sitting to leeward, 1 = fully out) while the player hikes by hand, else absent. */
   hike?: Gauge;
-  sail: { label: string; sheet: number; optimal: number; state: TrimState; autoTrim: boolean; text?: string };
+  sail: {
+    label: string;
+    sheet: number;
+    optimal: number;
+    state: TrimState;
+    autoTrim: boolean;
+    text?: string;
+  };
   /** True while the player's boat planes (the HUD shows a tag by the speed); absent otherwise. */
   planing?: true;
   /** A call from the Partner the player should act on (the Helm's to the Crew, or the Crew's to the Helm), or null. */
@@ -47,11 +60,23 @@ export type PanelView = {
 };
 
 /** The bottom panel for the player's boat. */
-export function buildPanel({ session, role, control, twoPerson: two, tiller, autoTrim, autoHike }: PanelView): Panel {
+export function buildPanel({
+  session,
+  role,
+  control,
+  twoPerson: two,
+  tiller,
+  autoTrim,
+  autoHike,
+}: PanelView): Panel {
   const p = session.player!;
-  const s = p.sim.state, tel = p.sim.telemetry;
+  const s = p.sim.state,
+    tel = p.sim.telemetry;
   const name = session.partner?.name ?? "";
-  const chem = two && session.partner ? { name, value: crewChemistry(session.partner) } : null;
+  const chem =
+    two && session.partner
+      ? { name, value: crewChemistry(session.partner) }
+      : null;
   if (role === "crew") {
     const spiUp = s.spiHoist > 0.5;
     const sailTel = spiUp ? tel.spi! : tel.jib!;
@@ -60,41 +85,96 @@ export function buildPanel({ session, role, control, twoPerson: two, tiller, aut
     let call: string | null = null;
     const ideal = tel.crew!.ideal;
     if (crewOnWrongSide(p.sim)) call = t("call.switchSide", { name });
-    else if (session.race.phase !== "prestart" && wantSpinnaker(session.race, p) !== !!session.playerControls.spi)
-      call = session.playerControls.spi ? t("call.spiDrop", { name }) : t("call.spiHoist", { name });
+    else if (
+      session.race.phase !== "prestart" &&
+      wantSpinnaker(session.race, p) !== !!session.playerControls.spi
+    )
+      call = session.playerControls.spi
+        ? t("call.spiDrop", { name })
+        : t("call.spiHoist", { name });
     else if (tel.crew!.balance > 60) call = t("call.hikeOut", { name });
-    else if (s.crewOut - ideal > 0.25 && tel.crew!.balance < -20) call = t("call.comeIn", { name });
+    else if (s.crewOut - ideal > 0.25 && tel.crew!.balance < -20)
+      call = t("call.comeIn", { name });
     const where = crewWeightText(crewWeight(s.crewOut), "own");
     const spi = spinnakerText(spinnakerState(s.spiHoist));
     return {
-      gauge: { label: t("hud.gauge.weight", { position: where }), value: s.crewOut, centered: false, ideal, ends: [t("hud.gauge.in"), t("hud.gauge.out")] },
-      sail: { label: spiUp ? t("hud.sail.spinnaker") : t("hud.sail.jib"), sheet, optimal: sailTel.optimal, state: sailTel.trimState, autoTrim,
-        text: tel.jib!.backed && !spiUp ? t("trim.jibBacked") : spiUp && tel.spi!.collapsed ? t("trim.spiCollapsed") : undefined },
-      call, partnerLine: t("hud.partnerLine.helm", { name, spi }), chem,
+      gauge: {
+        label: t("hud.gauge.weight", { position: where }),
+        value: s.crewOut,
+        centered: false,
+        ideal,
+        ends: [t("hud.gauge.in"), t("hud.gauge.out")],
+      },
+      sail: {
+        label: spiUp ? t("hud.sail.spinnaker") : t("hud.sail.jib"),
+        sheet,
+        optimal: sailTel.optimal,
+        state: sailTel.trimState,
+        autoTrim,
+        text:
+          tel.jib!.backed && !spiUp
+            ? t("trim.jibBacked")
+            : spiUp && tel.spi!.collapsed
+              ? t("trim.spiCollapsed")
+              : undefined,
+      },
+      call,
+      partnerLine: t("hud.partnerLine.helm", { name, spi }),
+      chem,
       ...(tel.planing ? { planing: true as const } : {}),
     };
   }
-  const tillerGauge = { label: t("hud.gauge.tiller"), value: tiller, centered: true, ends: [t("hud.gauge.left"), t("hud.gauge.right")] as [string, string] };
-  const sail = { label: two ? t("hud.sail.main") : t("hud.sail.single"), sheet: s.sheet, optimal: tel.optimalSheet, state: tel.trimState, autoTrim };
+  const tillerGauge = {
+    label: t("hud.gauge.tiller"),
+    value: tiller,
+    centered: true,
+    ends: [t("hud.gauge.left"), t("hud.gauge.right")] as [string, string],
+  };
+  const sail = {
+    label: two ? t("hud.sail.main") : t("hud.sail.single"),
+    sheet: s.sheet,
+    optimal: tel.optimalSheet,
+    state: tel.trimState,
+    autoTrim,
+  };
   let partnerLine: string | null = null;
   if (two) {
     const weight = crewWeightText(crewWeight(s.crewOut), "partner");
     const spi = spinnakerText(spinnakerState(s.spiHoist));
-    partnerLine = t(control === "fullBoat" ? "hud.partnerLine.crewOnCall" : "hud.partnerLine.crew", { name, weight, spi });
+    partnerLine = t(
+      control === "fullBoat"
+        ? "hud.partnerLine.crewOnCall"
+        : "hud.partnerLine.crew",
+      { name, weight, spi },
+    );
   }
-  const panel: Panel = { gauge: tillerGauge, sail, call: null, partnerLine, chem };
+  const panel: Panel = {
+    gauge: tillerGauge,
+    sail,
+    call: null,
+    partnerLine,
+    chem,
+  };
   if (tel.planing) panel.planing = true;
   // The Crew's call to a Helm who is over-heeling in the 420: flatten with the main, and hike too if the Helm's own weight is short.
   if (two && control === "playerCareer" && tel.crew && tel.crew.balance > 60) {
-    const short = !autoHike && tel.helm !== undefined && tel.helm.ideal - s.helmOut > 0.25;
+    const short =
+      !autoHike && tel.helm !== undefined && tel.helm.ideal - s.helmOut > 0.25;
     panel.call = t(short ? "call.easeHike" : "call.flatten", { name });
   }
   if (!autoHike) {
     // Along the gauge: from the class's lowest weight position (sitting to leeward in the 420) to fully out.
-    const low = p.sim.cls.helmRighting.leewardMin, along = (out: number) => (out - low) / (1 - low);
+    const low = p.sim.cls.helmRighting.leewardMin,
+      along = (out: number) => (out - low) / (1 - low);
     panel.hike = {
-      label: t("hud.gauge.hike"), value: along(s.helmOut), centered: false, ideal: along(tel.helm!.ideal),
-      ends: [t(low < 0 ? "hud.slider.hikeLeeward" : "hud.slider.hikeIn"), t("hud.slider.hikeOut")],
+      label: t("hud.gauge.hike"),
+      value: along(s.helmOut),
+      centered: false,
+      ideal: along(tel.helm!.ideal),
+      ends: [
+        t(low < 0 ? "hud.slider.hikeLeeward" : "hud.slider.hikeIn"),
+        t("hud.slider.hikeOut"),
+      ],
     };
   }
   return panel;

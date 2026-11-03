@@ -6,7 +6,12 @@ import { clamp } from "../core/math";
 import type { RegattaLevel } from "./Calendar";
 
 /** The rating each level clusters around for 13-year-olds. */
-const LEVEL_AT_13: Readonly<Record<RegattaLevel, number>> = { club: 0.38, regional: 0.5, national: 0.62, international: 0.74 };
+const LEVEL_AT_13: Readonly<Record<RegattaLevel, number>> = {
+  club: 0.38,
+  regional: 0.5,
+  national: 0.62,
+  international: 0.74,
+};
 
 /** How much stronger a level's sailors are per year of age, from 8 to 16. */
 export const STRENGTH_PER_YEAR = 0.02;

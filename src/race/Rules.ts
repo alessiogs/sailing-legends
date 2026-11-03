@@ -11,15 +11,22 @@ import type { BoatSim } from "../sailing/BoatPhysics";
  * Penalties (Rule 44): two turns (720°) for a Part 2 breach, one turn (360°) for touching a mark.
  * Not modelled yet: mark-room (18), changing course near a right-of-way boat (16), proper course.
  */
-export type Verdict = { atFault: 0 | 1; rule: RightOfWayRule; reason: VerdictReason } | null;
+export type Verdict = {
+  atFault: 0 | 1;
+  rule: RightOfWayRule;
+  reason: VerdictReason;
+} | null;
 
 /** The Part 2 right-of-way rules judged on contact. */
 export type RightOfWayRule = "10" | "11" | "12" | "13";
 /** Any rule a boat can be penalised under: a right-of-way rule, or 31 for touching a mark. */
 export type Rule = RightOfWayRule | "31";
 /** Why the boat at fault had to keep clear (one per right-of-way rule; the UI words it). */
-export type VerdictReason = "tacking" | "portStarboard" | "clearAstern" | "windward";
-
+export type VerdictReason =
+  | "tacking"
+  | "portStarboard"
+  | "clearAstern"
+  | "windward";
 
 /** +1 starboard tack (wind over the starboard side), -1 port tack. */
 export function tackOf(sim: BoatSim): number {
@@ -32,9 +39,12 @@ export function isTacking(sim: BoatSim): boolean {
 
 /** True if boat b is clear astern of boat a (b's bow behind a line abeam from a's stern). */
 export function clearAstern(a: BoatSim, b: BoatSim): boolean {
-  const fx = Math.sin(a.state.heading), fz = Math.cos(a.state.heading);
-  const ha = a.cls.length / 2, hb = b.cls.length / 2;
-  const sternX = a.state.x - fx * ha, sternZ = a.state.z - fz * ha;
+  const fx = Math.sin(a.state.heading),
+    fz = Math.cos(a.state.heading);
+  const ha = a.cls.length / 2,
+    hb = b.cls.length / 2;
+  const sternX = a.state.x - fx * ha,
+    sternZ = a.state.z - fz * ha;
   const bowX = b.state.x + Math.sin(b.state.heading) * hb;
   const bowZ = b.state.z + Math.cos(b.state.heading) * hb;
   return (bowX - sternX) * fx + (bowZ - sternZ) * fz < 0;
@@ -42,15 +52,22 @@ export function clearAstern(a: BoatSim, b: BoatSim): boolean {
 
 /** Which of two boats had to keep clear, given the mean wind direction (for windward/leeward). */
 export function judge(a: BoatSim, b: BoatSim, windDir: number): Verdict {
-  const ta = isTacking(a), tb = isTacking(b);
+  const ta = isTacking(a),
+    tb = isTacking(b);
   if (ta !== tb) return { atFault: ta ? 0 : 1, rule: "13", reason: "tacking" };
   if (ta && tb) return null;
-  const tackA = tackOf(a), tackB = tackOf(b);
-  if (tackA !== tackB) return { atFault: tackA < 0 ? 0 : 1, rule: "10", reason: "portStarboard" };
-  if (clearAstern(a, b)) return { atFault: 1, rule: "12", reason: "clearAstern" };
-  if (clearAstern(b, a)) return { atFault: 0, rule: "12", reason: "clearAstern" };
-  const ux = dirX(windDir), uz = dirZ(windDir);
-  const upA = a.state.x * ux + a.state.z * uz, upB = b.state.x * ux + b.state.z * uz;
+  const tackA = tackOf(a),
+    tackB = tackOf(b);
+  if (tackA !== tackB)
+    return { atFault: tackA < 0 ? 0 : 1, rule: "10", reason: "portStarboard" };
+  if (clearAstern(a, b))
+    return { atFault: 1, rule: "12", reason: "clearAstern" };
+  if (clearAstern(b, a))
+    return { atFault: 0, rule: "12", reason: "clearAstern" };
+  const ux = dirX(windDir),
+    uz = dirZ(windDir);
+  const upA = a.state.x * ux + a.state.z * uz,
+    upB = b.state.x * ux + b.state.z * uz;
   return { atFault: upA > upB ? 0 : 1, rule: "11", reason: "windward" };
 }
 

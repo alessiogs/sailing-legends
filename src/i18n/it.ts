@@ -11,20 +11,34 @@ export const italian = {
   // Main menu.
   "menu.lede.twoPerson": "Prova 420, in due con fiocco, spinnaker e trapezio",
   "menu.lede.single": "Prova Optimist",
-  "menu.versionChip": ({ boatClass }: { boatClass: string }) => `PROTOTIPO 0.6 · ${boatClass}`,
-  "menu.roleHelp.helm": "Timone e randa. Il tuo prodiere regola fiocco e spi, esce al trapezio e decide quando issare lo spi.",
-  "menu.roleHelp.crew": "Il partner timona. Tu: W/S fiocco (o spi), A/D peso dentro/fuori fino al trapezio, E cambio lato dopo virate e strambate, Spazio issa/ammaina lo spi. Ascolta le sue chiamate.",
-  "menu.roleHelp.fullBoat": "Timone e randa, e chiami tu le manovre: Spazio = issa/ammaina lo spi. Il prodiere esegue (più in fretta se l'intesa è alta).",
-  "menu.partnerStats": ({ chemistry, technique, discipline }: { chemistry: number; technique: number; discipline: number }) =>
+  "menu.versionChip": ({ boatClass }: { boatClass: string }) =>
+    `PROTOTIPO 0.6 · ${boatClass}`,
+  "menu.roleHelp.helm":
+    "Timone e randa. Il tuo prodiere regola fiocco e spi, esce al trapezio e decide quando issare lo spi.",
+  "menu.roleHelp.crew":
+    "Il partner timona. Tu: W/S fiocco (o spi), A/D peso dentro/fuori fino al trapezio, E cambio lato dopo virate e strambate, Spazio issa/ammaina lo spi. Ascolta le sue chiamate.",
+  "menu.roleHelp.fullBoat":
+    "Timone e randa, e chiami tu le manovre: Spazio = issa/ammaina lo spi. Il prodiere esegue (più in fretta se l'intesa è alta).",
+  "menu.partnerStats": ({
+    chemistry,
+    technique,
+    discipline,
+  }: {
+    chemistry: number;
+    technique: number;
+    discipline: number;
+  }) =>
     `Intesa ${chemistry}/100 · tecnica ${technique} · affidabilità ${discipline}`,
 
   // Main menu, static page text (index.html, data-i18n attributes).
   "menu.loading": "Caricamento regata…",
-  "menu.lede.course": "Bastone (bolina – poppa – bolina). Partenza con 45 secondi di procedura. Leggi il vento: le zone d'acqua più scure sono raffiche.",
+  "menu.lede.course":
+    "Bastone (bolina – poppa – bolina). Partenza con 45 secondi di procedura. Leggi il vento: le zone d'acqua più scure sono raffiche.",
   "menu.keys.tiller": "Barra (Shift = fine)",
   "menu.keys.camera": "Camera: inseguimento / libera / tattica",
   "menu.keys.audio": "Audio",
-  "menu.keys.gamepad": "Gamepad: stick sinistro barra · RT/LT cazza/lasca · Y camera · X auto-vela · RB/LB fuori/dentro",
+  "menu.keys.gamepad":
+    "Gamepad: stick sinistro barra · RT/LT cazza/lasca · Y camera · X auto-vela · RB/LB fuori/dentro",
   "menu.label.boat": "BARCA",
   "menu.label.wind": "VENTO",
   "menu.wind.light": "Leggero 7 kn",
@@ -40,11 +54,16 @@ export const italian = {
   "menu.role.fullBoat": "Barca completa",
   "menu.label.partner": "IL TUO COMPAGNO · CREW CHEMISTRY",
   "menu.tips.title": "Come si va veloci",
-  "menu.tips.upwind": "Non puoi puntare dritto nel vento: sotto i ~40° la vela sbatte. Risali a zig-zag virando.",
-  "menu.tips.trimBar": "La barra in basso mostra la regolazione ideale (zona verde): tieni l'indicatore lì dentro.",
-  "menu.tips.tacks": "Le virate costano velocità: falle con la barca lanciata, non da ferma.",
-  "menu.tips.marksAndStart": "Boe da lasciare a sinistra. Alla partenza resta sotto la linea fino allo sparo.",
-  "menu.tips.rightOfWay": "Precedenze: mure a sinistra dà acqua a mure a dritta, sopravvento a sottovento, chi è dietro a chi è davanti. Se tocchi per colpa tua: 2 giri di penalità; se tocchi una boa: 1 giro.",
+  "menu.tips.upwind":
+    "Non puoi puntare dritto nel vento: sotto i ~40° la vela sbatte. Risali a zig-zag virando.",
+  "menu.tips.trimBar":
+    "La barra in basso mostra la regolazione ideale (zona verde): tieni l'indicatore lì dentro.",
+  "menu.tips.tacks":
+    "Le virate costano velocità: falle con la barca lanciata, non da ferma.",
+  "menu.tips.marksAndStart":
+    "Boe da lasciare a sinistra. Alla partenza resta sotto la linea fino allo sparo.",
+  "menu.tips.rightOfWay":
+    "Precedenze: mure a sinistra dà acqua a mure a dritta, sopravvento a sottovento, chi è dietro a chi è davanti. Se tocchi per colpa tua: 2 giri di penalità; se tocchi una boa: 1 giro.",
   "menu.start": "Inizia prova",
   "menu.label.language": "LINGUA",
   "menu.language.it": "Italiano",
@@ -58,8 +77,10 @@ export const italian = {
   "pause.restartHint": "R per ricominciare la prova",
 
   // Controls menu.
-  "controls.steerHelp.tiller": "→ sposta la barra a destra e la barca gira a sinistra, come nella realtà.",
-  "controls.steerHelp.boat": "→ fa girare la barca a destra (la barra va dal lato opposto da sola).",
+  "controls.steerHelp.tiller":
+    "→ sposta la barra a destra e la barca gira a sinistra, come nella realtà.",
+  "controls.steerHelp.boat":
+    "→ fa girare la barca a destra (la barra va dal lato opposto da sola).",
   "controls.keyLeft.tiller": "Barra a sinistra (la barca gira a destra)",
   "controls.keyLeft.boat": "Gira a sinistra",
   "controls.keyRight.tiller": "Barra a destra (la barca gira a sinistra)",
@@ -71,7 +92,8 @@ export const italian = {
   "controls.steering.tiller": "Muovi la barra",
   "controls.steering.boat": "Direzione della barca",
   "controls.autoCenter.label": "Ritorno della barra al centro",
-  "controls.autoCenter.help": "Se disattivato la barra resta dove la lasci, come una barra vera.",
+  "controls.autoCenter.help":
+    "Se disattivato la barra resta dove la lasci, come una barra vera.",
   "controls.autoCenter.on": "Automatico",
   "controls.autoCenter.off": "Resta ferma",
   "controls.tillerSpeed": "Velocità della barra",
@@ -123,7 +145,8 @@ export const italian = {
   "toast.spi.drop": "Ammaina lo spi!",
   "toast.spi.callHoist": "Tu: «Issa!»",
   "toast.spi.callDrop": "Tu: «Ammaina!»",
-  "toast.spi.partnerDecides": ({ name }: { name: string }) => `Lo spi lo decide ${name} (in "Barca completa" lo chiami tu)`,
+  "toast.spi.partnerDecides": ({ name }: { name: string }) =>
+    `Lo spi lo decide ${name} (in "Barca completa" lo chiami tu)`,
   "toast.spi.crewDecides": `Lo spi lo decide il prodiere (in "Barca completa" lo chiami tu)`,
 
   // Names in a race (ui/raceNames.ts): the course's legs, the player, and a boat as "Helm/Crew".
@@ -131,15 +154,18 @@ export const italian = {
   "race.leg.mark2": "Boa 2",
   "race.leg.finish": "Arrivo",
   "race.player": "Tu",
-  "race.pair": ({ helm, crew }: { helm: string; crew: string }) => `${helm}/${crew}`,
+  "race.pair": ({ helm, crew }: { helm: string; crew: string }) =>
+    `${helm}/${crew}`,
 
   // Race events (ui/raceEventText.ts words each event the race emits).
-  "event.warning": ({ seconds }: { seconds: number }) => `${seconds} secondi alla partenza`,
+  "event.warning": ({ seconds }: { seconds: number }) =>
+    `${seconds} secondi alla partenza`,
   "event.gun": "PARTENZA!",
   "event.ocs": "OCS! Partenza anticipata: torna sotto la linea",
   "event.ocsCleared": "Rientrato: ora puoi ripartire",
   "event.start": ({ next }: { next: string }) => `Partito · ${next}`,
-  "event.rounded": ({ rounded, next }: { rounded: string; next: string }) => `${rounded} girata · ora: ${next}`,
+  "event.rounded": ({ rounded, next }: { rounded: string; next: string }) =>
+    `${rounded} girata · ora: ${next}`,
   "event.finish": ({ place }: { place: number }) => `ARRIVO! ${place}° posto`,
   "event.finishDsq": "ARRIVO, ma penalità non scontata: squalificato (DSQ)",
   "event.penalty": ({ turns, reason }: { turns: number; reason: string }) =>
@@ -147,10 +173,22 @@ export const italian = {
   "event.penalty.rule": ({ rule }: { rule: string }) => `regola ${rule}`,
   "event.penalty.markTouched": "boa toccata, regola 31",
   "event.penaltyDone": "Penalità scontata",
-  "event.contact.atFault": ({ other, rule, reason }: { other: string; rule: string; reason: string }) =>
-    `Contatto con ${other}: regola ${rule}, ${reason}`,
-  "event.contact.touchedBy": ({ other, rule }: { other: string; rule: string }) =>
-    `${other} ti ha toccato (regola ${rule}): penalità a ${other}`,
+  "event.contact.atFault": ({
+    other,
+    rule,
+    reason,
+  }: {
+    other: string;
+    rule: string;
+    reason: string;
+  }) => `Contatto con ${other}: regola ${rule}, ${reason}`,
+  "event.contact.touchedBy": ({
+    other,
+    rule,
+  }: {
+    other: string;
+    rule: string;
+  }) => `${other} ti ha toccato (regola ${rule}): penalità a ${other}`,
   // Why the boat at fault had to keep clear (Rules.ts VerdictReason).
   "event.reason.tacking": "stava virando",
   "event.reason.portStarboard": "mure a sinistra contro mure a dritta",
@@ -160,24 +198,37 @@ export const italian = {
   // Coaching: manoeuvre feedback and hints.
   "coach.tack": "Virata!",
   "coach.gybe": "Strambata!",
-  "coach.partnerTack": ({ name }: { name: string }) => `${name}: «Viro!» — cambia lato (E)`,
-  "coach.partnerGybe": ({ name }: { name: string }) => `${name}: «Strambo!» — cambia lato (E)`,
-  "coach.partnerReadyAbout": ({ name }: { name: string }) => `${name}: «Pronti a virare… Vira!»`,
-  "coach.irons.tiller": "Sei fermo prua al vento: lasca (S) e spingi la barra per poggiare",
-  "coach.irons.boat": "Sei fermo prua al vento: lasca (S) e poggia con il timone",
+  "coach.partnerTack": ({ name }: { name: string }) =>
+    `${name}: «Viro!» — cambia lato (E)`,
+  "coach.partnerGybe": ({ name }: { name: string }) =>
+    `${name}: «Strambo!» — cambia lato (E)`,
+  "coach.partnerReadyAbout": ({ name }: { name: string }) =>
+    `${name}: «Pronti a virare… Vira!»`,
+  "coach.irons.tiller":
+    "Sei fermo prua al vento: lasca (S) e spingi la barra per poggiare",
+  "coach.irons.boat":
+    "Sei fermo prua al vento: lasca (S) e poggia con il timone",
 
   // Partner calls the player (as Crew) should act on.
-  "call.switchSide": ({ name }: { name: string }) => `${name}: «Cambia lato!» → premi E`,
-  "call.spiHoist": ({ name }: { name: string }) => `${name}: «Issa lo spi!» → Spazio`,
-  "call.spiDrop": ({ name }: { name: string }) => `${name}: «Ammaina!» → Spazio`,
-  "call.hikeOut": ({ name }: { name: string }) => `${name}: «Fuori! Siamo sbandati» → D / →`,
-  "call.comeIn": ({ name }: { name: string }) => `${name}: «Dentro! Ci rovesciamo sopravvento» → A / ←`,
-  "call.flatten": ({ name }: { name: string }) => `${name}: «Appiattisci! Allenta la randa» → S / ↓`,
-  "call.easeHike": ({ name }: { name: string }) => `${name}: «Allenta e vai fuori!» → S / ↓ e Q`,
+  "call.switchSide": ({ name }: { name: string }) =>
+    `${name}: «Cambia lato!» → premi E`,
+  "call.spiHoist": ({ name }: { name: string }) =>
+    `${name}: «Issa lo spi!» → Spazio`,
+  "call.spiDrop": ({ name }: { name: string }) =>
+    `${name}: «Ammaina!» → Spazio`,
+  "call.hikeOut": ({ name }: { name: string }) =>
+    `${name}: «Fuori! Siamo sbandati» → D / →`,
+  "call.comeIn": ({ name }: { name: string }) =>
+    `${name}: «Dentro! Ci rovesciamo sopravvento» → A / ←`,
+  "call.flatten": ({ name }: { name: string }) =>
+    `${name}: «Appiattisci! Allenta la randa» → S / ↓`,
+  "call.easeHike": ({ name }: { name: string }) =>
+    `${name}: «Allenta e vai fuori!» → S / ↓ e Q`,
 
   // HUD: race card, instruments, bottom panel.
   "hud.label.position": "POSIZIONE",
-  "hud.pillLine": ({ vmg, wind }: { vmg: string; wind: string }) => `VMG ${vmg} · VENTO ${wind}`,
+  "hud.pillLine": ({ vmg, wind }: { vmg: string; wind: string }) =>
+    `VMG ${vmg} · VENTO ${wind}`,
   "hud.panelToggle": "Classifica e mappa",
   "hud.slider.in": "CAZZA",
   "hud.slider.ease": "LASCA",
@@ -195,19 +246,40 @@ export const italian = {
   "hud.leg.prestart": "Sotto la linea",
   "hud.leg.cross": "Taglia la linea",
   "hud.leg.done": "Prova conclusa",
-  "hud.leg.sailing": ({ leg, legs, target }: { leg: number; legs: number; target: string }) => `Lato ${leg}/${legs} · ${target}`,
-  "hud.twa": ({ angle, starboard }: { angle: string; starboard: boolean }) => `${angle}° ${starboard ? "dx" : "sx"}`,
+  "hud.leg.sailing": ({
+    leg,
+    legs,
+    target,
+  }: {
+    leg: number;
+    legs: number;
+    target: string;
+  }) => `Lato ${leg}/${legs} · ${target}`,
+  "hud.twa": ({ angle, starboard }: { angle: string; starboard: boolean }) =>
+    `${angle}° ${starboard ? "dx" : "sx"}`,
   "hud.leeway": ({ angle }: { angle: string }) => `scarroccio ${angle}°`,
-  "hud.shift.lift": ({ shift }: { shift: string }) => `A favore ${shift}° · tieni queste mure`,
-  "hud.shift.header": ({ shift }: { shift: string }) => `Contro ${shift}° · valuta la virata`,
-  "hud.chem.pair": ({ name }: { name: string }) => `Equipaggio con ${name} · Intesa`,
+  "hud.shift.lift": ({ shift }: { shift: string }) =>
+    `A favore ${shift}° · tieni queste mure`,
+  "hud.shift.header": ({ shift }: { shift: string }) =>
+    `Contro ${shift}° · valuta la virata`,
+  "hud.chem.pair": ({ name }: { name: string }) =>
+    `Equipaggio con ${name} · Intesa`,
   "hud.chem.value": ({ value }: { value: number }) => `${value}/100`,
-  "hud.penalty": ({ turns, done, total }: { turns: number; done: number; total: number }) =>
+  "hud.penalty": ({
+    turns,
+    done,
+    total,
+  }: {
+    turns: number;
+    done: number;
+    total: number;
+  }) =>
     `Penalità: ${plural(turns, { one: `${turns} giro`, other: `${turns} giri` })} da fare (${done}° / ${total}°) · gira sempre nello stesso verso`,
   "hud.gauge.tiller": "TIMONE",
   "hud.gauge.left": "◀ SX",
   "hud.gauge.right": "DX ▶",
-  "hud.gauge.weight": ({ position }: { position: string }) => `${position.toUpperCase()}`,
+  "hud.gauge.weight": ({ position }: { position: string }) =>
+    `${position.toUpperCase()}`,
   "hud.gauge.hike": "PESO TIMONIERE",
   "hud.planing": "PLANATA",
   "hud.gauge.leeward": "◀ SOTTOVENTO",
@@ -217,10 +289,26 @@ export const italian = {
   "hud.sail.single": "REGOLAZIONE VELA",
   "hud.sail.jib": "FIOCCO",
   "hud.sail.spinnaker": "SPINNAKER",
-  "hud.partnerLine.helm": ({ name, spi }: { name: string; spi: string }) => `${name} al timone e alla randa · spi: ${spi}`,
-  "hud.partnerLine.crew": ({ name, weight, spi }: { name: string; weight: string; spi: string }) => `${name}: ${weight} · spi ${spi}`,
-  "hud.partnerLine.crewOnCall": ({ name, weight, spi }: { name: string; weight: string; spi: string }) =>
-    `${name}: ${weight} · spi ${spi} · Spazio = issa/ammaina`,
+  "hud.partnerLine.helm": ({ name, spi }: { name: string; spi: string }) =>
+    `${name} al timone e alla randa · spi: ${spi}`,
+  "hud.partnerLine.crew": ({
+    name,
+    weight,
+    spi,
+  }: {
+    name: string;
+    weight: string;
+    spi: string;
+  }) => `${name}: ${weight} · spi ${spi}`,
+  "hud.partnerLine.crewOnCall": ({
+    name,
+    weight,
+    spi,
+  }: {
+    name: string;
+    weight: string;
+    spi: string;
+  }) => `${name}: ${weight} · spi ${spi} · Spazio = issa/ammaina`,
   // Crew weight and spinnaker state (sailing/BoatStates), worded by ui/boatStateText for the lines above and the weight gauge.
   "hud.weight.trapeze": "al trapezio",
   "hud.weight.hiking": "in cinghia",
@@ -230,7 +318,15 @@ export const italian = {
   "hud.spi.moving": "in manovra",
   "hud.spi.down": "giù",
   "hud.minimap.wind": "VENTO",
-  "hud.tag": ({ position, name, ocs }: { position: number; name: string; ocs: boolean }) => `${position}° ${name}${ocs ? " · OCS" : ""}`,
+  "hud.tag": ({
+    position,
+    name,
+    ocs,
+  }: {
+    position: number;
+    name: string;
+    ocs: boolean;
+  }) => `${position}° ${name}${ocs ? " · OCS" : ""}`,
 
   // Sail trim state under the trim bar.
   "trim.good": "Vela regolata ✓",
@@ -247,7 +343,8 @@ export const italian = {
   "standings.ocs": "OCS",
   "standings.prestart": "pre",
   "standings.start": "partenza",
-  "standings.leg": ({ leg, legs }: { leg: number; legs: number }) => `lato ${leg}/${legs}`,
+  "standings.leg": ({ leg, legs }: { leg: number; legs: number }) =>
+    `lato ${leg}/${legs}`,
 
   // Results table.
   "results.title": "RISULTATI",
@@ -261,63 +358,116 @@ export const italian = {
   "career.back": "Indietro",
   "career.mainMenu": "Menu principale",
   "career.age.title": "Quanti anni hai?",
-  "career.age.help": "Inizi la carriera in Optimist a questa età: ogni stagione ti fa crescere di un anno.",
+  "career.age.help":
+    "Inizi la carriera in Optimist a questa età: ogni stagione ti fa crescere di un anno.",
   "career.age.replaces": "La carriera salvata sarà sostituita.",
-  "career.build.help": "Com'è la tua corporatura? Più leggero vai meglio con poco vento, più pesante con la brezza.",
+  "career.build.help":
+    "Com'è la tua corporatura? Più leggero vai meglio con poco vento, più pesante con la brezza.",
   "career.build.light": "Leggera",
   "career.build.average": "Media",
   "career.build.heavy": "Robusta",
   "career.age.start": "Inizia la carriera",
   "career.unreadable.title": "Salvataggio illeggibile",
-  "career.unreadable.text": "Non riesco a leggere il salvataggio della carriera (forse è vecchio o rovinato). Vuoi iniziare una nuova carriera?",
+  "career.unreadable.text":
+    "Non riesco a leggere il salvataggio della carriera (forse è vecchio o rovinato). Vuoi iniziare una nuova carriera?",
   "career.unreadable.yes": "Nuova carriera",
   "career.unreadable.no": "Torna al menu",
   "career.calendar.title": ({ season, age }: { season: number; age: number }) =>
     `Stagione ${season} · ${plural(age, { one: `${age} anno`, other: `${age} anni` })}`,
-  "career.calendar.regatta": ({ number, venue }: { number: number; venue: string }) => `Regata ${number} · ${venue}`,
-  "career.calendar.detail": ({ boatClass, boats, races }: { boatClass: string; boats: number; races: number }) =>
+  "career.calendar.regatta": ({
+    number,
+    venue,
+  }: {
+    number: number;
+    venue: string;
+  }) => `Regata ${number} · ${venue}`,
+  "career.calendar.detail": ({
+    boatClass,
+    boats,
+    races,
+  }: {
+    boatClass: string;
+    boats: number;
+    races: number;
+  }) =>
     `${boatClass} · ${plural(boats, { one: `${boats} barca`, other: `${boats} barche` })} · ${plural(races, { one: `${races} prova`, other: `${races} prove` })}`,
-  "career.calendar.stage": ({ stage, stages }: { stage: number; stages: number }) => `Zonale – tappa ${stage} di ${stages}`,
+  "career.calendar.stage": ({
+    stage,
+    stages,
+  }: {
+    stage: number;
+    stages: number;
+  }) => `Zonale – tappa ${stage} di ${stages}`,
   "career.level.club": "Club",
   "career.level.regional": "Regionale",
   "career.level.national": "Nazionale",
   "career.level.international": "Internazionale",
   "career.regatta.done": "Conclusa",
-  "career.regatta.next": ({ race, races }: { race: number; races: number }) => `Prova ${race} di ${races}`,
+  "career.regatta.next": ({ race, races }: { race: number; races: number }) =>
+    `Prova ${race} di ${races}`,
   "career.regatta.upcoming": "In programma",
-  "career.race.start": ({ race }: { race: number }) => `Inizia la prova ${race}`,
+  "career.race.start": ({ race }: { race: number }) =>
+    `Inizia la prova ${race}`,
   "career.seasonOver": "Tutte le regate della stagione sono concluse.",
   "career.results.next": "Prossima prova",
   "career.results.calendar": "Calendario",
   "career.results.standings": "Classifica",
-  "career.standings.title": ({ number, venue }: { number: number; venue: string }) => `Classifica · Regata ${number} · ${venue}`,
+  "career.standings.title": ({
+    number,
+    venue,
+  }: {
+    number: number;
+    venue: string;
+  }) => `Classifica · Regata ${number} · ${venue}`,
   "career.standings.regatta": "Classifica della regata",
   "career.standings.season": "Classifica di stagione",
   "career.standings.you": "Tu",
-  "career.standings.kg": ({ name, kg }: { name: string; kg: number }) => `${name} · ${kg} kg`,
-  "career.standings.points": ({ points }: { points: number }) => plural(points, { one: `${points} punto`, other: `${points} punti` }),
+  "career.standings.kg": ({ name, kg }: { name: string; kg: number }) =>
+    `${name} · ${kg} kg`,
+  "career.standings.points": ({ points }: { points: number }) =>
+    plural(points, { one: `${points} punto`, other: `${points} punti` }),
   "career.standings.last": "Ultima classifica",
   "career.standings.continue": "Avanti",
   "career.rival.beatYou": ({ name, gap }: { name: string; gap: number }) =>
     `${name} ti ha battuto di ${plural(gap, { one: `${gap} punto`, other: `${gap} punti` })}`,
   "career.rival.youBeat": ({ name, gap }: { name: string; gap: number }) =>
     `Hai battuto ${name} di ${plural(gap, { one: `${gap} punto`, other: `${gap} punti` })}`,
-  "career.rival.tieBeatYou": ({ name }: { name: string }) => `${name} ti ha preceduto a pari punti`,
-  "career.rival.youTie": ({ name }: { name: string }) => `Hai preceduto ${name} a pari punti`,
-  "career.summary.title": ({ season }: { season: number }) => `Stagione ${season} conclusa`,
-  "career.summary.result": ({ place, points }: { place: number; points: number }) =>
+  "career.rival.tieBeatYou": ({ name }: { name: string }) =>
+    `${name} ti ha preceduto a pari punti`,
+  "career.rival.youTie": ({ name }: { name: string }) =>
+    `Hai preceduto ${name} a pari punti`,
+  "career.summary.title": ({ season }: { season: number }) =>
+    `Stagione ${season} conclusa`,
+  "career.summary.result": ({
+    place,
+    points,
+  }: {
+    place: number;
+    points: number;
+  }) =>
     `Chiudi la stagione al ${place}° posto con ${plural(points, { one: `${points} punto`, other: `${points} punti` })}.`,
   "career.summary.places": "Posizioni nelle regate",
   "career.summary.rivals": "Contro i tuoi rivali",
-  "career.summary.outgrown": ({ kg }: { kg: number }) => `Con ${kg} kg stai crescendo oltre il peso ideale dell'Optimist (circa 35-50 kg): il 420 ti aspetta.`,
+  "career.summary.outgrown": ({ kg }: { kg: number }) =>
+    `Con ${kg} kg stai crescendo oltre il peso ideale dell'Optimist (circa 35-50 kg): il 420 ti aspetta.`,
   "career.summary.next": "Prossima stagione",
-  "career.next.title": ({ season }: { season: number }) => `Stagione ${season}: come prosegui?`,
-  "career.next.help": "Resti in Optimist o passi al 420, in due con un compagno che hai incontrato in regata?",
+  "career.next.title": ({ season }: { season: number }) =>
+    `Stagione ${season}: come prosegui?`,
+  "career.next.help":
+    "Resti in Optimist o passi al 420, in due con un compagno che hai incontrato in regata?",
   "career.next.stay": "Resta in Optimist",
   "career.next.move": "Passa al 420",
-  "career.next.partner": "Scegli il tuo compagno tra i velisti che hai incontrato. L'intesa cresce con le stagioni passate a regatare insieme.",
-  "career.next.chemistry": ({ chemistry, kg }: { chemistry: number; kg: number }) => `Intesa ${chemistry}/100 · ${kg} kg`,
-  "career.next.pair": ({ kg, hint }: { kg: number; hint: string }) => `Equipaggio ${kg} kg · ${hint}`,
+  "career.next.partner":
+    "Scegli il tuo compagno tra i velisti che hai incontrato. L'intesa cresce con le stagioni passate a regatare insieme.",
+  "career.next.chemistry": ({
+    chemistry,
+    kg,
+  }: {
+    chemistry: number;
+    kg: number;
+  }) => `Intesa ${chemistry}/100 · ${kg} kg`,
+  "career.next.pair": ({ kg, hint }: { kg: number; hint: string }) =>
+    `Equipaggio ${kg} kg · ${hint}`,
   "career.next.hint.light": "leggero",
   "career.next.hint.ideal": "peso ideale",
   "career.next.hint.heavy": "pesante",
@@ -325,24 +475,44 @@ export const italian = {
 
   // Touch wording: on a touch screen `t` and `lookup` read "<key>.touch" instead of "<key>" when it exists
   // (see index.ts), for the messages that name a key. A variant takes the same parameters as its message.
-  "menu.roleHelp.crew.touch": "Il partner timona. Tu: trascina la barra della vela per il fiocco (o lo spi) e quella in alto per il peso dentro/fuori fino al trapezio; tocca Cambio lato dopo virate e strambate e Spi per issare/ammainare. Ascolta le sue chiamate.",
-  "menu.roleHelp.fullBoat.touch": "Timone e randa, e chiami tu le manovre: tocca Spi per issare/ammainare lo spi. Il prodiere esegue (più in fretta se l'intesa è alta).",
+  "menu.roleHelp.crew.touch":
+    "Il partner timona. Tu: trascina la barra della vela per il fiocco (o lo spi) e quella in alto per il peso dentro/fuori fino al trapezio; tocca Cambio lato dopo virate e strambate e Spi per issare/ammainare. Ascolta le sue chiamate.",
+  "menu.roleHelp.fullBoat.touch":
+    "Timone e randa, e chiami tu le manovre: tocca Spi per issare/ammainare lo spi. Il prodiere esegue (più in fretta se l'intesa è alta).",
   "pause.restartHint.touch": "Tocca Ricomincia per rifare la prova",
   "results.hint.touch": "Tocca Altra prova o Menu",
   "hud.hint.touch": "Barra a sinistra, scotta a destra: usa i due pollici",
-  "hud.partnerLine.crewOnCall.touch": ({ name, weight, spi }: { name: string; weight: string; spi: string }) =>
-    `${name}: ${weight} · spi ${spi} · tocca Spi per issare/ammainare`,
-  "call.switchSide.touch": ({ name }: { name: string }) => `${name}: «Cambia lato!» → tocca Cambio lato`,
-  "call.spiHoist.touch": ({ name }: { name: string }) => `${name}: «Issa lo spi!» → tocca Spi`,
-  "call.spiDrop.touch": ({ name }: { name: string }) => `${name}: «Ammaina!» → tocca Spi`,
-  "call.hikeOut.touch": ({ name }: { name: string }) => `${name}: «Fuori! Siamo sbandati» → trascina il peso a destra`,
-  "call.comeIn.touch": ({ name }: { name: string }) => `${name}: «Dentro! Ci rovesciamo sopravvento» → trascina il peso a sinistra`,
-  "call.flatten.touch": ({ name }: { name: string }) => `${name}: «Appiattisci! Allenta la randa» → trascina la randa su LASCA`,
-  "call.easeHike.touch": ({ name }: { name: string }) => `${name}: «Allenta e vai fuori!» → lasca la randa e trascina il peso su FUORI`,
-  "coach.partnerTack.touch": ({ name }: { name: string }) => `${name}: «Viro!» — tocca Cambio lato`,
-  "coach.partnerGybe.touch": ({ name }: { name: string }) => `${name}: «Strambo!» — tocca Cambio lato`,
-  "coach.irons.tiller.touch": "Sei fermo prua al vento: lasca la vela e spingi la barra per poggiare",
-  "coach.irons.boat.touch": "Sei fermo prua al vento: lasca la vela e poggia con il timone",
+  "hud.partnerLine.crewOnCall.touch": ({
+    name,
+    weight,
+    spi,
+  }: {
+    name: string;
+    weight: string;
+    spi: string;
+  }) => `${name}: ${weight} · spi ${spi} · tocca Spi per issare/ammainare`,
+  "call.switchSide.touch": ({ name }: { name: string }) =>
+    `${name}: «Cambia lato!» → tocca Cambio lato`,
+  "call.spiHoist.touch": ({ name }: { name: string }) =>
+    `${name}: «Issa lo spi!» → tocca Spi`,
+  "call.spiDrop.touch": ({ name }: { name: string }) =>
+    `${name}: «Ammaina!» → tocca Spi`,
+  "call.hikeOut.touch": ({ name }: { name: string }) =>
+    `${name}: «Fuori! Siamo sbandati» → trascina il peso a destra`,
+  "call.comeIn.touch": ({ name }: { name: string }) =>
+    `${name}: «Dentro! Ci rovesciamo sopravvento» → trascina il peso a sinistra`,
+  "call.flatten.touch": ({ name }: { name: string }) =>
+    `${name}: «Appiattisci! Allenta la randa» → trascina la randa su LASCA`,
+  "call.easeHike.touch": ({ name }: { name: string }) =>
+    `${name}: «Allenta e vai fuori!» → lasca la randa e trascina il peso su FUORI`,
+  "coach.partnerTack.touch": ({ name }: { name: string }) =>
+    `${name}: «Viro!» — tocca Cambio lato`,
+  "coach.partnerGybe.touch": ({ name }: { name: string }) =>
+    `${name}: «Strambo!» — tocca Cambio lato`,
+  "coach.irons.tiller.touch":
+    "Sei fermo prua al vento: lasca la vela e spingi la barra per poggiare",
+  "coach.irons.boat.touch":
+    "Sei fermo prua al vento: lasca la vela e poggia con il timone",
   "trim.jibBacked.touch": "Fiocco a collo! Tocca Cambio lato",
   "toast.camera.free.touch": "Camera: libera (trascina col dito)",
 

@@ -20,9 +20,19 @@ function tack(cls: BoatClass, kn: number, roll: Roll, override?: number) {
   const wind = new WindField({ puffCount: 0, meanSpeedKn: kn });
   wind.shift = () => 0;
   const sim = new BoatSim(cls, createBoat(0, 0, -45 * DEG));
-  const c: Controls = { rudder: 0, sheet: 0.5, jibSheet: 0.5, spiSheet: 0.5, crewOut: 0.3, spi: false };
+  const c: Controls = {
+    rudder: 0,
+    sheet: 0.5,
+    jibSheet: 0.5,
+    spiSheet: 0.5,
+    crewOut: 0.3,
+    spi: false,
+  };
   const dt = 1 / 60;
-  let tacking = false, crossed = -1, sum = 0, n = 0;
+  let tacking = false,
+    crossed = -1,
+    sum = 0,
+    n = 0;
   for (let i = 0; i < 60 * 70; i++) {
     const time = i * dt;
     if (!tacking && time >= 30) tacking = true;
@@ -35,7 +45,10 @@ function tack(cls: BoatClass, kn: number, roll: Roll, override?: number) {
     // Steer: hold the old tack, then turn through the wind with full rudder, then hold the new tack.
     const goal = (crossed >= 0 ? 1 : -1) * 45 * DEG;
     const err = goal - sim.state.heading;
-    c.rudder = tacking && crossed < 0 ? 1 : Math.max(-1, Math.min(1, err * 2.6 - sim.state.yawRate * 0.6));
+    c.rudder =
+      tacking && crossed < 0
+        ? 1
+        : Math.max(-1, Math.min(1, err * 2.6 - sim.state.yawRate * 0.6));
     if (tacking && crossed < 0 && sim.state.heading > 40 * DEG) c.rudder = 0.2;
     if (roll === "none") c.helmOut = 0;
     else if (roll === "good") c.helmOut = sinceCross >= 0 ? 0.9 : 0;
@@ -46,7 +59,10 @@ function tack(cls: BoatClass, kn: number, roll: Roll, override?: number) {
     const before = sim.state.boomSide;
     sim.step(dt, c, wind);
     if (tacking && crossed < 0 && sim.state.boomSide !== before) crossed = time;
-    if (crossed >= 0 && time - crossed >= 1.2 && time - crossed <= 9) { sum += sim.telemetry.speed * KNOTS; n++; }
+    if (crossed >= 0 && time - crossed >= 1.2 && time - crossed <= 9) {
+      sum += sim.telemetry.speed * KNOTS;
+      n++;
+    }
   }
   expect(crossed).toBeGreaterThan(0);
   return sum / n;
@@ -55,7 +71,10 @@ function tack(cls: BoatClass, kn: number, roll: Roll, override?: number) {
 describe("Roll tack", () => {
   for (const cls of [OPTIMIST, I420]) {
     it(`${cls.name}: in 5 kn a good roll exits faster than none or a late one, and Auto-hike sits between`, () => {
-      const good = tack(cls, 5, "good"), auto = tack(cls, 5, "auto"), late = tack(cls, 5, "late"), none = tack(cls, 5, "none");
+      const good = tack(cls, 5, "good"),
+        auto = tack(cls, 5, "auto"),
+        late = tack(cls, 5, "late"),
+        none = tack(cls, 5, "none");
       expect(good).toBeGreaterThan(none + 0.05);
       expect(late).toBeLessThan(auto);
       expect(good).toBeGreaterThan(auto);
@@ -65,9 +84,11 @@ describe("Roll tack", () => {
       expect(tack(cls, 5, "early")).toBeLessThan(tack(cls, 5, "good"));
     });
     it(`${cls.name}: above 10 kn the roll hardly matters`, () => {
-      const good = tack(cls, 14, "auto", 1), bad = tack(cls, 14, "auto", 0);
+      const good = tack(cls, 14, "auto", 1),
+        bad = tack(cls, 14, "auto", 0);
       expect(Math.abs(good - bad) / bad).toBeLessThan(0.01);
-      const lightGood = tack(cls, 5, "auto", 1), lightBad = tack(cls, 5, "auto", 0);
+      const lightGood = tack(cls, 5, "auto", 1),
+        lightBad = tack(cls, 5, "auto", 0);
       expect((lightGood - lightBad) / lightBad).toBeGreaterThan(0.03);
     });
   }

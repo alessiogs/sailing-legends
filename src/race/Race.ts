@@ -1,7 +1,21 @@
 import { angleDiff, bearingTo, dirX, dirZ, segmentsCross } from "../core/math";
 import type { BoatSim } from "../sailing/BoatPhysics";
-import { distanceTo, legTarget, type Course, type Leg, type Line } from "./Course";
-import { judge, newPenalty, trackPenalty, type Penalty, type RightOfWayRule, type Rule, type VerdictReason } from "./Rules";
+import {
+  distanceTo,
+  legTarget,
+  type Course,
+  type Leg,
+  type Line,
+} from "./Course";
+import {
+  judge,
+  newPenalty,
+  trackPenalty,
+  type Penalty,
+  type RightOfWayRule,
+  type Rule,
+  type VerdictReason,
+} from "./Rules";
 
 /** A sailor on board: the player, or an AI sailor by their own name. The UI words them (`racerName`). */
 export type Sailor = { kind: "player" } | { kind: "ai"; name: string };
@@ -36,20 +50,42 @@ export type Racer = {
  * signals meant for the player (`warning`, `gun`) concern the player's boat.
  */
 export type RaceEvent =
-  | { kind: "warning"; racer: Racer; /** Seconds left to the gun. */ seconds: number }
+  | {
+      kind: "warning";
+      racer: Racer;
+      /** Seconds left to the gun. */ seconds: number;
+    }
   | { kind: "gun"; racer: Racer }
   | { kind: "ocs"; racer: Racer }
   | { kind: "ocs-cleared"; racer: Racer }
   | { kind: "start"; racer: Racer; /** The leg now being sailed. */ next: Leg }
-  | { kind: "rounded"; racer: Racer; /** The leg just completed. */ rounded: Leg; next: Leg }
-  | { kind: "finish"; racer: Racer; /** Finishing place, or null if disqualified (penalty not served). */ place: number | null }
+  | {
+      kind: "rounded";
+      racer: Racer;
+      /** The leg just completed. */ rounded: Leg;
+      next: Leg;
+    }
+  | {
+      kind: "finish";
+      racer: Racer;
+      /** Finishing place, or null if disqualified (penalty not served). */ place:
+        | number
+        | null;
+    }
   | { kind: "penalty"; racer: Racer; turns: number; rule: Rule }
   | { kind: "penalty-done"; racer: Racer }
   /**
    * Two boats touched and one was at fault. Each boat gets its own event: `other` is the boat it touched,
    * `atFault` the boat that had to keep clear (`racer` or `other`), under `rule` because of `reason`.
    */
-  | { kind: "contact"; racer: Racer; other: Racer; atFault: Racer; rule: RightOfWayRule; reason: VerdictReason };
+  | {
+      kind: "contact";
+      racer: Racer;
+      other: Racer;
+      atFault: Racer;
+      rule: RightOfWayRule;
+      reason: VerdictReason;
+    };
 
 export type Phase = "prestart" | "racing" | "done";
 
@@ -66,14 +102,29 @@ export class Race {
   /** Last time a given pair (or boat+mark) was judged, so one collision gives one penalty. */
   private contactCooldown = new Map<string, number>();
 
-  constructor(public course: Course, countdown = 60) {
+  constructor(
+    public course: Course,
+    countdown = 60,
+  ) {
     this.clock = -countdown;
   }
 
   add(id: string, sailors: Sailors, sim: BoatSim, isPlayer = false): Racer {
     const r: Racer = {
-      id, sailors, isPlayer, sim, leg: -1, ocs: false, clearedBack: true, finishTime: null,
-      sweep: 0, lastBearing: null, prevX: sim.state.x, prevZ: sim.state.z, penalty: null, dsq: false,
+      id,
+      sailors,
+      isPlayer,
+      sim,
+      leg: -1,
+      ocs: false,
+      clearedBack: true,
+      finishTime: null,
+      sweep: 0,
+      lastBearing: null,
+      prevX: sim.state.x,
+      prevZ: sim.state.z,
+      penalty: null,
+      dsq: false,
     };
     this.racers.push(r);
     return r;
@@ -82,13 +133,29 @@ export class Race {
   /** Signed distance "upwind" of the start line (positive = course side). */
   aboveStart(x: number, z: number) {
     const a = this.course.start.a;
-    return (x - a.x) * dirX(this.course.windDir) + (z - a.z) * dirZ(this.course.windDir);
+    return (
+      (x - a.x) * dirX(this.course.windDir) +
+      (z - a.z) * dirZ(this.course.windDir)
+    );
   }
 
   private crossedUp(r: Racer, line: Line) {
     const s = r.sim.state;
-    if (!segmentsCross(r.prevX, r.prevZ, s.x, s.z, line.a.x, line.a.z, line.b.x, line.b.z)) return false;
-    const mx = s.x - r.prevX, mz = s.z - r.prevZ;
+    if (
+      !segmentsCross(
+        r.prevX,
+        r.prevZ,
+        s.x,
+        s.z,
+        line.a.x,
+        line.a.z,
+        line.b.x,
+        line.b.z,
+      )
+    )
+      return false;
+    const mx = s.x - r.prevX,
+      mz = s.z - r.prevZ;
     return mx * dirX(this.course.windDir) + mz * dirZ(this.course.windDir) > 0;
   }
 
@@ -119,10 +186,25 @@ export class Race {
     if (!this.cooled([a.id, b.id].sort().join("|"))) return;
     const v = judge(a.sim, b.sim, this.course.windDir);
     if (!v) return;
-    const fault = v.atFault === 0 ? a : b, right = v.atFault === 0 ? b : a;
+    const fault = v.atFault === 0 ? a : b,
+      right = v.atFault === 0 ? b : a;
     const { rule, reason } = v;
-    this.emit({ kind: "contact", racer: fault, other: right, atFault: fault, rule, reason });
-    this.emit({ kind: "contact", racer: right, other: fault, atFault: fault, rule, reason });
+    this.emit({
+      kind: "contact",
+      racer: fault,
+      other: right,
+      atFault: fault,
+      rule,
+      reason,
+    });
+    this.emit({
+      kind: "contact",
+      racer: right,
+      other: fault,
+      atFault: fault,
+      rule,
+      reason,
+    });
     this.givePenalty(fault, 2, rule);
   }
 
@@ -141,7 +223,7 @@ export class Race {
     for (const t of [-30, -10, -5]) {
       if (before < t && this.clock >= t && !this.warned.has(t)) {
         this.warned.add(t);
-        const p = this.racers.find(r => r.isPlayer);
+        const p = this.racers.find((r) => r.isPlayer);
         if (p) this.emit({ kind: "warning", racer: p, seconds: -t });
       }
     }
@@ -155,7 +237,7 @@ export class Race {
           this.emit({ kind: "ocs", racer: r });
         }
       }
-      const p = this.racers.find(r => r.isPlayer);
+      const p = this.racers.find((r) => r.isPlayer);
       if (p) this.emit({ kind: "gun", racer: p });
     }
 
@@ -170,7 +252,11 @@ export class Race {
       r.prevZ = s.z;
     }
 
-    if (this.phase === "racing" && this.racers.every(r => r.finishTime !== null)) this.phase = "done";
+    if (
+      this.phase === "racing" &&
+      this.racers.every((r) => r.finishTime !== null)
+    )
+      this.phase = "done";
   }
 
   private updateRacer(r: Racer) {
@@ -203,7 +289,9 @@ export class Race {
           r.penalty = null;
           this.emit({ kind: "finish", racer: r, place: null });
         } else {
-          const pos = this.racers.filter(o => o.finishTime !== null && !o.dsq).length;
+          const pos = this.racers.filter(
+            (o) => o.finishTime !== null && !o.dsq,
+          ).length;
           this.emit({ kind: "finish", racer: r, place: pos });
         }
       }
@@ -216,12 +304,20 @@ export class Race {
       const b = bearingTo(leg.mark.x, leg.mark.z, s.x, s.z);
       if (r.lastBearing !== null) r.sweep += angleDiff(r.lastBearing, b);
       r.lastBearing = b;
-      const done = leg.rounding === "port" ? r.sweep <= -ROUND_SWEEP : r.sweep >= ROUND_SWEEP;
+      const done =
+        leg.rounding === "port"
+          ? r.sweep <= -ROUND_SWEEP
+          : r.sweep >= ROUND_SWEEP;
       if (done) {
         r.leg++;
         r.sweep = 0;
         r.lastBearing = null;
-        this.emit({ kind: "rounded", racer: r, rounded: leg, next: legs[r.leg] });
+        this.emit({
+          kind: "rounded",
+          racer: r,
+          rounded: leg,
+          next: legs[r.leg],
+        });
       }
     } else if (d > ROUND_RADIUS * 2) {
       r.sweep = 0;
@@ -233,9 +329,14 @@ export class Race {
   progress(r: Racer): number {
     if (r.dsq) return -1e7 - (r.finishTime ?? 0);
     if (r.finishTime !== null) return 1e6 - r.finishTime;
-    if (r.leg < 0) return -1e4 + this.aboveStart(r.sim.state.x, r.sim.state.z) - (r.ocs ? 1e3 : 0);
+    if (r.leg < 0)
+      return (
+        -1e4 + this.aboveStart(r.sim.state.x, r.sim.state.z) - (r.ocs ? 1e3 : 0)
+      );
     const leg = this.course.legs[r.leg];
-    return r.leg * 1e4 - distanceTo(legTarget(leg), r.sim.state.x, r.sim.state.z);
+    return (
+      r.leg * 1e4 - distanceTo(legTarget(leg), r.sim.state.x, r.sim.state.z)
+    );
   }
 
   standings(): Racer[] {

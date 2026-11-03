@@ -4,19 +4,34 @@
  */
 import { describe, expect, it } from "vitest";
 import { nextRaceSetup, startCareer } from "../src/career/Career";
-import { decodeCareer, encodeCareer, type CareerState } from "../src/career/CareerSave";
+import {
+  decodeCareer,
+  encodeCareer,
+  type CareerState,
+} from "../src/career/CareerSave";
 import { FLEET_SIZE } from "../src/career/Fleets";
-import { isSeasonOver, PLAYER_ID, raceEntries, recordRace } from "../src/career/RecordRace";
+import {
+  isSeasonOver,
+  PLAYER_ID,
+  raceEntries,
+  recordRace,
+} from "../src/career/RecordRace";
 import type { RaceEntry } from "../src/career/Scoring";
 import type { Racer } from "../src/race/Race";
 
 /** A Race of `size` boats in the order given by `ids`: everyone finishes, `ids[0]` first. */
 const race = (size: number, first = PLAYER_ID): RaceEntry[] => {
-  const ids = [first, ...Array.from({ length: size }, (_, i) => `s${i}`).filter(id => id !== first)].slice(0, size);
+  const ids = [
+    first,
+    ...Array.from({ length: size }, (_, i) => `s${i}`).filter(
+      (id) => id !== first,
+    ),
+  ].slice(0, size);
   return ids.map((id, i) => ({ id, status: "finished", place: i + 1 }));
 };
 /** A Race entered by the fleet of the Regatta in progress. */
-const sail = (state: CareerState) => race(nextRaceSetup(state)!.fleet.opponents.length + 1);
+const sail = (state: CareerState) =>
+  race(nextRaceSetup(state)!.fleet.opponents.length + 1);
 
 const start = () => startCareer({ seed: 5 });
 
@@ -80,15 +95,29 @@ describe("record a Race", () => {
 });
 
 /** A racer with only what `raceEntries` reads. */
-const racer = (id: string, o: Partial<Pick<Racer, "finishTime" | "dsq" | "ocs">> = {}): Racer =>
-  ({ id, isPlayer: id === PLAYER_ID, finishTime: null, dsq: false, ocs: false, ...o }) as Racer;
+const racer = (
+  id: string,
+  o: Partial<Pick<Racer, "finishTime" | "dsq" | "ocs">> = {},
+): Racer =>
+  ({
+    id,
+    isPlayer: id === PLAYER_ID,
+    finishTime: null,
+    dsq: false,
+    ocs: false,
+    ...o,
+  }) as Racer;
 
 describe("entries of a race", () => {
   const fleet = nextRaceSetup(start())!.fleet;
   const helm = (i: number) => fleet.opponents[i].helm.id;
 
   it("name the boats by their Helm, the player as 'player'", () => {
-    const entries = raceEntries(fleet, [racer("ai1", { finishTime: 100 }), racer("player", { finishTime: 90 }), racer("ai0", { finishTime: 120 })]);
+    const entries = raceEntries(fleet, [
+      racer("ai1", { finishTime: 100 }),
+      racer("player", { finishTime: 90 }),
+      racer("ai0", { finishTime: 120 }),
+    ]);
     expect(entries).toEqual([
       { id: helm(1), status: "finished", place: 2 },
       { id: "player", status: "finished", place: 1 },
@@ -98,10 +127,20 @@ describe("entries of a race", () => {
 
   it("give the places by finish time, leaving out the disqualified, and mark the rest", () => {
     const entries = raceEntries(fleet, [
-      racer("player", { finishTime: 200, dsq: true }), racer("ai0", { finishTime: 150 }), racer("ai1"), racer("ai2", { ocs: true }), racer("ai3", { finishTime: 140 }),
+      racer("player", { finishTime: 200, dsq: true }),
+      racer("ai0", { finishTime: 150 }),
+      racer("ai1"),
+      racer("ai2", { ocs: true }),
+      racer("ai3", { finishTime: 140 }),
     ]);
-    expect(entries.map(e => e.status)).toEqual(["dsq", "finished", "dnf", "ocs", "finished"]);
-    expect(entries.map(e => e.place ?? 0)).toEqual([0, 2, 0, 0, 1]);
+    expect(entries.map((e) => e.status)).toEqual([
+      "dsq",
+      "finished",
+      "dnf",
+      "ocs",
+      "finished",
+    ]);
+    expect(entries.map((e) => e.place ?? 0)).toEqual([0, 2, 0, 0, 1]);
   });
 
   it("refuse a boat that is not in the fleet", () => {

@@ -14,7 +14,12 @@ import { DEG } from "../../src/core/math";
 import { RacingAI } from "../../src/ai/RacingAI";
 import { distanceTo, legTarget } from "../../src/race/Course";
 import type { Race, Racer } from "../../src/race/Race";
-import { CREW, FULL_BOAT, HELM, type PlayerChoice } from "../../src/race/PlayerChoice";
+import {
+  CREW,
+  FULL_BOAT,
+  HELM,
+  type PlayerChoice,
+} from "../../src/race/PlayerChoice";
 import { makeFleet } from "../../src/race/Fleet";
 import { FIXED_DT, RaceSession } from "../../src/race/RaceSession";
 import { I420, OPTIMIST, type BoatClass } from "../../src/sailing/BoatClass";
@@ -23,19 +28,57 @@ import { I420, OPTIMIST, type BoatClass } from "../../src/sailing/BoatClass";
 type PlayerSetup = "helm" | "crew" | "full";
 
 /** Each recorded player setup as the session's Role and Control mode. */
-const PLAYER_CHOICE: Record<PlayerSetup, PlayerChoice> = { helm: HELM, crew: CREW, full: FULL_BOAT };
+const PLAYER_CHOICE: Record<PlayerSetup, PlayerChoice> = {
+  helm: HELM,
+  crew: CREW,
+  full: FULL_BOAT,
+};
 
-export type GoldenRace = { name: string; cls: BoatClass; seed: number; windKn: number; player: PlayerSetup | null };
+export type GoldenRace = {
+  name: string;
+  cls: BoatClass;
+  seed: number;
+  windKn: number;
+  player: PlayerSetup | null;
+};
 
 export const GOLDEN_RACES: GoldenRace[] = [
-  ...[OPTIMIST, I420].flatMap(cls =>
-    ([[11, 11], [3, 7], [5, 16]] as const).map(([seed, windKn]) => ({
-      name: `${cls.name} seed ${seed} ${windKn} kn, AI only`, cls, seed, windKn, player: null,
+  ...[OPTIMIST, I420].flatMap((cls) =>
+    (
+      [
+        [11, 11],
+        [3, 7],
+        [5, 16],
+      ] as const
+    ).map(([seed, windKn]) => ({
+      name: `${cls.name} seed ${seed} ${windKn} kn, AI only`,
+      cls,
+      seed,
+      windKn,
+      player: null,
     })),
   ),
-  { name: "420 seed 11 11 kn, player Helm", cls: I420, seed: 11, windKn: 11, player: "helm" },
-  { name: "420 seed 3 7 kn, player Crew", cls: I420, seed: 3, windKn: 7, player: "crew" },
-  { name: "420 seed 5 16 kn, player Full Boat Control", cls: I420, seed: 5, windKn: 16, player: "full" },
+  {
+    name: "420 seed 11 11 kn, player Helm",
+    cls: I420,
+    seed: 11,
+    windKn: 11,
+    player: "helm",
+  },
+  {
+    name: "420 seed 3 7 kn, player Crew",
+    cls: I420,
+    seed: 3,
+    windKn: 7,
+    player: "crew",
+  },
+  {
+    name: "420 seed 5 16 kn, player Full Boat Control",
+    cls: I420,
+    seed: 5,
+    windKn: 16,
+    player: "full",
+  },
 ];
 
 /** A race still running after this many simulated seconds is cut off (the record shows it unfinished). */
@@ -47,8 +90,19 @@ export type GoldenRecord = {
   /** Seconds since the session was created, then per boat id: [x, z, heading, speed]. */
   samples: { t: number; boats: Record<string, number[]> }[];
   /** Race clock when each event was drained (right after the step that emitted it). */
-  events: { t: number; kind: string; racer: string; other?: string; turns?: number }[];
-  results: { id: string; finishTime: number | null; dsq: boolean; leg: number }[];
+  events: {
+    t: number;
+    kind: string;
+    racer: string;
+    other?: string;
+    turns?: number;
+  }[];
+  results: {
+    id: string;
+    finishTime: number | null;
+    dsq: boolean;
+    leg: number;
+  }[];
   standings: string[];
   endClock: number;
 };
@@ -70,15 +124,35 @@ const r6 = (v: number) => {
 class TestPlayer {
   private helm: RacingAI | null;
 
-  constructor(private session: RaceSession, private role: PlayerSetup) {
+  constructor(
+    private session: RaceSession,
+    private role: PlayerSetup,
+  ) {
     const p = session.player!;
-    this.helm = role === "crew" ? null
-      : new RacingAI(p, { id: "auto", name: "Auto", technique: 0.95, tactics: 0.9, speed: 0.9, discipline: 0.9 }, session.race, 99, 3);
+    this.helm =
+      role === "crew"
+        ? null
+        : new RacingAI(
+            p,
+            {
+              id: "auto",
+              name: "Auto",
+              technique: 0.95,
+              tactics: 0.9,
+              speed: 0.9,
+              discipline: 0.9,
+            },
+            session.race,
+            99,
+            3,
+          );
   }
 
   /** Set the player's controls for the next fixed step. */
   update(dt: number) {
-    const s = this.session, p = s.player!, pc = s.playerControls;
+    const s = this.session,
+      p = s.player!,
+      pc = s.playerControls;
     if (this.helm) {
       const c = this.helm.update(dt, s.wind);
       pc.rudder = c.rudder;
@@ -90,15 +164,20 @@ class TestPlayer {
       pc.spiSheet = t.spi?.optimal;
       pc.crewOut = t.crew?.ideal;
       pc.spi = spinnakerWanted(s.race, p);
-      if ((t.jib?.backed || !t.crew?.onWindward) && Math.abs(t.awa) > 22 * DEG) pc.switchSide = true;
+      if ((t.jib?.backed || !t.crew?.onWindward) && Math.abs(t.awa) > 22 * DEG)
+        pc.switchSide = true;
     }
-    if (this.role === "full") s.partnerCrew!.spiCommand = spinnakerWanted(s.race, p);
+    if (this.role === "full")
+      s.partnerCrew!.spiCommand = spinnakerWanted(s.race, p);
   }
 }
 
 /** The perfect Crew's spinnaker rule: up on a downwind leg, well away from the mark, with no penalty owed. */
 function spinnakerWanted(race: Race, r: Racer): boolean {
-  const leg = r.leg >= 0 && r.leg < race.course.legs.length ? race.course.legs[r.leg] : null;
+  const leg =
+    r.leg >= 0 && r.leg < race.course.legs.length
+      ? race.course.legs[r.leg]
+      : null;
   if (!leg || leg.upwind || r.finishTime !== null || r.penalty) return false;
   const s = r.sim.state;
   if (distanceTo(legTarget(leg), s.x, s.z) < 26) return false;
@@ -106,18 +185,33 @@ function spinnakerWanted(race: Race, r: Racer): boolean {
 }
 
 export function sailGoldenRace(g: GoldenRace): GoldenRecord {
-  const fleet = makeFleet({ boatClass: g.cls, withPlayer: g.player !== null, ...(g.player ? { choice: PLAYER_CHOICE[g.player] } : {}) });
+  const fleet = makeFleet({
+    boatClass: g.cls,
+    withPlayer: g.player !== null,
+    ...(g.player ? { choice: PLAYER_CHOICE[g.player] } : {}),
+  });
   const session = new RaceSession({ seed: g.seed, windKn: g.windKn, fleet });
   const race = session.race;
   const player = g.player ? new TestPlayer(session, g.player) : null;
-  const rec: GoldenRecord = { samples: [], events: [], results: [], standings: [], endClock: 0 };
+  const rec: GoldenRecord = {
+    samples: [],
+    events: [],
+    results: [],
+    standings: [],
+    endClock: 0,
+  };
   const sample = (step: number) => {
     const boats: Record<string, number[]> = {};
     for (const r of race.racers) {
       const s = r.sim.state;
-      boats[r.id] = [r6(s.x), r6(s.z), r6(s.heading), r6(r.sim.telemetry.speed)];
+      boats[r.id] = [
+        r6(s.x),
+        r6(s.z),
+        r6(s.heading),
+        r6(r.sim.telemetry.speed),
+      ];
     }
-    rec.samples.push({ t: step / SAMPLE_STEPS * 10, boats });
+    rec.samples.push({ t: (step / SAMPLE_STEPS) * 10, boats });
   };
 
   const maxSteps = MAX_RACE_S / FIXED_DT;
@@ -128,7 +222,11 @@ export function sailGoldenRace(g: GoldenRace): GoldenRecord {
     session.step(FIXED_DT);
     step++;
     for (const e of race.drainEvents()) {
-      const ev: GoldenRecord["events"][number] = { t: r6(race.clock), kind: e.kind, racer: e.racer.id };
+      const ev: GoldenRecord["events"][number] = {
+        t: r6(race.clock),
+        kind: e.kind,
+        racer: e.racer.id,
+      };
       if (e.kind === "contact") ev.other = e.other.id;
       // Penalty turns owed: 1 for touching a mark, 2 for a rule breach.
       if (e.kind === "penalty") ev.turns = e.turns;
@@ -138,8 +236,13 @@ export function sailGoldenRace(g: GoldenRace): GoldenRecord {
   }
   if (step % SAMPLE_STEPS !== 0) sample(step);
 
-  rec.results = race.racers.map(r => ({ id: r.id, finishTime: r.finishTime === null ? null : r6(r.finishTime), dsq: r.dsq, leg: r.leg }));
-  rec.standings = race.standings().map(r => r.id);
+  rec.results = race.racers.map((r) => ({
+    id: r.id,
+    finishTime: r.finishTime === null ? null : r6(r.finishTime),
+    dsq: r.dsq,
+    leg: r.leg,
+  }));
+  rec.standings = race.standings().map((r) => r.id);
   rec.endClock = r6(race.clock);
   return rec;
 }
@@ -153,7 +256,12 @@ export function sailAllGoldenRaces(): Record<string, GoldenRecord> {
 
 /** JSON text of a snapshot: two-space indent, but each array of numbers kept on one line for readable diffs. */
 export function formatSnapshot(snapshot: Record<string, GoldenRecord>): string {
-  return JSON.stringify(snapshot, null, 2).replace(/\[\s+(-?[\d.e+-]+(?:,\s+-?[\d.e+-]+)*)\s+\]/g, (_, nums: string) => `[${nums.split(/,\s+/).join(", ")}]`) + "\n";
+  return (
+    JSON.stringify(snapshot, null, 2).replace(
+      /\[\s+(-?[\d.e+-]+(?:,\s+-?[\d.e+-]+)*)\s+\]/g,
+      (_, nums: string) => `[${nums.split(/,\s+/).join(", ")}]`,
+    ) + "\n"
+  );
 }
 
 export const SNAPSHOT_URL = new URL("./races.json", import.meta.url);

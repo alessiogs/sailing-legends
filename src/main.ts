@@ -1,8 +1,19 @@
 import {
-  Color3, Color4, DirectionalLight, Engine, HemisphericLight, Scene, Vector3,
+  Color3,
+  Color4,
+  DirectionalLight,
+  Engine,
+  HemisphericLight,
+  Scene,
+  Vector3,
 } from "@babylonjs/core";
 import { Input } from "./core/Input";
-import { chooseLanguage, setLanguage, setTouchWording, type Language } from "./i18n";
+import {
+  chooseLanguage,
+  setLanguage,
+  setTouchWording,
+  type Language,
+} from "./i18n";
 import { Sound } from "./core/Sound";
 import { GameController } from "./game/GameController";
 import { CameraRig } from "./game/CameraRig";
@@ -30,7 +41,11 @@ fillPageText();
 
 // ---------- Engine & scene ----------
 const canvas = document.querySelector<HTMLCanvasElement>("#game")!;
-const engine = new Engine(canvas, true, { stencil: false, antialias: true, powerPreference: "high-performance" });
+const engine = new Engine(canvas, true, {
+  stencil: false,
+  antialias: true,
+  powerPreference: "high-performance",
+});
 engine.setHardwareScalingLevel(1 / Math.min(window.devicePixelRatio || 1, 1.5));
 const scene = new Scene(engine);
 scene.clearColor = new Color4(0.72, 0.83, 0.9, 1);
@@ -56,7 +71,12 @@ attachTouchButtons(input);
 let savedLanguage = prefs.language;
 input.settings = prefs.controls;
 sound.muted = prefs.muted;
-const savePlayerPrefs = () => savePrefs(storage, { controls: input.settings, muted: sound.muted, language: savedLanguage });
+const savePlayerPrefs = () =>
+  savePrefs(storage, {
+    controls: input.settings,
+    muted: sound.muted,
+    language: savedLanguage,
+  });
 
 // ---------- Menus and game ----------
 // Changing the language saves it and reloads the page: every screen and the HUD then read the new catalog from the
@@ -67,17 +87,33 @@ const chooseMenuLanguage = (next: Language) => {
   location.reload();
 };
 const menus = new Menus(input, savePlayerPrefs, language, chooseMenuLanguage);
-const game = new GameController({ engine, scene, cameraRig, canvas, input, hud, sound, screens: menus, savePrefs: savePlayerPrefs, careerStorage: storage });
+const game = new GameController({
+  engine,
+  scene,
+  cameraRig,
+  canvas,
+  input,
+  hud,
+  sound,
+  screens: menus,
+  savePrefs: savePlayerPrefs,
+  careerStorage: storage,
+});
 menus.attach(game);
 
 // ---------- Main loop ----------
-engine.runRenderLoop(() => game.frame(Math.min(engine.getDeltaTime() / 1000, 0.1)));
+engine.runRenderLoop(() =>
+  game.frame(Math.min(engine.getDeltaTime() / 1000, 0.1)),
+);
 
 // Menu background: show the course with AI boats idling until the player starts.
 game.showMenuBackground();
 
 window.addEventListener("resize", () => engine.resize());
-setTimeout(() => document.getElementById("loading")!.classList.add("hidden"), 300);
+setTimeout(
+  () => document.getElementById("loading")!.classList.add("hidden"),
+  300,
+);
 
 // Debug/testing hook (used by automated browser tests).
 installTestHook(game, input, hud);

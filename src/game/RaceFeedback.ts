@@ -51,45 +51,98 @@ export class RaceFeedback {
 
   private raceEvents(session: RaceSession, cues: Cue[]) {
     const clock = session.race.clock;
-    for (const at of COUNTDOWN_BEEPS) if (this.lastClock < at && clock >= at) cues.push({ kind: "beep" });
+    for (const at of COUNTDOWN_BEEPS)
+      if (this.lastClock < at && clock >= at) cues.push({ kind: "beep" });
     this.lastClock = clock;
     for (const e of session.race.drainEvents()) {
-      if (e.kind === "gun") cues.push({ kind: "horn", seconds: 1.2, afterMs: 0 });
-      if (e.kind === "ocs" && e.racer.isPlayer) cues.push({ kind: "horn", seconds: 0.5, afterMs: 0 });
+      if (e.kind === "gun")
+        cues.push({ kind: "horn", seconds: 1.2, afterMs: 0 });
+      if (e.kind === "ocs" && e.racer.isPlayer)
+        cues.push({ kind: "horn", seconds: 0.5, afterMs: 0 });
       // One bump per contact involving the player: on the at-fault boat's event (each boat gets one).
-      if (e.kind === "contact" && (e.racer.isPlayer || e.other.isPlayer) && e.atFault === e.racer) cues.push({ kind: "bump" });
+      if (
+        e.kind === "contact" &&
+        (e.racer.isPlayer || e.other.isPlayer) &&
+        e.atFault === e.racer
+      )
+        cues.push({ kind: "bump" });
       if (!e.racer.isPlayer) continue;
       if (e.kind === "rounded") cues.push({ kind: "chime" });
       if (e.kind === "penalty") cues.push({ kind: "buzzer" });
-      if (e.kind === "finish") cues.push({ kind: "horn", seconds: 0.6, afterMs: 0 }, { kind: "horn", seconds: 0.6, afterMs: 700 });
-      const style: ToastStyle = e.kind === "ocs" || e.kind === "penalty" ? "bad"
-        : e.kind === "gun" || e.kind === "finish" ? "big"
-        : e.kind === "rounded" || e.kind === "ocs-cleared" || e.kind === "penalty-done" ? "good" : "";
+      if (e.kind === "finish")
+        cues.push(
+          { kind: "horn", seconds: 0.6, afterMs: 0 },
+          { kind: "horn", seconds: 0.6, afterMs: 700 },
+        );
+      const style: ToastStyle =
+        e.kind === "ocs" || e.kind === "penalty"
+          ? "bad"
+          : e.kind === "gun" || e.kind === "finish"
+            ? "big"
+            : e.kind === "rounded" ||
+                e.kind === "ocs-cleared" ||
+                e.kind === "penalty-done"
+              ? "good"
+              : "";
       cues.push({ kind: "toast", text: eventText(e), style });
       if (e.kind === "finish") cues.push({ kind: "results", afterMs: 2500 });
     }
-    if (session.race.phase === "done" && session.player!.finishTime === null) cues.push({ kind: "results", afterMs: 0 });
+    if (session.race.phase === "done" && session.player!.finishTime === null)
+      cues.push({ kind: "results", afterMs: 0 });
   }
 
   private coaching(session: RaceSession, steering: SteeringMode, cues: Cue[]) {
     const p = session.player!;
-    const s = p.sim.state, tel = p.sim.telemetry;
+    const s = p.sim.state,
+      tel = p.sim.telemetry;
     if (this.lastBoomSide === 0) this.lastBoomSide = s.boomSide;
     if (s.boomSide !== this.lastBoomSide) {
       const gybe = Math.abs(tel.awa) > 90 * DEG;
       // When the Partner is the Helm, the call comes from them (the player, as Crew, must react).
-      if (session.partnerHelm) cues.push({ kind: "toast", text: t(gybe ? "coach.partnerGybe" : "coach.partnerTack", { name: session.partner!.name }), style: "bad" });
-      else cues.push({ kind: "toast", text: gybe ? t("coach.gybe") : t("coach.tack"), style: "" });
+      if (session.partnerHelm)
+        cues.push({
+          kind: "toast",
+          text: t(gybe ? "coach.partnerGybe" : "coach.partnerTack", {
+            name: session.partner!.name,
+          }),
+          style: "bad",
+        });
+      else
+        cues.push({
+          kind: "toast",
+          text: gybe ? t("coach.gybe") : t("coach.tack"),
+          style: "",
+        });
       this.lastBoomSide = s.boomSide;
     }
     if (session.partnerHelm) {
       const tacking = session.partnerHelm.tacking;
-      if (tacking && !this.wasTacking) cues.push({ kind: "toast", text: t("coach.partnerReadyAbout", { name: session.partner!.name }), style: "" }, { kind: "beep" });
+      if (tacking && !this.wasTacking)
+        cues.push(
+          {
+            kind: "toast",
+            text: t("coach.partnerReadyAbout", { name: session.partner!.name }),
+            style: "",
+          },
+          { kind: "beep" },
+        );
       this.wasTacking = tacking;
     }
-    if (!this.ironsHintShown && tel.trimState === "irons" && Math.abs(tel.speed) < 0.3 && session.race.clock > -40) {
+    if (
+      !this.ironsHintShown &&
+      tel.trimState === "irons" &&
+      Math.abs(tel.speed) < 0.3 &&
+      session.race.clock > -40
+    ) {
       this.ironsHintShown = true;
-      cues.push({ kind: "toast", text: steering === "tiller" ? t("coach.irons.tiller") : t("coach.irons.boat"), style: "bad" });
+      cues.push({
+        kind: "toast",
+        text:
+          steering === "tiller"
+            ? t("coach.irons.tiller")
+            : t("coach.irons.boat"),
+        style: "bad",
+      });
     }
   }
 }

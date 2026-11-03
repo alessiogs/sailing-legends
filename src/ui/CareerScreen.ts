@@ -1,11 +1,20 @@
 import { t } from "../i18n";
 import { BUILDS, type Build } from "../sailors/BodyWeight";
-import { ageInSeason, DEFAULT_STARTING_AGE, MAX_STARTING_AGE, MIN_STARTING_AGE } from "../career/Ages";
+import {
+  ageInSeason,
+  DEFAULT_STARTING_AGE,
+  MAX_STARTING_AGE,
+  MIN_STARTING_AGE,
+} from "../career/Ages";
 import { seasonCalendar, venueName } from "../career/Calendar";
 import type { CareerState } from "../career/CareerSave";
 import { FLEET_SIZE } from "../career/Fleets";
 import { isSeasonOver } from "../career/RecordRace";
-import { lastCompleteRegatta, type RegattaReport, type SeasonSummary } from "../career/Standings";
+import {
+  lastCompleteRegatta,
+  type RegattaReport,
+  type SeasonSummary,
+} from "../career/Standings";
 import { CLASSES } from "../sailing/BoatClass";
 import type { SeasonChoice } from "../career/SeasonClose";
 import { h } from "./dom";
@@ -14,10 +23,18 @@ import { standingsSheet, summarySheet } from "./StandingsView";
 
 /** What the Career overlay shows: the starting-age choice, the unreadable-save prompt, or the Season calendar. */
 export type CareerView =
-  | { kind: "age"; /** A saved Career exists and will be replaced. */ replaces: boolean }
+  | {
+      kind: "age";
+      /** A saved Career exists and will be replaced. */ replaces: boolean;
+    }
   | { kind: "unreadable" }
   | { kind: "calendar"; state: CareerState }
-  | { kind: "standings"; state: CareerState; report: RegattaReport; /** Whether it was the Season's last Regatta, which the summary follows. */ last: boolean }
+  | {
+      kind: "standings";
+      state: CareerState;
+      report: RegattaReport;
+      /** Whether it was the Season's last Regatta, which the summary follows. */ last: boolean;
+    }
   | { kind: "summary"; state: CareerState; summary: SeasonSummary }
   | { kind: "next"; state: CareerState };
 
@@ -57,16 +74,34 @@ export class CareerScreen {
 
   private content(view: CareerView): (HTMLElement | string)[] {
     switch (view.kind) {
-      case "age": return this.age(view.replaces);
-      case "unreadable": return this.unreadable();
-      case "calendar": return this.calendar(view.state);
-      case "standings": return this.standings(view.state, view.report, view.last);
-      case "summary": return this.summary(view.state, view.summary);
-      case "next": return nextSeasonSheet(view.state, { choose: c => this.actions.startSeason(c), back: () => this.actions.showSummary() }, c => this.root.replaceChildren(h("div", { class: "sheet" }, ...c)));
+      case "age":
+        return this.age(view.replaces);
+      case "unreadable":
+        return this.unreadable();
+      case "calendar":
+        return this.calendar(view.state);
+      case "standings":
+        return this.standings(view.state, view.report, view.last);
+      case "summary":
+        return this.summary(view.state, view.summary);
+      case "next":
+        return nextSeasonSheet(
+          view.state,
+          {
+            choose: (c) => this.actions.startSeason(c),
+            back: () => this.actions.showSummary(),
+          },
+          (c) => this.root.replaceChildren(h("div", { class: "sheet" }, ...c)),
+        );
     }
   }
 
-  private button(kind: "primary" | "ghost", text: string, onClick: () => void, id?: string) {
+  private button(
+    kind: "primary" | "ghost",
+    text: string,
+    onClick: () => void,
+    id?: string,
+  ) {
     const b = h("button", { class: kind, ...(id ? { id } : {}) }, text);
     b.addEventListener("click", onClick);
     return b;
@@ -74,16 +109,33 @@ export class CareerScreen {
 
   private age(replaces: boolean) {
     let age = DEFAULT_STARTING_AGE;
-    const ages = Array.from({ length: MAX_STARTING_AGE - MIN_STARTING_AGE + 1 }, (_, i) => MIN_STARTING_AGE + i);
-    const buttons = ages.map(a => {
-      const b = h("button", { "data-v": String(a), class: a === age ? "on" : "" }, String(a));
-      b.addEventListener("click", () => { age = a; for (const o of buttons) o.classList.toggle("on", o === b); });
+    const ages = Array.from(
+      { length: MAX_STARTING_AGE - MIN_STARTING_AGE + 1 },
+      (_, i) => MIN_STARTING_AGE + i,
+    );
+    const buttons = ages.map((a) => {
+      const b = h(
+        "button",
+        { "data-v": String(a), class: a === age ? "on" : "" },
+        String(a),
+      );
+      b.addEventListener("click", () => {
+        age = a;
+        for (const o of buttons) o.classList.toggle("on", o === b);
+      });
       return b;
     });
     let build: Build = "average";
-    const builds = BUILDS.map(b => {
-      const el = h("button", { "data-v": b, class: b === build ? "on" : "" }, t(`career.build.${b}`));
-      el.addEventListener("click", () => { build = b; for (const o of builds) o.classList.toggle("on", o === el); });
+    const builds = BUILDS.map((b) => {
+      const el = h(
+        "button",
+        { "data-v": b, class: b === build ? "on" : "" },
+        t(`career.build.${b}`),
+      );
+      el.addEventListener("click", () => {
+        build = b;
+        for (const o of builds) o.classList.toggle("on", o === el);
+      });
       return el;
     });
     return [
@@ -92,10 +144,25 @@ export class CareerScreen {
       h("div", { class: "seg", id: "career-age" }, ...buttons),
       h("p", { class: "lede" }, t("career.build.help")),
       h("div", { class: "seg", id: "career-build" }, ...builds),
-      ...(replaces ? [h("p", { class: "muted" }, t("career.age.replaces"))] : []),
-      h("div", { class: "row-btns" },
-        this.button("ghost", t("career.back"), () => this.actions.mainMenu(), "career-back"),
-        this.button("primary", t("career.age.start"), () => this.actions.start(age, build), "career-begin")),
+      ...(replaces
+        ? [h("p", { class: "muted" }, t("career.age.replaces"))]
+        : []),
+      h(
+        "div",
+        { class: "row-btns" },
+        this.button(
+          "ghost",
+          t("career.back"),
+          () => this.actions.mainMenu(),
+          "career-back",
+        ),
+        this.button(
+          "primary",
+          t("career.age.start"),
+          () => this.actions.start(age, build),
+          "career-begin",
+        ),
+      ),
     ];
   }
 
@@ -103,28 +170,73 @@ export class CareerScreen {
     return [
       h("div", { class: "brand" }, t("career.unreadable.title")),
       h("p", { class: "lede" }, t("career.unreadable.text")),
-      h("div", { class: "row-btns" },
-        this.button("ghost", t("career.unreadable.no"), () => this.actions.mainMenu(), "career-no"),
-        this.button("primary", t("career.unreadable.yes"), () => this.actions.askAge(), "career-yes")),
+      h(
+        "div",
+        { class: "row-btns" },
+        this.button(
+          "ghost",
+          t("career.unreadable.no"),
+          () => this.actions.mainMenu(),
+          "career-no",
+        ),
+        this.button(
+          "primary",
+          t("career.unreadable.yes"),
+          () => this.actions.askAge(),
+          "career-yes",
+        ),
+      ),
     ];
   }
 
   private standings(state: CareerState, report: RegattaReport, last: boolean) {
     return [
       ...standingsSheet(state, report),
-      h("div", { class: "row-btns" },
-        this.button("ghost", t("career.results.calendar"), () => this.actions.showCalendar(), "career-calendar-btn"),
-        this.button("primary", t("career.standings.continue"), () => last ? this.actions.showSummary() : this.actions.showCalendar(), "career-continue-btn")),
+      h(
+        "div",
+        { class: "row-btns" },
+        this.button(
+          "ghost",
+          t("career.results.calendar"),
+          () => this.actions.showCalendar(),
+          "career-calendar-btn",
+        ),
+        this.button(
+          "primary",
+          t("career.standings.continue"),
+          () =>
+            last ? this.actions.showSummary() : this.actions.showCalendar(),
+          "career-continue-btn",
+        ),
+      ),
     ];
   }
 
   private summary(state: CareerState, summary: SeasonSummary) {
     return [
       ...summarySheet(state, summary),
-      h("div", { class: "row-btns" },
-        this.button("ghost", t("career.mainMenu"), () => this.actions.mainMenu(), "career-summary-menu"),
-        this.button("ghost", t("career.results.calendar"), () => this.actions.showCalendar(), "career-summary-calendar"),
-        this.button("primary", t("career.summary.next"), () => this.actions.showNextSeason(), "career-summary-next")),
+      h(
+        "div",
+        { class: "row-btns" },
+        this.button(
+          "ghost",
+          t("career.mainMenu"),
+          () => this.actions.mainMenu(),
+          "career-summary-menu",
+        ),
+        this.button(
+          "ghost",
+          t("career.results.calendar"),
+          () => this.actions.showCalendar(),
+          "career-summary-calendar",
+        ),
+        this.button(
+          "primary",
+          t("career.summary.next"),
+          () => this.actions.showNextSeason(),
+          "career-summary-next",
+        ),
+      ),
     ];
   }
 
@@ -136,24 +248,91 @@ export class CareerScreen {
     const rows = calendar.map((r, i) => {
       const done = i < state.regattaIndex || (over && i === state.regattaIndex);
       const current = i === state.regattaIndex && !over;
-      const status = done ? t("career.regatta.done") : current ? t("career.regatta.next", { race: sailed + 1, races: r.races }) : t("career.regatta.upcoming");
-      return h("li", { class: current ? "current" : done ? "done" : "" },
+      const status = done
+        ? t("career.regatta.done")
+        : current
+          ? t("career.regatta.next", { race: sailed + 1, races: r.races })
+          : t("career.regatta.upcoming");
+      return h(
+        "li",
+        { class: current ? "current" : done ? "done" : "" },
         h("span", { class: "n" }, String(i + 1)),
-        h("span", {},
-          h("b", {}, t("career.calendar.regatta", { number: i + 1, venue: venueName(r) })),
-          h("small", {}, `${r.stage ? t("career.calendar.stage", { stage: r.stage.number, stages: r.stage.of }) : t(`career.level.${r.level}`)} · ${t("career.calendar.detail", { boatClass: CLASSES[r.classId].name, boats: FLEET_SIZE[r.level], races: r.races })}`)),
-        h("span", { class: "s" }, status));
+        h(
+          "span",
+          {},
+          h(
+            "b",
+            {},
+            t("career.calendar.regatta", {
+              number: i + 1,
+              venue: venueName(r),
+            }),
+          ),
+          h(
+            "small",
+            {},
+            `${r.stage ? t("career.calendar.stage", { stage: r.stage.number, stages: r.stage.of }) : t(`career.level.${r.level}`)} · ${t("career.calendar.detail", { boatClass: CLASSES[r.classId].name, boats: FLEET_SIZE[r.level], races: r.races })}`,
+          ),
+        ),
+        h("span", { class: "s" }, status),
+      );
     });
     return [
-      h("div", { class: "brand" }, t("career.calendar.title", { season: state.season, age: ageInSeason(state.startingAge, state.season) })),
+      h(
+        "div",
+        { class: "brand" },
+        t("career.calendar.title", {
+          season: state.season,
+          age: ageInSeason(state.startingAge, state.season),
+        }),
+      ),
       h("ol", { class: "regattas", id: "career-calendar" }, ...rows),
-      ...(over ? [h("p", { class: "muted", id: "career-over" }, t("career.seasonOver"))] : []),
-      h("div", { class: "row-btns" },
-        this.button("ghost", t("career.mainMenu"), () => this.actions.mainMenu(), "career-menu"),
-        ...(latest !== null ? [this.button("ghost", t("career.standings.last"), () => this.actions.showStandings(latest), "career-standings")] : []),
+      ...(over
+        ? [
+            h(
+              "p",
+              { class: "muted", id: "career-over" },
+              t("career.seasonOver"),
+            ),
+          ]
+        : []),
+      h(
+        "div",
+        { class: "row-btns" },
+        this.button(
+          "ghost",
+          t("career.mainMenu"),
+          () => this.actions.mainMenu(),
+          "career-menu",
+        ),
+        ...(latest !== null
+          ? [
+              this.button(
+                "ghost",
+                t("career.standings.last"),
+                () => this.actions.showStandings(latest),
+                "career-standings",
+              ),
+            ]
+          : []),
         ...(over
-          ? [this.button("primary", t("career.summary.next"), () => this.actions.showNextSeason(), "career-next-season")]
-          : [this.button("primary", t("career.race.start", { race: sailed + 1 }), () => this.actions.startRace(), "career-race")])),
+          ? [
+              this.button(
+                "primary",
+                t("career.summary.next"),
+                () => this.actions.showNextSeason(),
+                "career-next-season",
+              ),
+            ]
+          : [
+              this.button(
+                "primary",
+                t("career.race.start", { race: sailed + 1 }),
+                () => this.actions.startRace(),
+                "career-race",
+              ),
+            ]),
+      ),
     ];
   }
 }

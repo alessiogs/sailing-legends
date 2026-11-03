@@ -7,7 +7,13 @@ import { describe, expect, it } from "vitest";
 import { nextRaceSetup, startCareer } from "../src/career/Career";
 import type { CareerState } from "../src/career/CareerSave";
 import {
-  chemistryChange, CHEMISTRY_CAP, CHEMISTRY_FLOOR, expectedPlace, moveChemistry, partnerProfile, startingChemistry,
+  chemistryChange,
+  CHEMISTRY_CAP,
+  CHEMISTRY_FLOOR,
+  expectedPlace,
+  moveChemistry,
+  partnerProfile,
+  startingChemistry,
 } from "../src/career/Chemistry";
 import { recordRace } from "../src/career/RecordRace";
 import { crewChemistry, RIVALS } from "../src/sailors/Sailors";
@@ -24,8 +30,12 @@ describe("starting Chemistry", () => {
     expect(startingChemistry(giulia, 2)).toBe(93);
   });
   it("never goes over 100, and a sailor with no shared history starts from the default bond", () => {
-    expect(startingChemistry({ ...giulia, bond: 98 }, 5)).toBe(crewChemistry({ ...giulia, bond: 100 }));
-    expect(startingChemistry({ ...giulia, bond: undefined }, 0)).toBe(crewChemistry({ ...giulia, bond: 60 }));
+    expect(startingChemistry({ ...giulia, bond: 98 }, 5)).toBe(
+      crewChemistry({ ...giulia, bond: 100 }),
+    );
+    expect(startingChemistry({ ...giulia, bond: undefined }, 0)).toBe(
+      crewChemistry({ ...giulia, bond: 60 }),
+    );
   });
 });
 
@@ -60,18 +70,38 @@ describe("the change after a Regatta", () => {
 
 /** A 420 Career at its first Regatta with Giulia as Partner, and a Race where the player takes `place`. */
 function career420(chemistry: number): CareerState {
-  return { ...startCareer({ seed: 3 }), classId: "420", partnerId: "giulia", chemistry };
+  return {
+    ...startCareer({ seed: 3 }),
+    classId: "420",
+    partnerId: "giulia",
+    chemistry,
+  };
 }
 function race(state: CareerState, place: number) {
-  const others = state.pool.filter(s => s.id !== "giulia").slice(0, 5).map(s => s.id);
-  const ids = [...others.slice(0, place - 1), "player", ...others.slice(place - 1)];
-  return ids.map((id, i) => ({ id, status: "finished" as const, place: i + 1 }));
+  const others = state.pool
+    .filter((s) => s.id !== "giulia")
+    .slice(0, 5)
+    .map((s) => s.id);
+  const ids = [
+    ...others.slice(0, place - 1),
+    "player",
+    ...others.slice(place - 1),
+  ];
+  return ids.map((id, i) => ({
+    id,
+    status: "finished" as const,
+    place: i + 1,
+  }));
 }
-const sail = (state: CareerState, place: number) => [0, 1, 2].reduce(s => recordRace(s, race(s, place)), state);
+const sail = (state: CareerState, place: number) =>
+  [0, 1, 2].reduce((s) => recordRace(s, race(s, place)), state);
 
 describe("a 420 Regatta moves the Pair's Chemistry", () => {
   it("only when the Regatta's last Race is recorded", () => {
-    const s = recordRace(recordRace(career420(70), race(career420(70), 1)), race(career420(70), 1));
+    const s = recordRace(
+      recordRace(career420(70), race(career420(70), 1)),
+      race(career420(70), 1),
+    );
     expect(s.chemistry).toBe(70);
   });
   it("up when the Pair wins a fleet it was not expected to, within the cap", () => {
@@ -108,12 +138,18 @@ describe("the Partner as the race sees them", () => {
 describe("the next Race of a 420 Season", () => {
   it("sails with the Career's Partner, at the Pair's Chemistry, in the player's Role", () => {
     const base = career420(55);
-    const ada = base.pool.find(s => !RIVALS.some(r => r.id === s.id))!.id;
-    const state: CareerState = { ...base, partnerId: ada, choice: { role: "crew", control: "playerCareer" } };
+    const ada = base.pool.find((s) => !RIVALS.some((r) => r.id === s.id))!.id;
+    const state: CareerState = {
+      ...base,
+      partnerId: ada,
+      choice: { role: "crew", control: "playerCareer" },
+    };
     const fleet = nextRaceSetup(state)!.fleet;
     expect(fleet.partner?.id).toBe(ada);
     expect(Math.abs(crewChemistry(fleet.partner!) - 55)).toBeLessThanOrEqual(1);
     expect(fleet.choice).toEqual({ role: "crew", control: "playerCareer" });
-    expect(fleet.opponents.some(o => o.helm.id === ada || o.crew?.id === ada)).toBe(false);
+    expect(
+      fleet.opponents.some((o) => o.helm.id === ada || o.crew?.id === ada),
+    ).toBe(false);
   });
 });

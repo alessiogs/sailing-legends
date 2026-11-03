@@ -50,7 +50,10 @@ export class PlayerControls {
   /** The sail the Crew is trimming. */
   private activeSail: "jib" | "spi" = "jib";
 
-  constructor(private readonly input: PlayerInput, private readonly assists: Readonly<Assists>) {}
+  constructor(
+    private readonly input: PlayerInput,
+    private readonly assists: Readonly<Assists>,
+  ) {}
 
   /** A new race starts: both Crew sheets are eased to the middle. */
   newRace() {
@@ -64,17 +67,28 @@ export class PlayerControls {
     const pc = session.playerControls;
     const tel = p.sim.telemetry;
     if (this.autopilotOn) {
-      if (!this.autopilot || this.autopilot.racer !== p) this.autopilot = new RacingAI(p, AUTOPILOT_HELM, session.race, 99, 3);
+      if (!this.autopilot || this.autopilot.racer !== p)
+        this.autopilot = new RacingAI(p, AUTOPILOT_HELM, session.race, 99, 3);
       const c = this.autopilot.update(dt, session.wind);
-      if (!session.partnerHelm) { pc.rudder = c.rudder; pc.sheet = c.sheet; pc.helmOut = c.helmOut; pc.roll = c.roll; }
+      if (!session.partnerHelm) {
+        pc.rudder = c.rudder;
+        pc.sheet = c.sheet;
+        pc.helmOut = c.helmOut;
+        pc.roll = c.roll;
+      }
       if (input.role === "crew") this.autopilotCrew(session, pc, p);
       return;
     }
     if (input.role === "crew") {
       // The Partner is the Helm (RaceSession fills rudder and mainsheet). We trim and move.
       const nowSail: "jib" | "spi" = p.sim.state.spiHoist > 0.5 ? "spi" : "jib";
-      if (nowSail !== this.activeSail) { this.activeSail = nowSail; input.sheet = this.activeCrewSheet(); }
-      if (this.assists.autoTrim) input.sheet = this.activeSail === "spi" ? tel.spi!.optimal : tel.jib!.optimal;
+      if (nowSail !== this.activeSail) {
+        this.activeSail = nowSail;
+        input.sheet = this.activeCrewSheet();
+      }
+      if (this.assists.autoTrim)
+        input.sheet =
+          this.activeSail === "spi" ? tel.spi!.optimal : tel.jib!.optimal;
       crewSheets[this.activeSail] = input.sheet;
       pc.jibSheet = crewSheets.jib;
       pc.spiSheet = crewSheets.spi;
@@ -93,7 +107,10 @@ export class PlayerControls {
 
   /** Auto-trim was switched off: the sheet the player takes over starts where the sail is trimmed now. */
   autoTrimOff(session: RaceSession) {
-    this.input.sheet = this.input.role === "crew" ? this.activeCrewSheet() : session.player!.sim.state.sheet;
+    this.input.sheet =
+      this.input.role === "crew"
+        ? this.activeCrewSheet()
+        : session.player!.sim.state.sheet;
   }
 
   /** Auto-hike was switched off: the weight the player takes over starts where the sailor is now. */
@@ -117,9 +134,13 @@ export class PlayerControls {
     }
     if (choice.control === "fullBoat" && session.partnerCrew) {
       session.partnerCrew.spiCommand = !session.partnerCrew.spiCommand;
-      return session.partnerCrew.spiCommand ? t("toast.spi.callHoist") : t("toast.spi.callDrop");
+      return session.partnerCrew.spiCommand
+        ? t("toast.spi.callHoist")
+        : t("toast.spi.callDrop");
     }
-    return session.partner ? t("toast.spi.partnerDecides", { name: session.partner.name }) : t("toast.spi.crewDecides");
+    return session.partner
+      ? t("toast.spi.partnerDecides", { name: session.partner.name })
+      : t("toast.spi.crewDecides");
   }
 
   /** The side-switch key: the Crew moves to the other side. Returns whether it applied (only to the Crew). */
@@ -131,18 +152,26 @@ export class PlayerControls {
 
   /** Test hook: one fixed step of the race, the autopilot steering when it is on and has been made. */
   fastForwardStep(session: RaceSession, dt: number) {
-    if (this.autopilotOn && this.autopilot) Object.assign(session.playerControls, this.autopilot.update(dt, session.wind));
+    if (this.autopilotOn && this.autopilot)
+      Object.assign(
+        session.playerControls,
+        this.autopilot.update(dt, session.wind),
+      );
     session.step(dt);
   }
 
   private activeCrewSheet() {
-    return this.activeSail === "spi" ? this.crewSheets.spi : this.crewSheets.jib;
+    return this.activeSail === "spi"
+      ? this.crewSheets.spi
+      : this.crewSheets.jib;
   }
 
   /** Test helper: perfect Crew work for the autopilot. */
   private autopilotCrew(session: RaceSession, pc: Controls, p: Racer) {
     const tel = p.sim.telemetry;
-    pc.jibSheet = tel.jib?.optimal; pc.spiSheet = tel.spi?.optimal; pc.crewOut = tel.crew?.ideal;
+    pc.jibSheet = tel.jib?.optimal;
+    pc.spiSheet = tel.spi?.optimal;
+    pc.crewOut = tel.crew?.ideal;
     pc.spi = wantSpinnaker(session.race, p);
     if (crewOnWrongSide(p.sim)) pc.switchSide = true;
   }

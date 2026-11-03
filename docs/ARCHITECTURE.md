@@ -3,6 +3,7 @@
 Every source file and test, one line each. AGENTS.md has the short version; update both when you add or move a file.
 
 ## Source tree
+
 ```
 src/
   core/      math.ts (angles, RNG, segment tests), Input.ts (keyboard/gamepad/drag, tiller vs boat-direction
@@ -167,8 +168,8 @@ scripts/     polar.ts (npm run polar), career-sim.ts (npm run career-sim: a stan
              prints places, Rival ratings and Chemistry; flags --skills= --seasons= --seed=; about 9 min for the defaults), golden-update.ts (npm run golden:update), hud-overlap.cjs (the HUD no-overlap check in
              headless Chromium, run by hand: docs/agents/sandbox-build.md)
 ```
+
 **Rule:** `core/math.ts`, `sailing/`, `race/`, `ai/`, `sailors/`, `career/`, `i18n/` and every other file a test imports
 (`hudPanel.ts`, `raceEventText.ts`, `PlayerControls.ts`, `RaceFeedback.ts`, `sailShape.ts`, `sceneCache.ts`, …)
 import neither Babylon nor browser APIs: they run in Node (tests) and in the browser, and `tsconfig.node.json`
 type-checks them without DOM types.
-

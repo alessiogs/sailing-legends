@@ -20,11 +20,54 @@ export const GENERATED_COUNT = 27;
  * (the Rivals, the opponents' Crews, the extra Helm), so a name never means two people.
  */
 const NAMES: readonly string[] = [
-  "Alessandro", "Andrea", "Matteo", "Lorenzo", "Francesco", "Leonardo", "Davide", "Gabriele", "Riccardo", "Federico",
-  "Simone", "Edoardo", "Filippo", "Giorgio", "Nicolo", "Emanuele", "Stefano", "Jacopo", "Alberto", "Daniele",
-  "Michele", "Paolo", "Enrico", "Carlo", "Martina", "Chiara", "Francesca", "Sofia", "Alice", "Aurora",
-  "Beatrice", "Elisa", "Valentina", "Giorgia", "Camilla", "Ginevra", "Emma", "Greta", "Ilaria", "Anna",
-  "Caterina", "Matilde", "Viola", "Bianca", "Silvia", "Marta", "Irene", "Costanza",
+  "Alessandro",
+  "Andrea",
+  "Matteo",
+  "Lorenzo",
+  "Francesco",
+  "Leonardo",
+  "Davide",
+  "Gabriele",
+  "Riccardo",
+  "Federico",
+  "Simone",
+  "Edoardo",
+  "Filippo",
+  "Giorgio",
+  "Nicolo",
+  "Emanuele",
+  "Stefano",
+  "Jacopo",
+  "Alberto",
+  "Daniele",
+  "Michele",
+  "Paolo",
+  "Enrico",
+  "Carlo",
+  "Martina",
+  "Chiara",
+  "Francesca",
+  "Sofia",
+  "Alice",
+  "Aurora",
+  "Beatrice",
+  "Elisa",
+  "Valentina",
+  "Giorgia",
+  "Camilla",
+  "Ginevra",
+  "Emma",
+  "Greta",
+  "Ilaria",
+  "Anna",
+  "Caterina",
+  "Matilde",
+  "Viola",
+  "Bianca",
+  "Silvia",
+  "Marta",
+  "Irene",
+  "Costanza",
 ];
 
 /** The overall level of a sailor, 0..1: the mean of their four attributes. */
@@ -33,7 +76,12 @@ export function sailorRating(p: SailorProfile): number {
 }
 
 /** The four levels the generated sailors are spread over, club to international. */
-const LEVELS: readonly RegattaLevel[] = ["club", "regional", "national", "international"];
+const LEVELS: readonly RegattaLevel[] = [
+  "club",
+  "regional",
+  "national",
+  "international",
+];
 
 const round2 = (v: number) => Math.round(v * 100) / 100;
 
@@ -44,7 +92,8 @@ const round2 = (v: number) => Math.round(v * 100) / 100;
  */
 export function generatePool(seed: number, playerAge: number): PoolSailor[] {
   const rand = rng(mixSeed(seed, 0x500c));
-  const ageNearPlayer = () => Math.max(7, playerAge + Math.floor(rand() * 5) - 2);
+  const ageNearPlayer = () =>
+    Math.max(7, playerAge + Math.floor(rand() * 5) - 2);
 
   const names = [...NAMES];
   for (let i = names.length - 1; i > 0; i--) {
@@ -57,17 +106,31 @@ export function generatePool(seed: number, playerAge: number): PoolSailor[] {
     const startingAge = ageNearPlayer();
     const shift = rivalStartRating(startingAge) - sailorRating(r);
     const at = (v: number) => round2(clamp(v + shift, 0.1, 0.98));
-    return { ...r, technique: at(r.technique), tactics: at(r.tactics), speed: at(r.speed), discipline: at(r.discipline), startingAge };
-  });
-  const generated = names.slice(0, GENERATED_COUNT).map((name, i): PoolSailor => {
-    const startingAge = ageNearPlayer();
-    const mean = levelRating(LEVELS[i % LEVELS.length], startingAge);
-    const attribute = () => round2(clamp(mean + (rand() - 0.5) * 0.24, 0.1, 0.98));
     return {
-      id: name.toLowerCase(), name,
-      technique: attribute(), tactics: attribute(), speed: attribute(), discipline: attribute(),
+      ...r,
+      technique: at(r.technique),
+      tactics: at(r.tactics),
+      speed: at(r.speed),
+      discipline: at(r.discipline),
       startingAge,
     };
   });
+  const generated = names
+    .slice(0, GENERATED_COUNT)
+    .map((name, i): PoolSailor => {
+      const startingAge = ageNearPlayer();
+      const mean = levelRating(LEVELS[i % LEVELS.length], startingAge);
+      const attribute = () =>
+        round2(clamp(mean + (rand() - 0.5) * 0.24, 0.1, 0.98));
+      return {
+        id: name.toLowerCase(),
+        name,
+        technique: attribute(),
+        tactics: attribute(),
+        speed: attribute(),
+        discipline: attribute(),
+        startingAge,
+      };
+    });
   return [...rivals, ...generated];
 }

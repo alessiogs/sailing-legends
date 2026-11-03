@@ -6,10 +6,13 @@ type Attributes = Record<string, string>;
  * so a sailor's name (or any other text) can't add elements or attributes to the page.
  */
 export function h<K extends keyof HTMLElementTagNameMap>(
-  tag: K, attributes: Attributes = {}, ...children: (Node | string)[]
+  tag: K,
+  attributes: Attributes = {},
+  ...children: (Node | string)[]
 ): HTMLElementTagNameMap[K] {
   const el = document.createElement(tag);
-  for (const [name, value] of Object.entries(attributes)) el.setAttribute(name, value);
+  for (const [name, value] of Object.entries(attributes))
+    el.setAttribute(name, value);
   el.append(...children);
   return el;
 }
