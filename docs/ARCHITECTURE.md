@@ -13,7 +13,7 @@ src/
              sailed by a Pair, which has `crewRighting`),
              BoatPhysics.ts (the model), Wind.ts (shifts + puffs), BoatStates.ts (Crew weight in/hiking/trapeze
              and spinnaker down/moving/up from the boat state: the one home of their thresholds)
-  race/      Course.ts (marks, start/finish lines and legs, each with a `LegId`),
+  race/      Course.ts (marks, the start line that is also the finish line, and legs, each with a `LegId`),
              Race.ts (start/OCS, rounding, finish, penalties), Rules.ts (RRS 10/11/12/13/31),
              RaceSession.ts (one race from a `Fleet`: wind, course, boats, AIs, contacts; fixed 60 Hz; no rendering)
              Fleet.ts (`makeFleet`: the player's boat with the Partner, the opponents with their Crews, and every

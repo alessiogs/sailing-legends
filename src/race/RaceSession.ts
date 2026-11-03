@@ -186,12 +186,13 @@ export class RaceSession {
     const c = this.race.course;
     const obstacles = courseObstacles(c);
     const finishIdx = c.legs.findIndex((l) => l.kind === "finish");
-    // Rule 31 only covers the marks of the leg being sailed (and the start marks before starting).
+    // Rule 31 only covers the marks of the leg being sailed (and the start marks before starting and on the finish leg, since the finish line is the start line).
     const counts = (r: Racer, key: string) => {
-      if (key === "pin" || key === "committee") return r.leg === -1;
+      if (key === "pin" || key === "committee")
+        return r.leg === -1 || r.leg === finishIdx;
       if (key === "m0") return r.leg === 0;
       if (key === "m1") return r.leg === 1;
-      return r.leg === finishIdx;
+      return false;
     };
     for (let i = 0; i < rs.length; i++) {
       const A = rs[i],

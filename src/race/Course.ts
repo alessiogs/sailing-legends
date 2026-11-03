@@ -3,7 +3,7 @@ import { bearingTo, dirX, dirZ } from "../core/math";
 /**
  * A windward/leeward course, defined relative to the mean wind so it can be rotated freely.
  *
- *   start line  ->  Mark 1 (windward, leave to port)  ->  Mark 2 (leeward, leave to port)  ->  finish line (upwind)
+ *   start line  ->  Mark 1 (windward, leave to port)  ->  Mark 2 (leeward, leave to port)  ->  finish (upwind, through the start line again)
  */
 export type Point = { x: number; z: number };
 export type Line = { a: Point; b: Point };
@@ -51,22 +51,23 @@ export function makeWindwardLeeward(
   const committee = P(half + 2, 0);
   const m1 = P(0, beat);
   const m2 = P(-4, -(opts.run ?? 38));
-  const finish: Line = { a: P(-12, beat * 0.62), b: P(12, beat * 0.62) };
+  // The finish line is the start line: upwind through it, between the pin and the committee boat.
+  const line: Line = { a: pin, b: committee };
   return {
     windDir,
-    start: { a: pin, b: committee },
+    start: line,
     pin,
     committee,
-    marks: [m1, m2, finish.a, finish.b],
+    marks: [m1, m2],
     legs: [
       { kind: "mark", id: "mark1", mark: m1, rounding: "port", upwind: true },
       { kind: "mark", id: "mark2", mark: m2, rounding: "port", upwind: false },
-      { kind: "finish", id: "finish", line: finish, upwind: true },
+      { kind: "finish", id: "finish", line, upwind: true },
     ],
   };
 }
 
-/** Point the AI (and the HUD arrow) should aim at for a leg. */
+/** Point the HUD arrow and the standings aim at for a leg (the middle of a finish line). */
 export function legTarget(leg: Leg): Point {
   if (leg.kind === "finish")
     return {
@@ -74,6 +75,25 @@ export function legTarget(leg: Leg): Point {
       z: (leg.line.a.z + leg.line.b.z) / 2,
     };
   return leg.mark;
+}
+
+/**
+ * Where a boat at (x, z) should aim on a leg: the mark, or on a finish line the nearest point of it, kept at least `inset` (and 22% of the line)
+ * away from both ends so the boat finishes where it arrives without touching the committee boat or the pin.
+ */
+export function aimPoint(leg: Leg, x: number, z: number, inset = 0): Point {
+  if (leg.kind !== "finish") return leg.mark;
+  const { a, b } = leg.line;
+  const dx = b.x - a.x,
+    dz = b.z - a.z;
+  const len = Math.hypot(dx, dz);
+  if (len < 1e-9) return a;
+  const lo = Math.min(Math.max(inset, 0.22 * len), len / 2);
+  const t = Math.max(
+    lo,
+    Math.min(len - lo, ((x - a.x) * dx + (z - a.z) * dz) / len),
+  );
+  return { x: a.x + (dx * t) / len, z: a.z + (dz * t) / len };
 }
 
 export function distanceTo(p: Point, x: number, z: number) {

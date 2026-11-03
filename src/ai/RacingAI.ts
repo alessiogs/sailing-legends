@@ -9,7 +9,7 @@ import {
 } from "../core/math";
 import type { Controls } from "../sailing/BoatPhysics";
 import type { WindField } from "../sailing/Wind";
-import { distanceTo, legTarget, type Point } from "../race/Course";
+import { aimPoint, distanceTo, type Point } from "../race/Course";
 import type { Race, Racer } from "../race/Race";
 import type { SailorProfile } from "../sailors/Sailors";
 import { boatWithin, giveWay } from "./Avoidance";
@@ -156,7 +156,7 @@ export class RacingAI {
       this.debug = steer.debug;
     } else {
       const leg = c.legs[r.leg];
-      let target = legTarget(leg);
+      let target = aimPoint(leg, s.x, s.z, 6 * this.k);
       if (leg.kind === "mark")
         target = this.orbitPoint(
           leg.mark,

@@ -104,15 +104,11 @@ describe("course obstacles", () => {
     expect(obstacles.map((o) => o.key)).toEqual([
       "m0",
       "m1",
-      "m2",
-      "m3",
       "pin",
       "committee",
     ]);
-    expect(obstacles.map((o) => o.shape.r)).toEqual([
-      0.75, 0.75, 0.4, 0.4, 0.45, 1.3,
-    ]);
-    const cb = obstacles[5].shape;
+    expect(obstacles.map((o) => o.shape.r)).toEqual([0.75, 0.75, 0.45, 1.3]);
+    const cb = obstacles[3].shape;
     expect(
       cb.kind === "capsule" &&
         near(cb.seg.ax, c.committee.x) &&
