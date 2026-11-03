@@ -24,7 +24,7 @@ const FAIRLEAD_X = 0.62, FAIRLEAD_Y = 0.46, FAIRLEAD_Z = 0.1;
 const SHEET_COLOR = new Color3(0.93, 0.93, 0.88);
 const MAST_STEP: V3 = { x: 0, y: 0, z: MAST_Z };
 
-const MOTION: BoatMotion = { waveHeight: 0.7, pitch: 0.6, roll: 0.4, heelRate: 2.5, heel: 0.8, boomRate: 2.4, rudderDeg: RIG["420"].rudderDeg };
+const MOTION: BoatMotion = { waveHeight: 0.7, pitch: 0.6, roll: 0.4, heelRate: 2.5, heel: 0.8, boomRate: 2.4, rudderDeg: RIG["420"].rudderDeg, bowLift: 0.08, bowZ: 2.0 };
 
 /** Visual of a 420: sloop rig (main + jib), spinnaker on a pole, an articulated Helm hiking and Crew on the trapeze. */
 export class Boat420View extends BoatViewBase {
@@ -233,7 +233,7 @@ export class Boat420View extends BoatViewBase {
   protected placeSailors(dt: number, s: BoatState, tel: Telemetry) {
     // Both sailors are on the crew's side (the windward side once the crew has moved across).
     const common: Omit<PoseInput, "role" | "height"> = {
-      classId: "420", crewSide: s.crewSide, crewOut: s.crewOut, boomSide: s.boomSide, spiHoist: s.spiHoist,
+      classId: "420", crewSide: s.crewSide, crewOut: s.crewOut, helmOut: s.helmOut, boomSide: s.boomSide, spiHoist: s.spiHoist,
       heelDeg: tel.heelDeg, sideForce: tel.sideForce, tiller: -s.rudder,
     };
     const helm = this.helmPose = sailorPose({ ...common, role: "helm", height: this.helm.height }, this.helmPose, dt);

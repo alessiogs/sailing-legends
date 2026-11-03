@@ -1,5 +1,6 @@
 import { DEFAULT_CONTROLS } from "../core/ControlSettings";
 import type { Input } from "../core/Input";
+import { defaultAutoHike } from "../game/PlayerControls";
 import type { CareerResults, GameController, Mode, Screens } from "../game/GameController";
 import { LANGUAGES, t, type Language, type MessageKey } from "../i18n";
 import type { Racer } from "../race/Race";
@@ -31,10 +32,11 @@ export class Menus implements Screens {
   private readonly el = {
     menu: $("menu"), pause: $("pause"), results: $("results"), controls: $("controls"),
     autoTrim: $("auto-trim-opt") as HTMLInputElement,
+    autoHike: $("auto-hike-opt") as HTMLInputElement,
   };
   private game!: GameController;
   private readonly career = new CareerScreen({
-    start: age => this.game.newCareer(age),
+    start: (age, build) => this.game.newCareer(age, build),
     startRace: () => this.game.startCareerRace(),
     showCalendar: () => this.game.showCalendar(),
     showStandings: index => this.game.showStandings(index),
@@ -95,6 +97,13 @@ export class Menus implements Screens {
 
   showAutoTrim(on: boolean) { this.el.autoTrim.checked = on; }
 
+  /** True once the player has set Auto-hike themselves (the box or G); until then a Role click sets its default. */
+  private autoHikeSet = false;
+
+  autoHikeChosen() { return this.autoHikeSet ? this.el.autoHike.checked : null; }
+
+  showAutoHike(on: boolean) { this.el.autoHike.checked = on; this.autoHikeSet = true; }
+
   // ---------- Wiring ----------
   /** Wires every menu button to `game` and shows the current settings and race setup. Call once, at startup. */
   attach(game: GameController) {
@@ -104,6 +113,7 @@ export class Menus implements Screens {
     this.attachCommands();
     this.attachTouchButtons();
     this.attachBoatMenu();
+    this.el.autoHike.addEventListener("change", () => { this.autoHikeSet = true; });
     this.attachLanguage();
     for (const b of buttons("#wind-opt button")) {
       b.addEventListener("click", () => {
@@ -221,7 +231,12 @@ export class Menus implements Screens {
       });
     }
     for (const b of buttons("#role-opt button")) {
-      b.addEventListener("click", () => { game.choice = ROLE_OPTIONS[b.dataset.v as RoleOption].choice; this.syncBoatMenu(); });
+      b.addEventListener("click", () => {
+        game.choice = ROLE_OPTIONS[b.dataset.v as RoleOption].choice;
+        // Auto-hike starts on for the Helm and off for the Crew, until the player chooses it themselves.
+        if (!this.autoHikeSet) this.el.autoHike.checked = defaultAutoHike(game.choice);
+        this.syncBoatMenu();
+      });
     }
     this.syncBoatMenu();
   }

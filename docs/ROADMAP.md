@@ -24,6 +24,11 @@
   17 Races). AI attributes now shape how a sailor sails; fleets, generated sailors and Rivals follow one
   strength-by-age curve (`career/Strength.ts`), measured with `npm run career-sim`.
 
+- **0.6c Body weight and planing** — spec #142. Every sailor has a body weight from age and Build; the Helm hikes
+  by hand (Auto-hike Assist, hike gauge, Q/Z/G), the 420 Helm can sit to leeward, roll tacks and gybes, AI hiking by
+  technique, fore-aft weight, the 420 planes on a breezy reach and the Optimist gains a little downwind; Partner
+  weight and Pair hint in the Career, the "Planing" tag, bow lift, bow spray and a louder water rush.
+
 ## How planning works
 This file holds the vision and the order. Details and status live on GitHub: one
 [milestone](https://github.com/alessiogs/sailing-legends/milestones) per version, a spec issue for big
@@ -31,8 +36,6 @@ versions, and its issues (5–8 per spec). Don't copy issue lists here.
 
 ## Next (in order)
 - **0.4.x maintenance** — small tech-debt issues, worked in the background (no spec).
-- **0.6c Body weight and planing** — fore-aft and side weight in the physics, Optimist hiking and roll tacks,
-  bow up to surf and plane.
 - **0.7 Training** — drills, a coach, player attributes, "sim this race".
 - **0.8 Race tactics** — mark-room (rule 18), rule 16, protests, AI covering/splitting.
 - **0.9 Weather and venues** — Garda thermal winds, sea state, current, light; real venues.

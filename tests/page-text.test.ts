@@ -64,7 +64,7 @@ describe("static page text", () => {
 
   it("holds no text of its own that the catalog does not supply", () => {
     // Left in the page: the brand, boat class names, key and button names, units and the instruments' start values.
-    const allowed = /^(SAILING|LEGENDS|Optimist|420|[A-Z]|[←→↑↓/·+–—]|RT|LT|RT \/ LT|Shift|Esc|Start|Back|-0:45|0\.0|kn|0°|11 kn)$/;
+    const allowed = /^(SAILING|LEGENDS|Optimist|420|[A-Z]|[←→↑↓/·+–—]|RT|LT|RT \/ LT|RB \/ LB|Shift|Esc|Start|Back|-0:45|0\.0|kn|0°|11 kn)$/;
     const loading = lookup("menu.loading");
     const ownText = textPieces(page).filter(line => !allowed.test(line) && line !== loading);
     expect(ownText).toEqual([]);

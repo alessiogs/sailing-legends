@@ -1,6 +1,7 @@
 import { Mesh, MeshBuilder, TransformNode, type Material, type Scene, type Vector3 } from "@babylonjs/core";
 import { clamp, DEG, lerpAngle } from "../core/math";
 import type { BoatState, Telemetry, TrimState } from "../sailing/BoatPhysics";
+import { BowSpray } from "./BowSpray";
 import { surfaceAt, type Wave } from "./Waves";
 
 /** How a boat class moves on the water: the numbers that differ between the Optimist and the 420. */
@@ -19,6 +20,10 @@ export type BoatMotion = {
   boomRate: number;
   /** Rudder angle drawn at full helm (degrees). */
   rudderDeg: number;
+  /** Bow-up pitch (rad) at full planing. */
+  bowLift: number;
+  /** How far ahead of the middle of the boat the bow is (m). */
+  bowZ: number;
 };
 
 /** Distance (m) from the camera within which sailors are drawn in full; a boat that was near stays so a little further out. */
@@ -51,8 +56,11 @@ export abstract class BoatViewBase {
   /** Whether the camera is close enough for the sailors to be drawn in full (see `NEAR`). */
   protected sailorsNear = true;
   private heelVisual = 0;
+  /** The bow spray of a planing boat the camera is near; its drops are made only then. */
+  private readonly spray: BowSpray;
 
   constructor(scene: Scene, name: string, private readonly motion: BoatMotion) {
+    this.spray = new BowSpray(scene);
     this.root = new TransformNode(name, scene);
     this.body = new TransformNode(`${name}-body`, scene);
     this.body.parent = this.root;
@@ -85,7 +93,8 @@ export abstract class BoatViewBase {
 
     // Heel (+ = to starboard) eases toward the physics value.
     this.heelVisual += (tel.heelDeg - this.heelVisual) * Math.min(1, dt * m.heelRate);
-    this.body.rotation.x = -Math.atan(slopeFwd) * m.pitch;
+    // The bow lifts as the boat gets onto the plane (a transform, no cost).
+    this.body.rotation.x = -Math.atan(slopeFwd) * m.pitch - tel.planeLevel * m.bowLift;
     this.body.rotation.z = -(this.heelVisual * DEG) * m.heel + Math.atan(slopeSide) * m.roll;
 
     // Boom swings to the leeward side; a gybe swings it across quickly.
@@ -101,6 +110,7 @@ export abstract class BoatViewBase {
       this.sailorsNear = d < (this.sailorsNear ? NEAR_LEAVE : NEAR);
     }
     this.placeSailors(dt, s, tel);
+    this.spray.update(dt, tel.planing && this.sailorsNear, s.x + fx * m.bowZ, this.root.position.y + 0.2, s.z + fz * m.bowZ, s.heading, tel.speed, tel.planeLevel);
 
     // Burgee points where the apparent wind goes.
     this.burgee.rotation.y = lerpAngle(this.burgee.rotation.y, tel.awa, Math.min(1, dt * 8));
@@ -117,6 +127,7 @@ export abstract class BoatViewBase {
   }
 
   dispose() {
+    this.spray.dispose();
     this.root.dispose(false, false);
   }
 }

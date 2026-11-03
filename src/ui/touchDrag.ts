@@ -2,12 +2,12 @@
  * Dragging the HUD's controls with a finger or the mouse (pointer events, so both work the same). The tiller bar
  * (the Crew's weight bar, horizontal) and the sheet slider (vertical, up = sheet in) each take one pointer, so two
  * thumbs can work them at once. The position along the track goes to `Input`, which knows nothing of the HUD;
- * letting go hands the control back.
+ * letting go hands the control back. A third slider, shown while the player hikes by hand, drags the hike.
  */
 import type { Input } from "../core/Input";
 
 /** What a drag needs of `Input`. */
-type Draggable = Pick<Input, "dragGauge" | "dragSheet">;
+type Draggable = Pick<Input, "dragGauge" | "dragSheet" | "dragHike">;
 
 /**
  * Makes `zone` (a larger area around `track`) drag-sensitive: a press anywhere in it, and the moves that follow, give
@@ -45,4 +45,6 @@ export function attachGaugeDrag(input: Draggable) {
   const $ = (id: string) => document.getElementById(id)!;
   bindDrag($("gauge-zone"), $("tiller-track"), "x", p => input.dragGauge(p));
   bindDrag($("trim-zone"), $("trim-track"), "y", p => input.dragSheet(p));
+  // The hike slider is vertical with fully out at the top, so the position along it is turned round.
+  bindDrag($("hike-zone"), $("hike-track"), "y", p => input.dragHike(p === null ? null : 1 - p));
 }

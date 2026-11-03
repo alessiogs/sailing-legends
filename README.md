@@ -37,8 +37,10 @@ Requirements: Node.js 20+, a desktop browser with WebGL 2.
 | Keyboard | Gamepad | Touch | Action |
 |---|---|---|---|
 | A / D, ← / → (Shift = fine) | Left stick | Drag the tiller bar (bottom) | Tiller; as Crew, your weight |
+| Q / Z (Shift = fine) | RB / LB | Drag the hike slider (only with Auto-hike off) | Hike out / in: your weight, as Helm or Crew |
 | W / ↑ · S / ↓ | RT · LT | Drag the sheet slider (right edge) | Sheet in · ease |
 | T | X | Auto-trim button | Auto-trim (an Assist) |
+| G | — | — | Auto-hike (an Assist) |
 | Space | — | Spi button | Hoist / drop the spinnaker (420) |
 | E | — | Switch button | Switch sides (420 Crew) |
 | C | Y | Camera button | Camera: chase / free / tactical |
@@ -54,8 +56,10 @@ the boat right); the tiller springs back to the centre or stays put; tiller and 
 
 ## Playing
 - **Quick race:** pick the boat (Optimist or 420), the wind and, for the 420, your Role (*Timoniere* = Helm,
-  *Prodiere* = Crew, *Barca completa* = Full Boat Control) and your Partner.
-- **Career:** choose your starting age (8–12). A **Season** is one year: four **Regattas** (club, regional, national,
+  *Prodiere* = Crew, *Barca completa* = Full Boat Control) and your Partner. Auto-hike (*Peso automatico*) sits beside
+  Auto-trim: on by default for the Helm and Full Boat Control, off for the Crew.
+- **Career:** choose your starting age (8–12) and your build (light, average or heavy: lighter is quicker in light
+  air, heavier in a breeze). A **Season** is one year: four **Regattas** (club, regional, national,
   international) of three races ("prove") each, scored low-point with a Discard from the third Regatta. Fleets grow
   from 6 to 12 boats with the level. After each Regatta you see the standings and how you did against Luca, Giulia
   and Marco; after the Season, a summary. Then stay in the Optimist or move to the 420 and pick a Partner from the
@@ -65,10 +69,19 @@ the boat right); the tiller springs back to the centre or stays put; tiller and 
   **finish** upwind, marks to port. Over the line at the gun you are **OCS** and must return. Darker, rippled
   patches are puffs. Right-of-way rules 10, 11, 12, 13 and 31 are judged on contact, with penalty turns; a penalty
   still owed at the finish means DSQ.
+- **Weight and hiking:** a 420 Pair's weight and the Helm's hike decide whether the boat stays flat. Too much weight
+  out in light air heels the boat to windward and slows it. Roll tacks and gybes: hiking hard on the new side within
+  about a second of the boom crossing loses less speed (a small burst in very light air). The 420 **planes** on a
+  breezy reach or run (a *Planing* tag); the Optimist gains a little speed downwind with the bow up. Fore-aft weight
+  is placed automatically. Every sailor's body weight comes from age and build.
 
 ## Changelog
 <details>
-<summary><b>0.6</b> — new HUD (in progress)</summary>
+<summary><b>0.6</b> — new HUD, body weight and planing (in progress)</summary>
+
+- **0.6c** — Helm hike control (Q/Z, RB/LB, touch slider) with the Auto-hike Assist (G); body weight from age and
+  Build, chosen when starting a Career; roll tacks and gybes; 420 planing and Optimist bow-up downwind; a hike gauge,
+  a Planing tag, bow lift, bow spray and water sound while planing.
 
 - Original "Sail number" HUD: a slim top strip (place, clock, next mark, pause), a compass pill with speed, round
   Camera and Standings/map buttons, one message at a time with calm status colours.
@@ -183,5 +196,6 @@ conventions are in the developer guide, [AGENTS.md](AGENTS.md).
 - Simplified rules: no mark-room (rule 18), no rule 16; breaches only count if there is contact.
 - AI starts are still sometimes late; no covering tactics.
 - In light wind the AI sometimes struggles to keep clear of right-of-way boats and takes penalties.
-- Sailors are simple figures with no animation yet (0.6b), and body weight fore and aft is not simulated (0.6c).
+- Sailors are simple figures with no animation yet (0.6b). Fore-aft weight is automatic (no player control), and
+  surfing on waves waits for 0.9.
 - `window.__game` exposes debug hooks (autopilot, fast-forward) used by the automated tests.

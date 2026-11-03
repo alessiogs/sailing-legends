@@ -5,6 +5,7 @@
 import { isClassId, type ClassId } from "../sailing/BoatClass";
 import { seasonCalendar } from "./Calendar";
 import { MAX_STARTING_AGE, MIN_STARTING_AGE } from "./Ages";
+import { isBuild, type Build } from "../sailors/BodyWeight";
 import { RIVALS } from "../sailors/Sailors";
 import type { PlayerChoice } from "../race/PlayerChoice";
 import type { PoolSailor } from "./Pool";
@@ -21,6 +22,8 @@ export type CareerState = {
   season: number;
   /** The class sailed this Season; it picks the Season's calendar. */
   classId: ClassId;
+  /** The player's Build (light, average, heavy), chosen when the Career starts: it sets their body weight at every age. */
+  build: Build;
   /** The Regatta in progress, as an index into the calendar. */
   regattaIndex: number;
   /**
@@ -40,7 +43,7 @@ export type CareerState = {
   seasonsTogether: Record<string, number>;
 };
 
-export const CAREER_VERSION = 2;
+export const CAREER_VERSION = 3;
 
 export type CareerLoad = { ok: true; state: CareerState } | { ok: false };
 
@@ -73,11 +76,14 @@ const migrateCalendar: CareerMigration = saved => {
   return { ...saved, regattaIndex: index, results: Array.from({ length: index + 1 }, (_, i) => moved[i] ?? []) };
 };
 
+/** Version 3 added the player's Build: an older Career gets the average one. */
+const addBuild: CareerMigration = saved => ({ ...saved, build: "average" });
+
 /**
  * Migrations by the version they start from. A change to the shape raises `CAREER_VERSION` and adds the step from the
  * old version here.
  */
-export const CAREER_MIGRATIONS: Readonly<Record<number, CareerMigration>> = { 1: migrateCalendar };
+export const CAREER_MIGRATIONS: Readonly<Record<number, CareerMigration>> = { 1: migrateCalendar, 2: addBuild };
 
 const STATUSES: readonly string[] = ["finished", "ocs", "dsq", "dnf"];
 
@@ -147,10 +153,10 @@ export function decodeCareer(
       saved = step(saved);
       version++;
     }
-    const { seed, startingAge, season, classId, regattaIndex, results, pool, partnerId, choice, chemistry, seasonsTogether } = saved;
+    const { seed, startingAge, season, classId, build, regattaIndex, results, pool, partnerId, choice, chemistry, seasonsTogether } = saved;
     if (!isInt(seed, 0) || !isInt(season, 1)) return { ok: false };
     if (!isInt(startingAge, MIN_STARTING_AGE) || startingAge > MAX_STARTING_AGE) return { ok: false };
-    if (typeof classId !== "string" || !isClassId(classId)) return { ok: false };
+    if (typeof classId !== "string" || !isClassId(classId) || !isBuild(build)) return { ok: false };
     if (!isInt(regattaIndex, 0) || !isResults(results, classId, regattaIndex)) return { ok: false };
     if (!isPool(pool) || !isChoice(choice) || !isHistory(seasonsTogether, pool)) return { ok: false };
     const paired = classId === "420";
@@ -159,7 +165,7 @@ export function decodeCareer(
       || typeof chemistry !== "number" || chemistry < 0 || chemistry > 100)) return { ok: false };
     return {
       ok: true,
-      state: { version: current, seed, startingAge, season, classId, regattaIndex, results, pool, partnerId: partnerId as string | null, choice, chemistry: chemistry as number | null, seasonsTogether },
+      state: { version: current, seed, startingAge, season, classId, build, regattaIndex, results, pool, partnerId: partnerId as string | null, choice, chemistry: chemistry as number | null, seasonsTogether },
     };
   } catch {
     return { ok: false };

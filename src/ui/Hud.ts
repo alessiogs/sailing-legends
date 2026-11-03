@@ -24,12 +24,12 @@ const fmtClock = (t: number) => {
 export class Hud {
   private el = {
     hud: $("hud"), clock: $("clock"), place: $("place"), boats: $("boats"), leg: $("leg"), target: $("target"),
-    standings: $("standings"), speed: $("speed"), pillLine: $("pill-line"), twa: $("twa"), tws: $("tws"), heel: $("heel"),
+    standings: $("standings"), speed: $("speed"), planing: $("planing"), pillLine: $("pill-line"), twa: $("twa"), tws: $("tws"), heel: $("heel"),
     leeway: $("leeway"), shift: $("shift"), trimOpt: $("trim-opt"), trimCur: $("trim-cur"), trimState: $("trim-state"),
     trimPill: $("trim-pill"), panel: $("panel"), panelToggle: $("panel-toggle"), line: $("leg").parentElement!,
     toast: $("toast"), tags: $("tags"), tillerPos: $("tiller-pos"),
     gaugeLabel: $("gauge-label"), gaugeCenter: $("gauge-center"), gaugeIdeal: $("gauge-ideal"), gaugeLeft: $("gauge-left"),
-    gaugeRight: $("gauge-right"), sailLabel: $("sail-label"), call: $("call"), partnerLine: $("partner-line"), chem: $("chem"),
+    gaugeRight: $("gauge-right"), hikeZone: $("hike-zone"), hikeTop: $("hike-top"), hikeBottom: $("hike-bottom"), hikeOpt: $("hike-opt"), hikeCur: $("hike-cur"), sailLabel: $("sail-label"), call: $("call"), partnerLine: $("partner-line"), chem: $("chem"),
     penalty: $("penalty"), penaltyText: $("penalty-text"), penaltyBar: $("penalty-bar"),
   };
   private compass = $<HTMLCanvasElement>("compass").getContext("2d")!;
@@ -148,6 +148,19 @@ export class Hud {
     this.el.tillerPos.style.left = `${along * 100}%`;
     this.el.gaugeIdeal.classList.toggle("hidden", g.ideal === undefined);
     if (g.ideal !== undefined) this.el.gaugeIdeal.style.left = `${Math.max(0, Math.min(1, g.ideal)) * 100}%`;
+    // The hike slider (fully out at the top) shows only while the player hikes by hand.
+    const hike = panel.hike;
+    this.el.hikeZone.classList.toggle("hidden", !hike);
+    if (hike) {
+      this.el.hikeTop.textContent = hike.ends[1];
+      this.el.hikeBottom.textContent = hike.ends[0];
+      const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
+      const ideal = clamp01(hike.ideal ?? hike.value);
+      this.el.hikeOpt.style.top = `${(1 - Math.min(1, ideal + 0.06)) * 100}%`;
+      this.el.hikeOpt.style.height = `${(Math.min(1, ideal + 0.06) - Math.max(0, ideal - 0.06)) * 100}%`;
+      this.el.hikeCur.style.top = `${(1 - clamp01(hike.value)) * 100}%`;
+    }
+    this.el.planing.classList.toggle("hidden", !panel.planing);
     this.el.call.classList.toggle("hidden", !panel.call);
     if (panel.call) this.el.call.textContent = panel.call;
     this.el.partnerLine.classList.toggle("hidden", !panel.partnerLine);

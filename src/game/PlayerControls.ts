@@ -1,7 +1,7 @@
 import { crewOnWrongSide, wantSpinnaker } from "../ai/CrewAI";
 import { RacingAI } from "../ai/RacingAI";
 import { t } from "../i18n";
-import type { Role } from "../race/PlayerChoice";
+import type { PlayerChoice, Role } from "../race/PlayerChoice";
 import type { Racer } from "../race/Race";
 import type { RaceSession } from "../race/RaceSession";
 import type { Controls } from "../sailing/BoatPhysics";
@@ -11,7 +11,14 @@ import { AUTOPILOT_HELM } from "../sailors/Sailors";
 export type Assists = {
   /** Auto-trim: the player's sail trim is set automatically. */
   autoTrim: boolean;
+  /** Auto-hike: the weight the player controls (the Helm's or the Crew's) is placed automatically. */
+  autoHike: boolean;
 };
+
+/** Auto-hike's default for a Role: on for the Helm and Full Boat Control, off for the Crew, whose job is hands-on. */
+export function defaultAutoHike(choice: PlayerChoice): boolean {
+  return choice.role === "helm";
+}
 
 /**
  * What the player's input gives this module: the Role (what the keys move), the rudder, the sheet of the sail
@@ -22,7 +29,9 @@ export type PlayerInput = {
   readonly role: Role;
   readonly rudder: number;
   sheet: number;
-  readonly crewOut: number;
+  crewOut: number;
+  /** The Helm's weight, 0 (in) .. 1 (fully out), below 0 sitting to leeward (420). */
+  helmOut: number;
 };
 
 /**
@@ -57,7 +66,7 @@ export class PlayerControls {
     if (this.autopilotOn) {
       if (!this.autopilot || this.autopilot.racer !== p) this.autopilot = new RacingAI(p, AUTOPILOT_HELM, session.race, 99, 3);
       const c = this.autopilot.update(dt, session.wind);
-      if (!session.partnerHelm) { pc.rudder = c.rudder; pc.sheet = c.sheet; }
+      if (!session.partnerHelm) { pc.rudder = c.rudder; pc.sheet = c.sheet; pc.helmOut = c.helmOut; pc.roll = c.roll; }
       if (input.role === "crew") this.autopilotCrew(session, pc, p);
       return;
     }
@@ -69,10 +78,13 @@ export class PlayerControls {
       crewSheets[this.activeSail] = input.sheet;
       pc.jibSheet = crewSheets.jib;
       pc.spiSheet = crewSheets.spi;
+      if (this.assists.autoHike) input.crewOut = tel.crew!.ideal;
       pc.crewOut = input.crewOut;
       return;
     }
     pc.rudder = input.rudder;
+    // Auto-hike leaves the Helm's weight unset, so the physics hikes exactly as needed.
+    pc.helmOut = this.assists.autoHike ? undefined : input.helmOut;
     if (this.assists.autoTrim) {
       input.sheet = tel.optimalSheet;
     }
@@ -82,6 +94,13 @@ export class PlayerControls {
   /** Auto-trim was switched off: the sheet the player takes over starts where the sail is trimmed now. */
   autoTrimOff(session: RaceSession) {
     this.input.sheet = this.input.role === "crew" ? this.activeCrewSheet() : session.player!.sim.state.sheet;
+  }
+
+  /** Auto-hike was switched off: the weight the player takes over starts where the sailor is now. */
+  autoHikeOff(session: RaceSession) {
+    const s = session.player!.sim.state;
+    if (this.input.role === "crew") this.input.crewOut = s.crewOut;
+    else this.input.helmOut = s.helmOut;
   }
 
   /**

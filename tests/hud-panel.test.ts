@@ -15,8 +15,8 @@ function setup(choice: PlayerChoice, boatClass: BoatClass = I420) {
   session.step(1 / 60); // fills the telemetry
   const p = session.player!;
   const role = isTwoPerson(boatClass) ? choice.role : "helm";
-  const panel = (tiller = 0, autoTrim = false) =>
-    buildPanel({ session, role, control: choice.control, twoPerson: isTwoPerson(boatClass), tiller, autoTrim });
+  const panel = (tiller = 0, autoTrim = false, autoHike = true) =>
+    buildPanel({ session, role, control: choice.control, twoPerson: isTwoPerson(boatClass), tiller, autoTrim, autoHike });
   return { session, p, s: p.sim.state, tel: p.sim.telemetry, panel };
 }
 
@@ -39,6 +39,27 @@ describe("HUD panel as Helm", () => {
     expect(panel().partnerLine).toBe("Giulia: dentro · spi in manovra");
     s.crewOut = 1; s.spiHoist = 1;
     expect(panel().partnerLine).toBe("Giulia: al trapezio · spi su");
+  });
+});
+
+describe("HUD hike gauge", () => {
+  it("shows only while the player hikes by hand as Helm, with the ideal mark", () => {
+    const { s, tel, panel } = setup(HELM);
+    expect(panel(0, false, true).hike).toBe(undefined);
+    s.helmOut = 0.5;
+    const hike = panel(0, false, false).hike!;
+    expect(hike.label).toBe("PESO TIMONIERE");
+    expect(hike.ends).toEqual(["SOTTOVENTO", "FUORI"]);
+    // the 420 gauge runs from sitting to leeward (-0.4) to fully out (1)
+    expect(hike.value).toBeCloseTo(0.9 / 1.4, 5);
+    expect(hike.ideal).toBeCloseTo((tel.helm!.ideal + 0.4) / 1.4, 5);
+  });
+  it("runs from sitting in to fully out in the Optimist, and is not shown to the Crew", () => {
+    const o = setup(HELM, OPTIMIST);
+    o.s.helmOut = 0.25;
+    expect(o.panel(0, false, false).hike!.value).toBe(0.25);
+    expect(o.panel(0, false, false).hike!.ends).toEqual(["DENTRO", "FUORI"]);
+    expect(setup(CREW).panel(0, false, false).hike).toBe(undefined);
   });
 });
 
@@ -134,5 +155,39 @@ describe("HUD panel as Crew", () => {
     session.race.phase = "racing";
     session.playerControls.spi = true; // up while the Helm wants it down (beating)
     expect(panel().call).toBe("Giulia: «Ammaina!» → Spazio");
+  });
+});
+
+describe("HUD planing tag", () => {
+  it("is set only while the boat planes", () => {
+    const { tel, panel } = setup(HELM);
+    tel.planing = false;
+    expect(panel().planing).toBe(undefined);
+    tel.planing = true;
+    expect(panel().planing).toBe(true);
+  });
+});
+
+describe("HUD Partner calls to the Helm", () => {
+  it("flattens the boat when the Helm is overpowered and the weight is right", () => {
+    const { tel, panel } = setup(HELM);
+    tel.crew!.balance = 20;
+    expect(panel().call).toBe(null);
+    tel.crew!.balance = 80;
+    expect(panel().call).toBe("Giulia: «Appiattisci! Allenta la randa» → S / ↓");
+  });
+  it("asks to ease and hike when the Helm hikes by hand and is not out enough", () => {
+    const { s, tel, panel } = setup(HELM);
+    tel.crew!.balance = 80; tel.helm!.ideal = 0.9; s.helmOut = 0.3;
+    expect(panel(0, false, false).call).toBe("Giulia: «Allenta e vai fuori!» → S / ↓ e Q");
+    s.helmOut = 0.85;
+    expect(panel(0, false, false).call).toBe("Giulia: «Appiattisci! Allenta la randa» → S / ↓");
+  });
+  it("stays quiet in a single-hander and in Full Boat Control", () => {
+    const o = setup(HELM, OPTIMIST);
+    expect(o.panel().call).toBe(null);
+    const f = setup(FULL_BOAT);
+    f.tel.crew!.balance = 80;
+    expect(f.panel().call).toBe(null);
   });
 });
