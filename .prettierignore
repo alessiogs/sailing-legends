@@ -1,0 +1,4 @@
+# Generated or vendored: not formatted.
+package-lock.json
+tests/golden/races.json
+.claude/
