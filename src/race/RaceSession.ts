@@ -66,7 +66,7 @@ export class RaceSession {
       }
     }
     fleet.opponents.forEach((b, i) => {
-      const racer = this.race.add(b.id, { helm: sailor(b.helm), crew: b.crew && sailor(b.crew) }, boatAt(cls, course, b.start, b.kg, b.helm === "player" ? 1 : b.helm.technique));
+      const racer = this.race.add(b.id, { helm: sailor(b.helm), crew: b.crew && sailor(b.crew) }, boatAt(cls, course, b.start, b.kg, b.helm.technique));
       const ai = new RacingAI(racer, b.helm, this.race, seed * 31 + i * 7, startSlot(i, boats));
       ai.placeAtStart();
       this.ais.push(ai);
