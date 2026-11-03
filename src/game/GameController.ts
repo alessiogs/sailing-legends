@@ -51,9 +51,9 @@ export interface Screens {
   autoTrimChosen(): boolean;
   /** Ticks or unticks the menu's Auto-trim option. */
   showAutoTrim(on: boolean): void;
-  /** Whether the menu's Auto-hike option is ticked. */
-  autoHikeChosen(): boolean;
-  /** Ticks or unticks the menu's Auto-hike option. */
+  /** The menu's Auto-hike option, or null while the player has never chosen it (then the Role's default applies). */
+  autoHikeChosen(): boolean | null;
+  /** Ticks or unticks the menu's Auto-hike option as the player's own choice. */
   showAutoHike(on: boolean): void;
 }
 
@@ -202,7 +202,7 @@ export class GameController {
   startFromMenu() {
     this.sound.init();
     this.assists.autoTrim = this.screens.autoTrimChosen();
-    this.assists.autoHike = this.screens.autoHikeChosen();
+    this.assists.autoHike = this.screens.autoHikeChosen() ?? defaultAutoHike(this.choice);
     this.newRace();
     this.setMode("racing");
   }
@@ -280,9 +280,9 @@ export class GameController {
     if (!setup) return;
     this.sound.init();
     this.assists.autoTrim = this.screens.autoTrimChosen();
-    // A Career Race has its own Role: Auto-hike starts as that Role's default.
-    this.assists.autoHike = defaultAutoHike(isTwoPerson(setup.fleet.boatClass) ? setup.fleet.choice : { role: "helm", control: "playerCareer" });
-    this.screens.showAutoHike(this.assists.autoHike);
+    // The menu's choice stands; a player who never chose gets the default of the Career Race's own Role (the menu is left alone).
+    this.assists.autoHike = this.screens.autoHikeChosen()
+      ?? defaultAutoHike(isTwoPerson(setup.fleet.boatClass) ? setup.fleet.choice : { role: "helm", control: "playerCareer" });
     this.newRace(setup);
     this.setMode("racing");
   }
@@ -407,7 +407,7 @@ export class GameController {
     hud.update(dt, session.race, p, session.wind, this.panel(session));
     const tel = p.sim.telemetry;
     const luff = tel.trimState === "luffing" || tel.trimState === "irons" ? Math.max(0.3, 1 - tel.aoa / (6 * DEG)) : 0;
-    this.sound.update(dt, tel.aws, tel.speed, mode === "racing" ? luff : 0, mode === "racing", tel.planeLevel);
+    this.sound.update(dt, tel.aws, tel.speed, mode === "racing" ? luff : 0, mode === "racing", tel.planing ? tel.planeLevel : 0);
     scene.render();
     const { projMat, tmp } = this;
     projMat.copyFrom(scene.getTransformMatrix());

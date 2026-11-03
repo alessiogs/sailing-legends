@@ -57,7 +57,7 @@ export class RaceSession {
     // Every AI is seeded from the session's seed and its place in the fleet, so a seed always sails the same race.
     const p = fleet.player;
     if (p) {
-      this.player = this.race.add(p.id, { helm: sailor(p.helm), crew: p.crew && sailor(p.crew) }, boatAt(cls, course, p.start, p.kg, p.helm === "player" ? 1 : p.helm.technique), true);
+      this.player = this.race.add(p.id, { helm: sailor(p.helm), crew: p.crew && sailor(p.crew) }, boatAt(cls, course, p.start, p.kg, 1), true);
       if (p.helm !== "player") {
         this.partnerHelm = new RacingAI(this.player, p.helm, this.race, seed * 17, startSlot(fleet.opponents.length, boats));
       } else if (p.crew && p.crew !== "player") {

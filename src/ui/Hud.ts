@@ -29,7 +29,7 @@ export class Hud {
     trimPill: $("trim-pill"), panel: $("panel"), panelToggle: $("panel-toggle"), line: $("leg").parentElement!,
     toast: $("toast"), tags: $("tags"), tillerPos: $("tiller-pos"),
     gaugeLabel: $("gauge-label"), gaugeCenter: $("gauge-center"), gaugeIdeal: $("gauge-ideal"), gaugeLeft: $("gauge-left"),
-    gaugeRight: $("gauge-right"), hikeZone: $("hike-zone"), hikeOpt: $("hike-opt"), hikeCur: $("hike-cur"), sailLabel: $("sail-label"), call: $("call"), partnerLine: $("partner-line"), chem: $("chem"),
+    gaugeRight: $("gauge-right"), hikeZone: $("hike-zone"), hikeTop: $("hike-top"), hikeBottom: $("hike-bottom"), hikeOpt: $("hike-opt"), hikeCur: $("hike-cur"), sailLabel: $("sail-label"), call: $("call"), partnerLine: $("partner-line"), chem: $("chem"),
     penalty: $("penalty"), penaltyText: $("penalty-text"), penaltyBar: $("penalty-bar"),
   };
   private compass = $<HTMLCanvasElement>("compass").getContext("2d")!;
@@ -152,6 +152,8 @@ export class Hud {
     const hike = panel.hike;
     this.el.hikeZone.classList.toggle("hidden", !hike);
     if (hike) {
+      this.el.hikeTop.textContent = hike.ends[1];
+      this.el.hikeBottom.textContent = hike.ends[0];
       const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
       const ideal = clamp01(hike.ideal ?? hike.value);
       this.el.hikeOpt.style.top = `${(1 - Math.min(1, ideal + 0.06)) * 100}%`;

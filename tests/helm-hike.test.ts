@@ -25,6 +25,25 @@ function sail(cls: BoatClass, kn: number, twa: number, helmOut: number | undefin
   }
   return sim;
 }
+/** Like `sail`, with the spinnaker up: the Helm's hike follows the ideal (`follow`) or is Auto-hike (unset). */
+function sailSpi(cls: BoatClass, kn: number, twa: number, follow: boolean, secs = 40) {
+  const wind = new WindField({ puffCount: 0, meanSpeedKn: kn });
+  wind.shift = () => 0;
+  const sim = new BoatSim(cls, createBoat(0, 0, -twa * DEG));
+  const c: Controls = { rudder: 0, sheet: 0.5, jibSheet: 0.5, spiSheet: 0.5, crewOut: 0.3, spi: true };
+  for (let i = 0; i < 60 * secs; i++) {
+    sim.state.heading = -twa * DEG;
+    sim.state.yawRate = 0;
+    const t = sim.telemetry;
+    c.sheet = t.optimalSheet;
+    c.jibSheet = t.jib?.optimal ?? 0.5;
+    c.spiSheet = t.spi?.optimal ?? 0.5;
+    c.crewOut = t.crew?.ideal ?? 0;
+    if (follow) c.helmOut = t.helm?.ideal ?? 0;
+    sim.step(1 / 60, c, wind);
+  }
+  return sim;
+}
 /** Heel to leeward in degrees (negative: heeled to windward). */
 const leeHeel = (sim: BoatSim) => -sim.telemetry.heelDeg * Math.sign(sim.telemetry.awa);
 
@@ -56,5 +75,20 @@ describe("Helm hike", () => {
   it("lets a 420 Helm sit to leeward by hand but not an Optimist Helm", () => {
     expect(sail(I420, 7, 175, -1).state.helmOut).toBeLessThan(0);
     expect(sail(OPTIMIST, 7, 175, -1).state.helmOut).toBe(0);
+  });
+  it("lets a 420 Helm hiking exactly at the ideal plane like Auto-hike, and not read as overpowered", () => {
+    const auto = sailSpi(I420, 16, 130, false), hand = sailSpi(I420, 16, 130, true);
+    expect(auto.telemetry.planing).toBe(true);
+    expect(hand.telemetry.planing).toBe(true);
+    expect(hand.telemetry.overpowered).toBe(false);
+    expect(hand.telemetry.speed).toBeGreaterThan(auto.telemetry.speed * 0.98);
+  });
+  it("keeps a 420 Helm sitting at the ideal on a light-air reach flat and as fast as Auto-hike", () => {
+    const auto = sailSpi(I420, 7, 130, false), hand = sailSpi(I420, 7, 130, true);
+    expect(hand.telemetry.overpowered).toBe(false);
+    expect(hand.telemetry.speed).toBeGreaterThan(auto.telemetry.speed * 0.98);
+  });
+  it("keeps the Auto-hike 420 Helm to windward while planing", () => {
+    expect(sailSpi(I420, 16, 150, false).state.helmOut).toBeGreaterThanOrEqual(0);
   });
 });

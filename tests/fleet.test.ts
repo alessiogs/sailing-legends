@@ -127,3 +127,17 @@ describe("big fleets (Career)", () => {
     expect(slots.every((v, i) => i === 0 || v > slots[i - 1])).toBe(true);
   });
 });
+
+describe("Quick race weights", () => {
+  it("gives the AI sailors their own Build at the class's reference age, and leaves the player average", () => {
+    const fleet = makeFleet({ boatClass: I420 });
+    expect(fleet.player!.kg).toBeUndefined();
+    const helmKgs = fleet.opponents.map(b => b.kg!.helmKg);
+    expect(new Set(helmKgs).size).toBeGreaterThan(1);
+    for (const kg of helmKgs) {
+      expect(kg).toBeGreaterThanOrEqual(I420.sailorKg.helm * 0.85);
+      expect(kg).toBeLessThanOrEqual(I420.sailorKg.helm * 1.15);
+    }
+    expect(makeFleet().opponents.every(b => b.kg!.crewKg === 0)).toBe(true);
+  });
+});

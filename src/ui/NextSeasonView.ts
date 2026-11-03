@@ -50,7 +50,7 @@ export function nextSeasonSheet(state: CareerState, actions: NextSeasonActions, 
     const partners = offers.map(o => {
       const b = h("button", { "data-v": o.id, class: `partner${o.id === partnerId ? " on" : ""}` },
         h("b", {}, nameOf(o.id)), h("span", { class: "meter" }, h("i", { style: `width:${o.chemistry}%` })),
-        h("small", {}, `${t("career.next.chemistry", { chemistry: Math.round(o.chemistry) })} · ${t("career.next.weight", { kg: Math.round(o.kg) })}`),
+        h("small", {}, t("career.next.chemistry", { chemistry: Math.round(o.chemistry), kg: Math.round(o.kg) })),
         h("small", { class: `hint ${o.hint}` }, t("career.next.pair", { kg: Math.round(o.pairKg), hint: t(`career.next.hint.${o.hint}`) })));
       b.addEventListener("click", () => { partnerId = o.id; draw(); });
       return b;

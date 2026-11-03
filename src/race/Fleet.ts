@@ -1,6 +1,7 @@
 import { DEG } from "../core/math";
 import { isTwoPerson, OPTIMIST, type BoatClass, type SailorWeights } from "../sailing/BoatClass";
 import { opponentCrew, opponentHelms, RIVALS, type SailorProfile } from "../sailors/Sailors";
+import { buildFactorOf } from "../sailors/BodyWeight";
 import { HELM, type PlayerChoice } from "./PlayerChoice";
 
 /**
@@ -126,6 +127,8 @@ export function makeFleet(opts: FleetOptions = {}): Fleet {
     helm,
     crew,
     start: big ? gridSpot(i, scale) : { downwind: (24 + i * 2) * scale, across: (-16 + i * 14) * scale, heading: -80 * DEG },
+    // A quick race's AI sailors are the class's reference age with their own Build (from their id); the player stays average.
+    ...(given ? {} : { kg: { helmKg: cls.sailorKg.helm * buildFactorOf(helm.id), crewKg: crew ? cls.sailorKg.crew * buildFactorOf(crew.id) : 0 } }),
   }));
   // A bigger fleet needs a longer line: the usual half-length (24 m, 34 m in two-person classes) per five boats.
   const lineHalf = big ? (two ? 34 : 24) * Math.max(1, boats / LINE_BOATS) : undefined;
