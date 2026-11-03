@@ -57,7 +57,7 @@ export class RaceSession {
     // Every AI is seeded from the session's seed and its place in the fleet, so a seed always sails the same race.
     const p = fleet.player;
     if (p) {
-      this.player = this.race.add(p.id, { helm: sailor(p.helm), crew: p.crew && sailor(p.crew) }, boatAt(cls, course, p.start, p.kg), true);
+      this.player = this.race.add(p.id, { helm: sailor(p.helm), crew: p.crew && sailor(p.crew) }, boatAt(cls, course, p.start, p.kg, p.helm === "player" ? 1 : p.helm.technique), true);
       if (p.helm !== "player") {
         this.partnerHelm = new RacingAI(this.player, p.helm, this.race, seed * 17, startSlot(fleet.opponents.length, boats));
       } else if (p.crew && p.crew !== "player") {
@@ -66,7 +66,7 @@ export class RaceSession {
       }
     }
     fleet.opponents.forEach((b, i) => {
-      const racer = this.race.add(b.id, { helm: sailor(b.helm), crew: b.crew && sailor(b.crew) }, boatAt(cls, course, b.start, b.kg));
+      const racer = this.race.add(b.id, { helm: sailor(b.helm), crew: b.crew && sailor(b.crew) }, boatAt(cls, course, b.start, b.kg, b.helm === "player" ? 1 : b.helm.technique));
       const ai = new RacingAI(racer, b.helm, this.race, seed * 31 + i * 7, startSlot(i, boats));
       ai.placeAtStart();
       this.ais.push(ai);
@@ -150,8 +150,8 @@ export class RaceSession {
 }
 
 /** A boat of the class placed at its starting spot on the course. */
-function boatAt(cls: BoatClass, course: Course, start: StartSpot, kg?: SailorWeights): BoatSim {
+function boatAt(cls: BoatClass, course: Course, start: StartSpot, kg?: SailorWeights, foreAftSkill = 1): BoatSim {
   const d = start.downwind;
   const p = { x: -dirX(course.windDir) * d, z: -dirZ(course.windDir) * d };
-  return new BoatSim(cls, createBoat(p.x + start.across, p.z, course.windDir + start.heading), kg);
+  return new BoatSim(cls, createBoat(p.x + start.across, p.z, course.windDir + start.heading), kg, foreAftSkill);
 }

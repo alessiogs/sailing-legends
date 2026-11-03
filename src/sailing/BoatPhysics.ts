@@ -94,6 +94,9 @@ export type Telemetry = {
   heelDeg: number;
   overpowered: boolean;
   puff: number;
+  /** True while the boat is on the plane (a planing class, weight aft, flat, in a breeze on a reach); `planeLevel` is how far (0..1). */
+  planing: boolean;
+  planeLevel: number;
   jib?: { angle: number; aoa: number; optimal: number; trimState: TrimState; backed: boolean };
   spi?: { hoist: number; angle: number; optimal: number; trimState: TrimState; collapsed: boolean; wrongSide: boolean };
   /** The Helm's weight: the ideal `helmOut` for the wind now, and the righting force (N) it gives. */
@@ -306,7 +309,15 @@ export class BoatSim {
   private rollT = Infinity;
   private rollSum = 0;
   private rollQ = 0.5;
-  constructor(public cls: BoatClass, state: BoatState, public weights: SailorWeights = referenceWeights(cls)) {
+  /** Where the sailors' weight sits fore-aft, 0 aft .. 1 forward. Automatic: the ideal for the wind (not a player control). */
+  private weightFore = 1;
+  /** How far the boat is planing (or has its bow up), 0..1; builds slowly and is lost quickly. */
+  private plane = 0;
+  /**
+   * `foreAftSkill` 0..1 is the Helm's technique at moving the weight aft (the player's boat is always 1): a lower skill gets the
+   * weight aft later and not so far, so the boat planes later or not at all. No randomness.
+   */
+  constructor(public cls: BoatClass, state: BoatState, public weights: SailorWeights = referenceWeights(cls), public foreAftSkill = 1) {
     const ref = referenceWeights(cls);
     this.helmHike = cls.hikeForce * weights.helmKg / ref.helmKg;
     this.rightingScale = (weights.helmKg + weights.crewKg) / (ref.helmKg + ref.crewKg);
@@ -316,7 +327,7 @@ export class BoatSim {
     this.state = state;
     this.telemetry = {
       speed: 0, sog: 0, leewayDeg: 0, tws: 0, twa: 0, aws: 0, awa: 0, boomAngle: 0, aoa: 0,
-      trimState: "luffing", optimalSheet: 0.5, drive: 0, sideForce: 0, heelDeg: 0, overpowered: false, puff: 0,
+      trimState: "luffing", optimalSheet: 0.5, drive: 0, sideForce: 0, heelDeg: 0, overpowered: false, puff: 0, planing: false, planeLevel: 0,
     };
   }
 
@@ -444,8 +455,18 @@ export class BoatSim {
 
     // Hull resistance (forward) and rudder drag.
     const au = Math.abs(u);
+    // Fore-aft weight: forward upwind and in light air, aft on a reach or run in a breeze (planing). Once the weight is aft and the
+    // boat is flat, the bow lifts (and a planing class gets onto the plane) and wave drag falls.
+    const tKn = w.speed * KNOTS, absTwa = Math.abs(twa);
+    const breezy = clamp(tKn - 12, 0, 1); // 0 at 12 kn, 1 at 13 kn: nothing at 11 kn
+    const downwind = clamp((absTwa - 75 * DEG) / (15 * DEG), 0, 1) * (cls.planing.planes ? clamp((172 * DEG - absTwa) / (10 * DEG), 0, 1) : 1);
+    const aftRate = dt * 0.6 * (0.3 + 0.7 * this.foreAftSkill);
+    this.weightFore += clamp((breezy * downwind > 0.5 ? 0.6 * (1 - this.foreAftSkill) : 1) - this.weightFore, -aftRate, aftRate);
+    const flat = Math.abs(this.telemetry.heelDeg) < 6 && !this.telemetry.overpowered;
+    const planeTarget = breezy * downwind * (this.weightFore < 0.35 && flat ? 1 : 0);
+    this.plane += clamp(planeTarget - this.plane, -dt * 1.0, dt * 0.4);
     const wave = Math.max(0, au - cls.hullSpeed);
-    const resist = Math.sign(u) * (this.dragScale * (cls.hullDrag * u * u + 6 * au) + cls.waveDrag * wave * wave) + 8 * u * u * s.rudder * s.rudder * Math.sign(u);
+    const resist = Math.sign(u) * (this.dragScale * (cls.hullDrag * u * u + 6 * au) + cls.waveDrag * (1 - cls.planing.waveCut * this.plane) * wave * wave) + 8 * u * u * s.rudder * s.rudder * Math.sign(u);
     u += ((drive - resist) / this.mass) * dt + this.rollAccel(dt, controls, w.speed * KNOTS);
     // Side force pushes the boat sideways; the hull itself damps lateral motion a little.
     v += ((side - 30 * v * Math.abs(v) - 8 * v) / this.mass) * dt;
@@ -490,6 +511,8 @@ export class BoatSim {
     t.tws = w.speed; t.twa = twa; t.aws = aws; t.awa = awa; t.puff = w.puff;
     t.boomAngle = main.angle; t.aoa = main.aoa;
     t.drive = drive; t.sideForce = side; t.overpowered = overpowered;
+    t.planeLevel = this.plane;
+    t.planing = cls.planing.planes && this.plane > 0.6;
     if (cls.crewRighting) {
       const heel = clamp(balance * cls.heelPerN * 1.4 + (need > 20 ? 4 : need * 0.2), -25, 40);
       t.heelDeg = heel * -Math.sign(awa || 1);
