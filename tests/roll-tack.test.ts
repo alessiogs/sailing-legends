@@ -54,7 +54,6 @@ describe("Roll tack", () => {
   for (const cls of [OPTIMIST, I420]) {
     it(`${cls.name}: in 5 kn a good roll exits faster than none or a late one, and Auto-hike sits between`, () => {
       const good = tack(cls, 5, "good"), auto = tack(cls, 5, "auto"), late = tack(cls, 5, "late"), none = tack(cls, 5, "none");
-      console.log(cls.name, { good, auto, late, none });
       expect(good).toBeGreaterThan(none + 0.05);
       expect(late).toBeLessThan(auto);
       expect(good).toBeGreaterThan(auto);

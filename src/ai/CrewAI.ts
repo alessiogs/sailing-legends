@@ -1,9 +1,9 @@
-import { clamp, DEG, rng } from "../core/math";
+import { clamp, DEG, KNOTS, rng } from "../core/math";
 import { distanceTo, legTarget } from "../race/Course";
 import type { Race, Racer } from "../race/Race";
 import { isTwoPerson } from "../sailing/BoatClass";
 import type { BoatState, Controls, Telemetry } from "../sailing/BoatPhysics";
-import { hikeError } from "./hiking";
+import { hikeError, hikeScale } from "./hiking";
 import { crewChemistry, type SailorProfile } from "../sailors/Sailors";
 
 /**
@@ -103,6 +103,6 @@ export class CrewAI {
       this.hikeBiasTimer = 2 + this.hikeRand() * 3;
       this.hikeBias = hikeError(this.profile.technique, this.hikeRand());
     }
-    c.crewOut = clamp(this.weightTarget + this.hikeBias, 0, 1);
+    c.crewOut = clamp(this.weightTarget + this.hikeBias * hikeScale(t.puff, t.tws * KNOTS), 0, 1);
   }
 }

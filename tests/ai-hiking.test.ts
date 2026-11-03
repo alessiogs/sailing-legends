@@ -53,7 +53,7 @@ function gusty() {
 
 describe("AI hiking in gusts", () => {
   it("makes a low-technique boat miss the ideal more and sail slower than a high-technique one", () => {
-    const [poor, good] = gusty(); console.log(poor, good);
+    const [poor, good] = gusty();
     expect(poor.miss).toBeGreaterThan(good.miss * 1.5);
     expect(good.speed).toBeGreaterThan(poor.speed);
   });

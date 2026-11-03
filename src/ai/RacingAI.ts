@@ -1,11 +1,11 @@
-import { angleDiff, bearingTo, clamp, DEG, rng, wrapPi } from "../core/math";
+import { angleDiff, bearingTo, clamp, DEG, KNOTS, rng, wrapPi } from "../core/math";
 import type { Controls } from "../sailing/BoatPhysics";
 import type { WindField } from "../sailing/Wind";
 import { distanceTo, legTarget, type Point } from "../race/Course";
 import type { Race, Racer } from "../race/Race";
 import type { SailorProfile } from "../sailors/Sailors";
 import { boatWithin, giveWay } from "./Avoidance";
-import { hikeError, hikeLag, rollQuality } from "./hiking";
+import { hikeError, hikeLag, hikeScale, rollQuality } from "./hiking";
 import { BeatTactics } from "./BeatTactics";
 import { StartPlanning } from "./StartPlanning";
 import { TackStateMachine } from "./TackStateMachine";
@@ -66,7 +66,7 @@ export class RacingAI {
       this.hikeBiasTimer = 2 + this.hikeRand() * 3;
       this.hikeBias = hikeError(technique, this.hikeRand());
     }
-    this.controls.helmOut = clamp(this.hikeTarget + this.hikeBias, this.racer.sim.cls.helmRighting.leewardMin, 1);
+    this.controls.helmOut = clamp(this.hikeTarget + this.hikeBias * hikeScale(tel.puff, tel.tws * KNOTS), this.racer.sim.cls.helmRighting.leewardMin, 1);
     if (s.boomSide !== this.boomSide) {
       this.boomSide = s.boomSide;
       this.controls.roll = rollQuality(technique, this.hikeRand());
