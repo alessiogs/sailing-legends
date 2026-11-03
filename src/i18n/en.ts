@@ -263,6 +263,7 @@ export const english: Catalog = {
   "career.calendar.regatta": ({ number, venue }) => `Regatta ${number} · ${venue}`,
   "career.calendar.detail": ({ boatClass, boats, races }) =>
     `${boatClass} · ${plural(boats, { one: `${boats} boat`, other: `${boats} boats` })} · ${plural(races, { one: `${races} race`, other: `${races} races` })}`,
+  "career.calendar.stage": ({ stage, stages }) => `Zonale – stage ${stage} of ${stages}`,
   "career.level.club": "Club",
   "career.level.regional": "Regional",
   "career.level.national": "National",

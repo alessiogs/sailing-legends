@@ -23,6 +23,9 @@ export class RacingAI {
   private trimBias = 0;
   private trimTimer = 0;
   private penaltyDir = 0;
+  private keepClear: { until: number; desired: number; sheet: number } | null = null;
+  /** Phases of the slow wanders (helming, pointing, wind reading), drawn from their own stream so `rand` keeps its order. */
+  private readonly phase: readonly number[];
   controls: Controls = { rudder: 0, sheet: 0.5 };
   debug = "";
 
@@ -36,6 +39,14 @@ export class RacingAI {
     this.startPlan = new StartPlanning(race, profile, this.k, this.rand, slot);
     this.beat = new BeatTactics(profile, () => this.time);
     this.tackMachine = new TackStateMachine(this.beat, this.k);
+    const p = rng(seed ^ 0x5eed);
+    this.phase = [p(), p(), p(), p()].map(v => v * 2 * Math.PI);
+  }
+
+  /** A smooth wander in -1..1 with periods of tens of seconds (`i` picks the phase). */
+  private wander(i: number, rate: number): number {
+    const t = this.time * rate;
+    return 0.6 * Math.sin(t + this.phase[i]) + 0.4 * Math.sin(t * 2.3 + this.phase[(i + 1) % 4]);
   }
 
   /** Start the race already waiting at the holding spot, ready for the run to the line. */
@@ -52,8 +63,10 @@ export class RacingAI {
     const s = r.sim.state;
     const tel = r.sim.telemetry;
     const w = wind.sample(s.x, s.z);
-    // Imperfect wind reading: lower tactics = noisier perception of the direction.
-    const fromDir = w.fromDir + Math.sin(this.time * 0.37 + this.profile.name.length) * (1 - this.profile.tactics) * 6 * DEG;
+    const { technique, tactics, speed } = this.profile;
+    // Imperfect wind reading: lower tactics = a wider, slowly wandering error in the wind direction (wrong side,
+    // tacking on a lift, overstanding).
+    const fromDir = w.fromDir + this.wander(0, 0.11) * (1 - tactics) * 26 * DEG;
 
     let desired = s.heading;
     let sheet = tel.optimalSheet;
@@ -92,10 +105,16 @@ export class RacingAI {
       this.debug = this.beat.label;
     }
 
-    // Keep clear of boats that have right of way.
+    // Keep clear of boats that have right of way (a disciplined sailor looks further ahead and leaves more room).
+    let avoiding = false;
     if (r.finishTime === null) {
-      const way = giveWay(r, race, this.k, desired, sheet, fromDir);
-      ({ desired, sheet } = way);
+      const way = giveWay(r, race, this.k, desired, sheet, fromDir, this.profile.discipline);
+      // Once giving way, hold the avoiding course a moment (longer for a disciplined sailor) instead of heading
+      // straight back up as soon as the next look-ahead clears.
+      if (way.rule !== null) this.keepClear = { until: this.time + 0.5 + 1.5 * this.profile.discipline, desired: way.desired, sheet: way.sheet };
+      else if (this.keepClear && this.time >= this.keepClear.until) this.keepClear = null;
+      avoiding = this.keepClear !== null;
+      ({ desired, sheet } = this.keepClear ?? way);
       if (way.rule) this.debug += ` avoid r${way.rule}`;
     }
 
@@ -114,7 +133,7 @@ export class RacingAI {
     this.trimTimer -= dt;
     if (this.trimTimer <= 0) {
       this.trimTimer = 1.5 + this.rand() * 2;
-      this.trimBias = (this.rand() - 0.5) * 0.28 * (1 - this.profile.technique);
+      this.trimBias = (this.rand() - 0.5) * 0.8 * (1 - technique);
     }
     this.controls.sheet = clamp(sheet + this.trimBias, 0, 1);
 
@@ -127,8 +146,13 @@ export class RacingAI {
     if (helm.easeSheet) this.controls.sheet = 1;
     if (helm.gybeRound) this.debug += " (gybe round)";
     this.debug += ` [${this.tackMachine.mode}]`;
+    // Helming: a pointing error that wanders slowly (technique) and a weave about the course (speed), both
+    // costing pace; a top sailor steers almost straight at the right angle.
+    if (this.tackMachine.mode === "sail" && r.finishTime === null && r.leg >= 0 && !avoiding) {
+      desired += this.wander(1, 0.07) * (1 - technique) * 18 * DEG + this.wander(2, 1.3) * (1 - speed) * 20 * DEG;
+    }
     const err = angleDiff(s.heading, desired);
-    const gain = 2.2 + this.profile.speed;
+    const gain = 2.6;
     let rud = clamp(err * gain - s.yawRate * 0.6, -1, 1);
     // Going backward the rudder works the other way round.
     if (tel.speed < -0.05) rud = -rud;

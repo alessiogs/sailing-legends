@@ -82,17 +82,17 @@ describe("Rival growth between Seasons", () => {
     for (const a of ["technique", "speed", "discipline"] as const) expect(tactics).toBeGreaterThan(mean(gains("luca", a)));
   });
   it("pins Marco and Luca over three Seasons (seed 1, starting age 10)", () => {
-    // Values recorded from the first run once they looked right: Marco's speed climbs unevenly towards the cap while
-    // the rest of him barely moves; Luca's tactics climb fastest and reach the cap.
+    // Values recorded once they looked right: Marco's speed climbs fastest and unevenly, the rest of him steadily;
+    // Luca's tactics climb fastest.
     const states = [startCareer({ seed: 1 })];
     for (let i = 0; i < 3; i++) states.push(closeSeason(states[i]));
     const marco = states.map(st => sailor(st, "marco"));
     const luca = states.map(st => sailor(st, "luca"));
-    expect(marco.map(m => m.speed)).toEqual([0.95, 0.965, 0.967, 0.984]);
-    expect(marco.map(m => m.technique)).toEqual([0.81, 0.826, 0.824, 0.826]);
-    expect(marco.map(m => m.tactics)).toEqual([0.6, 0.611, 0.619, 0.633]);
-    expect(marco.map(m => m.discipline)).toEqual([0.62, 0.634, 0.639, 0.648]);
-    expect(luca.map(l => l.tactics)).toEqual([0.9, 0.93, 0.966, 0.99]);
+    expect(marco.map(m => m.speed)).toEqual([0.76, 0.835, 0.88, 0.942]);
+    expect(marco.map(m => m.technique)).toEqual([0.63, 0.698, 0.732, 0.765]);
+    expect(marco.map(m => m.tactics)).toEqual([0.41, 0.458, 0.497, 0.539]);
+    expect(marco.map(m => m.discipline)).toEqual([0.43, 0.49, 0.53, 0.57]);
+    expect(luca.map(l => l.tactics)).toEqual([0.62, 0.71, 0.809, 0.892]);
   });
 });
 

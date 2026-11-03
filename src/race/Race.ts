@@ -113,6 +113,9 @@ export class Race {
   /** Two boats touched: apply the right-of-way rules. */
   contact(a: Racer, b: Racer) {
     if (a.finishTime !== null || b.finishTime !== null) return;
+    // A boat taking a penalty must keep clear of one that is not (rule 22.2); it already owes turns, so a contact
+    // with it gives nobody a new penalty, and boats doing their turns don't hand out penalties to the fleet.
+    if ((a.penalty !== null) !== (b.penalty !== null)) return;
     if (!this.cooled([a.id, b.id].sort().join("|"))) return;
     const v = judge(a.sim, b.sim, this.course.windDir);
     if (!v) return;

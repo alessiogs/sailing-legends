@@ -32,32 +32,32 @@ describe("record a Race", () => {
     expect(nextRaceSetup(two)!.raceIndex).toBe(2);
   });
 
-  it("starts the next Regatta when the third Race is recorded", () => {
+  it("starts the next Regatta when the last Race is recorded", () => {
     let state = start();
     for (let i = 0; i < 3; i++) state = recordRace(state, sail(state));
     expect(state.regattaIndex).toBe(1);
     expect(state.results).toHaveLength(2);
     expect(state.results[0]).toHaveLength(3);
     expect(state.results[1]).toEqual([]);
-    expect(nextRaceSetup(state)!.regattaId).toBe("optimist-regional");
+    expect(nextRaceSetup(state)!.regattaId).toBe("optimist-regional-1");
   });
 
   it("holds the Season's last Regatta when it is complete: the Season end is for closeSeason", () => {
     let state = start();
-    for (let i = 0; i < 12; i++) {
+    for (let i = 0; i < 17; i++) {
       expect(isSeasonOver(state)).toBe(false);
       state = recordRace(state, sail(state));
     }
     expect(isSeasonOver(state)).toBe(true);
-    expect(state.regattaIndex).toBe(3);
-    expect(state.results[3]).toHaveLength(3);
+    expect(state.regattaIndex).toBe(6);
+    expect(state.results[6]).toHaveLength(3);
     expect(nextRaceSetup(state)).toBe(null);
     expect(() => recordRace(state, race(FLEET_SIZE.international))).toThrow();
   });
 
   it("keeps the state valid for the save at every step of a Season", () => {
     let state = start();
-    for (let i = 0; i < 12; i++) {
+    for (let i = 0; i < 17; i++) {
       state = recordRace(state, sail(state));
       expect(decodeCareer(encodeCareer(state))).toEqual({ ok: true, state });
     }

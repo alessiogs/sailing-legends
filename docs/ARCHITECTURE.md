@@ -56,6 +56,7 @@ src/
              Pool.ts (the sailor pool: the Rivals plus 27 generated sailors with Italian names, drawn once from the
              Career seed and stored in the save; `sailorRating`)
              Fleets.ts (`regattaFleet`: a Regatta's fleet from the pool by level, 6 to 12 boats, Rivals always in)
+             Strength.ts (`levelRating`: each level's strength by age, kids weaker, adult at 16; `rivalStartRating`)
              RecordRace.ts (`raceEntries`: a race's outcome as Career entries, racer ids mapped to sailor ids;
              `recordRace`: adds a Race and moves to the next Regatta; `isSeasonOver`)
              Weather.ts (the wind and seed of each Race of a Regatta), Seeds.ts (`mixSeed`)
@@ -154,7 +155,8 @@ tests/       Vitest tests (npm test): smoke.test.ts (every AI-only race finishes
              scene-cache.test.ts (boat materials made once per scene, again for a recreated scene)
              sail-shape.test.ts (the shared sail grid draws the Optimist and 420 sails exactly as before)
              optimal-sheet.test.ts (the fast optimal-sheet search gives exactly the sheet that sampling every step gives)
-scripts/     polar.ts (npm run polar), golden-update.ts (npm run golden:update), hud-overlap.cjs (the HUD no-overlap check in
+scripts/     polar.ts (npm run polar), career-sim.ts (npm run career-sim: a stand-in AI player sails whole Career Seasons and
+             prints places, Rival ratings and Chemistry; flags --skills= --seasons= --seed=; about 9 min for the defaults), golden-update.ts (npm run golden:update), hud-overlap.cjs (the HUD no-overlap check in
              headless Chromium, run by hand: docs/agents/sandbox-build.md)
 ```
 **Rule:** `core/math.ts`, `sailing/`, `race/`, `ai/`, `sailors/`, `career/`, `i18n/` and every other file a test imports

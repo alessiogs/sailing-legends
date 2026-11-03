@@ -85,13 +85,23 @@ A set of Races at one venue, scored together into one ranking.
 _it_: Regata
 _Avoid_: Event, series, regatta for a single race (see Race)
 
+**Zonale**:
+The regional championship of the player's zone (Sardinia, FIV III Zona), sailed as four Stages; each Stage is a
+Regatta in the Season standings.
+_it_: Zonale
+_Avoid_: Regional championship as one Regatta
+
+**Stage**:
+One Regatta of the Zonale, at its own venue.
+_it_: Tappa
+
 **Points**:
 A sailor's Regatta score under low-point scoring: a Race place is worth that many points, and OCS or DSQ is
 worth the fleet size plus one. Lowest total wins.
 _it_: Punti
 
 **Discard**:
-A sailor's worst Race score in a Regatta, left out of their total once enough Races are sailed.
+A sailor's worst Race score in a Regatta, left out of their total; only Regattas of three Races have one.
 _it_: Scarto
 
 **Age limit**:

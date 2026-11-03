@@ -12,7 +12,7 @@ const POOL_TEXT = '[' + POOL.map(p => `{"id":"${p.id}","name":"${p.name}","techn
 
 const NO_PARTNER = { partnerId: null, choice: { role: "helm", control: "playerCareer" }, chemistry: null, seasonsTogether: {} };
 const STATE: CareerState = {
-  version: 1, seed: 12345, startingAge: 10, season: 2, classId: "optimist", regattaIndex: 1,
+  version: 2, seed: 12345, startingAge: 10, season: 2, classId: "optimist", regattaIndex: 1,
   results: [
     [[{ id: "me", status: "finished", place: 2 }, { id: "luca", status: "finished", place: 1 }],
      [{ id: "me", status: "dnf" }, { id: "luca", status: "finished", place: 1 }],
@@ -23,7 +23,7 @@ const STATE: CareerState = {
   partnerId: null, choice: { role: "helm", control: "playerCareer" }, chemistry: null, seasonsTogether: { luca: 1 },
 };
 /** The same fields as text, written out by hand. */
-const STATE_TEXT = '{"version":1,"seed":12345,"startingAge":10,"season":2,"classId":"optimist","regattaIndex":1,"results":['
+const STATE_TEXT = '{"version":2,"seed":12345,"startingAge":10,"season":2,"classId":"optimist","regattaIndex":1,"results":['
   + '[[{"id":"me","status":"finished","place":2},{"id":"luca","status":"finished","place":1}],'
   + '[{"id":"me","status":"dnf"},{"id":"luca","status":"finished","place":1}],'
   + '[{"id":"me","status":"ocs"},{"id":"luca","status":"finished","place":1}]],'
@@ -32,7 +32,7 @@ const STATE_TEXT = '{"version":1,"seed":12345,"startingAge":10,"season":2,"class
 /** A fresh Career's text, for the cases that vary one field. */
 const field = (name: string, value: string) => {
   const fields: Record<string, string> = {
-    version: "1", seed: "12345", startingAge: "10", season: "1", classId: '"optimist"', regattaIndex: "0", results: "[[]]", pool: POOL_TEXT,
+    version: "2", seed: "12345", startingAge: "10", season: "1", classId: '"optimist"', regattaIndex: "0", results: "[[]]", pool: POOL_TEXT,
     partnerId: "null", choice: '{"role":"helm","control":"playerCareer"}', chemistry: "null", seasonsTogether: "{}",
   };
   fields[name] = value;
@@ -77,8 +77,6 @@ describe("career save codec", () => {
       field("results", ""), field("results", "{}"), field("results", "[]"), field("results", "[[],[]]"),
       field("results", "[[1]]"),
       field("results", "[[[]]]"),
-      // Regatta 2 of the Season begun while Regatta 1 has no Races
-      `{"version":1,"seed":1,"startingAge":10,"season":1,"classId":"optimist","regattaIndex":1,"results":[[],[]]}`,
       field("results", "[[[1]]]"),
       field("results", '[[[{"id":"me","status":"finished"}]]]'),
       field("results", '[[[{"id":"me","status":"finished","place":0}]]]'),
@@ -94,7 +92,7 @@ describe("career save codec", () => {
     const text = field("classId", '"420"').replace('"partnerId":null', '"partnerId":"ada"').replace('"chemistry":null', '"chemistry":64.5')
       .replace('{"role":"helm","control":"playerCareer"}', '{"role":"helm","control":"fullBoat"}').replace('"seasonsTogether":{}', '"seasonsTogether":{"ada":2}');
     expect(decodeCareer(text)).toEqual({ ok: true, state: {
-      version: 1, seed: 12345, startingAge: 10, season: 1, classId: "420", regattaIndex: 0, results: [[]], pool: POOL,
+      version: 2, seed: 12345, startingAge: 10, season: 1, classId: "420", regattaIndex: 0, results: [[]], pool: POOL,
       partnerId: "ada", choice: { role: "helm", control: "fullBoat" }, chemistry: 64.5, seasonsTogether: { ada: 2 },
     } });
   });
@@ -122,6 +120,23 @@ describe("career save codec", () => {
     });
     it("is unreadable when the migrated save is still invalid", () => {
       expect(decodeCareer('{"version":1,"seed":7,"age":"nine"}', migrations, 3)).toEqual({ ok: false });
+    });
+
+    it("moves a version 1 Career to the Zonale calendar by level, keeping the Races sailed", () => {
+      const race = [{ id: "me", status: "dnf" }, { id: "luca", status: "finished", place: 1 }];
+      const v1 = (regattaIndex: number, results: unknown) => JSON.stringify({ ...STATE, version: 1, regattaIndex, results });
+      // National Regatta (old index 2) in progress: it becomes index 5, the old regional keeps two Races as stage 1.
+      const national = decodeCareer(v1(2, [[race, race, race], [race, race, race], [race]]));
+      expect(national.ok && national.state.regattaIndex).toBe(5);
+      expect(national.ok && national.state.results.map(r => r.length)).toEqual([3, 2, 0, 0, 0, 1]);
+      // Two of the three old regional Races sailed: stage 1 is complete, so the Career moves on to stage 2.
+      const regional = decodeCareer(v1(1, [[race, race, race], [race, race]]));
+      expect(regional.ok && regional.state.regattaIndex).toBe(2);
+      expect(regional.ok && regional.state.results.map(r => r.length)).toEqual([3, 2, 0]);
+      // The last Regatta becomes the last one of the new calendar.
+      const done = decodeCareer(v1(3, [[race, race, race], [race, race, race], [race, race, race], [race, race, race]]));
+      expect(done.ok && done.state.regattaIndex).toBe(6);
+      expect(done.ok && done.state.version).toBe(2);
     });
   });
 });

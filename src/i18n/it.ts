@@ -260,6 +260,7 @@ export const italian = {
   "career.calendar.regatta": ({ number, venue }: { number: number; venue: string }) => `Regata ${number} · ${venue}`,
   "career.calendar.detail": ({ boatClass, boats, races }: { boatClass: string; boats: number; races: number }) =>
     `${boatClass} · ${plural(boats, { one: `${boats} barca`, other: `${boats} barche` })} · ${plural(races, { one: `${races} prova`, other: `${races} prove` })}`,
+  "career.calendar.stage": ({ stage, stages }: { stage: number; stages: number }) => `Zonale – tappa ${stage} di ${stages}`,
   "career.level.club": "Club",
   "career.level.regional": "Regionale",
   "career.level.national": "Nazionale",

@@ -17,6 +17,8 @@ function at(i: number, races = 0, seed = 321): CareerState {
   const full = seasonCalendar("optimist").map(r => Array.from({ length: r.races }, () => [{ id: "player", status: "dnf" as const }]));
   return { ...state, regattaIndex: i, results: [...full.slice(0, i), full[i].slice(0, races)] };
 }
+/** The calendar index of the first club, Zonale, national and international Regattas. */
+const LEVELS = [0, 1, 5, 6];
 const setup = (i: number, races = 0, seed = 321) => nextRaceSetup(at(i, races, seed))!;
 const helmIds = (i: number, races = 0, seed = 321) => setup(i, races, seed).fleet.opponents.map(b => b.helm.id);
 
@@ -48,10 +50,10 @@ describe("next Race setup", () => {
   });
 
   it("varies the wind and the seed over the Races of a Regatta, within 6 and 16 knots", () => {
-    for (let i = 0; i < 4; i++) {
-      const races = [0, 1, 2].map(r => setup(i, r));
-      expect(new Set(races.map(r => r.windKn)).size).toBe(3);
-      expect(new Set(races.map(r => r.seed)).size).toBe(3);
+    for (let i = 0; i < 7; i++) {
+      const races = Array.from({ length: seasonCalendar("optimist")[i].races }, (_, r) => setup(i, r));
+      expect(new Set(races.map(r => r.windKn)).size).toBe(races.length);
+      expect(new Set(races.map(r => r.seed)).size).toBe(races.length);
       for (const r of races) {
         expect(r.windKn).toBeGreaterThanOrEqual(6);
         expect(r.windKn).toBeLessThanOrEqual(16);
@@ -62,20 +64,20 @@ describe("next Race setup", () => {
 
 describe("fleets by Regatta level", () => {
   it("grow from 6 boats at club level to 12 at international, the player included", () => {
-    const sizes = [0, 1, 2, 3].map(i => 1 + setup(i).fleet.opponents.length);
+    const sizes = LEVELS.map(i => 1 + setup(i).fleet.opponents.length);
     expect(sizes).toEqual([6, 8, 10, 12]);
   });
 
   it("always include the Rivals", () => {
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < 7; i++) {
       const ids = helmIds(i);
       for (const r of RIVALS) expect(ids.includes(r.id), `${r.id} at Regatta ${i}`).toBe(true);
     }
   });
 
   it("stay the same over the Races of a Regatta, and use each sailor once", () => {
-    for (let i = 0; i < 4; i++) {
-      expect(helmIds(i, 2)).toEqual(helmIds(i, 0));
+    for (let i = 0; i < 7; i++) {
+      expect(helmIds(i, seasonCalendar("optimist")[i].races - 1)).toEqual(helmIds(i, 0));
       expect(new Set(helmIds(i)).size).toBe(helmIds(i).length);
     }
   });
@@ -85,7 +87,7 @@ describe("fleets by Regatta level", () => {
       const generated = setup(i).fleet.opponents.map(b => b.helm).filter(h => !RIVALS.some(r => r.id === h.id));
       return generated.reduce((sum, h) => sum + sailorRating(h), 0) / generated.length;
     };
-    const s = [0, 1, 2, 3].map(strength);
+    const s = LEVELS.map(strength);
     expect(s[0]).toBeLessThan(s[1]);
     expect(s[1]).toBeLessThan(s[2]);
     expect(s[2]).toBeLessThan(s[3]);
@@ -100,16 +102,16 @@ describe("fleets by Regatta level", () => {
   });
 
   it("start in a RaceSession without overlaps, 12 boats at the international Regatta", () => {
-    for (let i = 0; i < 4; i++) {
+    for (const [n, i] of LEVELS.entries()) {
       const { fleet, seed, windKn } = setup(i);
-      expect(new RaceSession({ fleet, seed, windKn }).race.racers.length).toBe([6, 8, 10, 12][i]);
+      expect(new RaceSession({ fleet, seed, windKn }).race.racers.length).toBe([6, 8, 10, 12][n]);
     }
   });
 });
 
 describe("fleets in the 420", () => {
   const state420 = (): CareerState => {
-    const s = at(3);
+    const s = at(6);
     return { ...s, classId: "420", results: s.results };
   };
   const partner = (id: string, state = state420()) => state.pool.find(p => p.id === id)!;

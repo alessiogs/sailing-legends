@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "test": "vitest run --reporter=verbose",
     "polar": "tsx scripts/polar.ts",
+    "career-sim": "tsx scripts/career-sim.ts",
     "golden:update": "tsx scripts/golden-update.ts"
   },
   "dependencies": {

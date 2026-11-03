@@ -16,23 +16,27 @@ const ATTRIBUTES: readonly Attribute[] = ["technique", "tactics", "speed", "disc
 type Personality = Record<Attribute, { gain: number; swing: number }>;
 
 const TYPICAL: Personality = {
-  technique: { gain: 0.012, swing: 0.01 }, tactics: { gain: 0.012, swing: 0.01 },
-  speed: { gain: 0.012, swing: 0.01 }, discipline: { gain: 0.012, swing: 0.01 },
+  technique: { gain: 0.02, swing: 0.012 }, tactics: { gain: 0.02, swing: 0.012 },
+  speed: { gain: 0.02, swing: 0.012 }, discipline: { gain: 0.02, swing: 0.012 },
 };
 
-/** The Rivals' personalities: Luca improves in tactics, Giulia steadily in everything, Marco fast but erratic in speed. */
+/**
+ * The Rivals' personalities: talented kids who grow about three times as fast as a typical sailor, from between
+ * regional and national at 10 to the top of the international fleet by 15–16. Luca improves most in tactics, Giulia
+ * steadily in everything, Marco fast but erratic in speed.
+ */
 const PERSONALITIES: Readonly<Record<string, Personality>> = {
   luca: {
-    technique: { gain: 0.009, swing: 0.006 }, tactics: { gain: 0.03, swing: 0.006 },
-    speed: { gain: 0.009, swing: 0.006 }, discipline: { gain: 0.009, swing: 0.006 },
+    technique: { gain: 0.055, swing: 0.01 }, tactics: { gain: 0.09, swing: 0.01 },
+    speed: { gain: 0.055, swing: 0.01 }, discipline: { gain: 0.055, swing: 0.01 },
   },
   giulia: {
-    technique: { gain: 0.015, swing: 0.003 }, tactics: { gain: 0.015, swing: 0.003 },
-    speed: { gain: 0.015, swing: 0.003 }, discipline: { gain: 0.015, swing: 0.003 },
+    technique: { gain: 0.062, swing: 0.005 }, tactics: { gain: 0.062, swing: 0.005 },
+    speed: { gain: 0.062, swing: 0.005 }, discipline: { gain: 0.062, swing: 0.005 },
   },
   marco: {
-    technique: { gain: 0.007, swing: 0.01 }, tactics: { gain: 0.012, swing: 0.01 },
-    speed: { gain: 0.03, swing: 0.03 }, discipline: { gain: 0.007, swing: 0.01 },
+    technique: { gain: 0.055, swing: 0.015 }, tactics: { gain: 0.05, swing: 0.015 },
+    speed: { gain: 0.1, swing: 0.05 }, discipline: { gain: 0.05, swing: 0.015 },
   },
 };
 
