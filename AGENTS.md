@@ -3,6 +3,7 @@
 Browser sailing game (Babylon.js 9 + TypeScript + Vite) aiming at a FIFA-style career mode.
 
 **Further docs, read when needed:**
+
 - Concept: `docs/CONCEPT.md`
 - Plan: `docs/ROADMAP.md`
 - Vocabulary: `GLOSSARY.md`
@@ -15,6 +16,7 @@ Italian or English (the player's choice) and lives only in the catalogs in `src/
 and the UI words it).
 
 ## Branches, PRs, deploys
+
 - `main` is published at https://alessiogs.github.io/sailing-legends/ and `develop` at the same address under
   `/dev/`. Publishing (`develop` → `main`) is the user's call, so only when asked.
 - To make a change:
@@ -28,13 +30,16 @@ and the UI words it).
   workflow_dispatch. Keep Vite's `base: "./"`.
 
 ## Commands
+
 `npm run dev` (localhost:5173) · `npm test` (Vitest: smoke races, golden races, rule verdicts and unit tests)
 · `npm run build` (type-check and bundle) · `npm run polar` (speed table, after any physics change)
-· `npm run golden:update` (only when behaviour is meant to change; review the diff).
+· `npm run golden:update` (only when behaviour is meant to change; review the diff)
+· `npm run format` (Prettier with its defaults; CI runs `npm run format:check`).
 `tsc -b` checks two projects: `tsconfig.app.json` (`src/`, DOM types) and `tsconfig.node.json` (`tests/`,
 `scripts/` and the simulation code they import, with Node types and no DOM).
 
 ## Layout (full map: `docs/ARCHITECTURE.md`)
+
 - `src/core/`: math and RNG, input, control settings, sound.
 - `src/sailing/`: boat classes (`ClassId`), physics, wind, the Crew weight and spinnaker states.
 - `src/race/`: course, race (start, rounding, finish, penalties), rules, `RaceSession` (one race at a fixed 60 Hz,
@@ -57,6 +62,7 @@ and the UI words it).
 use neither Babylon nor browser APIs. They also run in Node.
 
 ## Conventions (get these right)
+
 - **Vocabulary:**
   - **Helm**, never skipper, is the sailor who steers.
   - **Crew** is only the sailor who trims the jib or spinnaker and moves their weight.
@@ -82,15 +88,19 @@ use neither Babylon nor browser APIs. They also run in Node.
   - The only Italian in the page is `#loading`.
 
 ## Behaviour guards
+
 - **Golden races:** `tests/golden.test.ts` sails nine fixed-seed races: AI-only races in both classes at 7, 11
   and 16 kn, plus 420 races with the player as Helm, as Crew and in Full Boat Control. It compares them with
   `tests/golden/races.json`. A diff means behaviour changed, so in a refactor fix the code, never the snapshot.
 - **Physics** (`BoatPhysics.ts`): target speeds at 11 kn:
   - Optimist: about 2.3 kn upwind, 3.9 reaching, 3.5 running.
   - 420: about 4 kn upwind, 6.5 reaching, 6–7 with the spinnaker.
+  - At 16 kn the 420 planes (weight aft, flat, reach to broad reach, from 12–13 kn): about 8–9 kn reaching, 9–10 with the
+    spinnaker. The Optimist gains 3–5% downwind from 12 kn with its bow up. Upwind and 11 kn do not change.
 
   After a physics change, run `polar` and `npm test`, and check that a tack from close-hauled still gets through
   the wind.
+
 - **AI pitfalls, keep them fixed:**
   - A tack is committed (`sail | tack | recover`). Too slow to tack, the boat bears away round instead.
   - Tack decisions use the persistent `onStbd`, with hysteresis and a minimum interval.
@@ -106,6 +116,7 @@ use neither Babylon nor browser APIs. They also run in Node.
     names them through `ui/raceNames.ts`.
 
 ## Working with agents (keep token use down)
+
 - **Model by task:**
   - **Opus:** specs, issue breakdowns, design calls, subtle work (golden diffs, RNG order) and the final review.
   - **Sonnet:** implementing a clearly specified issue.
@@ -121,6 +132,7 @@ use neither Babylon nor browser APIs. They also run in Node.
 - **This file:** it is loaded into every agent, so keep it short and put detail in `docs/`.
 
 ## Agent skills
+
 - Matt Pocock's skills are vendored in `.claude/skills/` (`mattpocock/skills` @ 59db609; update by re-copying).
 - Issues are on GitHub through `gh` (`docs/agents/issue-tracker.md`).
 - Labels: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`

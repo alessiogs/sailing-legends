@@ -21,4 +21,9 @@ export type ControlSettings = {
 };
 
 /** The settings of a new player (and of the Commands menu's reset). */
-export const DEFAULT_CONTROLS: ControlSettings = { steering: "tiller", autoCenter: true, tillerSpeed: 1, sheetSpeed: 1 };
+export const DEFAULT_CONTROLS: ControlSettings = {
+  steering: "tiller",
+  autoCenter: true,
+  tillerSpeed: 1,
+  sheetSpeed: 1,
+};

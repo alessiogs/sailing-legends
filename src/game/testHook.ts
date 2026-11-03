@@ -38,13 +38,29 @@ declare global {
 /** Puts the test hook on `window.__game`. */
 export function installTestHook(game: GameController, input: Input, hud: Hud) {
   window.__game = {
-    get session() { return game.session; }, input, get mode() { return game.mode; }, get career() { return game.career; },
-    start: () => game.startFromMenu(), angleDiff,
-    get autopilot() { return game.controls.autopilotOn; },
-    set autopilot(on: boolean) { game.controls.autopilotOn = on; },
-    fastForward(seconds: number) { game.fastForward(seconds); },
+    get session() {
+      return game.session;
+    },
+    input,
+    get mode() {
+      return game.mode;
+    },
+    get career() {
+      return game.career;
+    },
+    start: () => game.startFromMenu(),
+    angleDiff,
+    get autopilot() {
+      return game.controls.autopilotOn;
+    },
+    set autopilot(on: boolean) {
+      game.controls.autopilotOn = on;
+    },
+    fastForward(seconds: number) {
+      game.fastForward(seconds);
+    },
     toast: (text, style) => hud.toast(text, style),
-    showPanel: open => hud.showPanel(open),
+    showPanel: (open) => hud.showPanel(open),
     layoutHud: () => hud.fit(),
   };
 }

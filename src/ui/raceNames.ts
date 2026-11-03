@@ -24,5 +24,7 @@ function sailorName(sailor: Sailor): string {
 /** A boat's name: its Helm, or "Helm/Crew" on two-person classes ("Tu", "Tu/Giulia", "Giulia/Tu"). */
 export function racerName(racer: Racer): string {
   const { helm, crew } = racer.sailors;
-  return crew ? t("race.pair", { helm: sailorName(helm), crew: sailorName(crew) }) : sailorName(helm);
+  return crew
+    ? t("race.pair", { helm: sailorName(helm), crew: sailorName(crew) })
+    : sailorName(helm);
 }

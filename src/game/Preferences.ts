@@ -8,7 +8,11 @@ import { isLanguage, type Language } from "../i18n";
  * saved by earlier versions stop loading. Storage is best effort: it may be unavailable, and then the
  * defaults load and saving does nothing.
  */
-export type Preferences = { controls: ControlSettings; muted: boolean; language?: Language };
+export type Preferences = {
+  controls: ControlSettings;
+  muted: boolean;
+  language?: Language;
+};
 
 export const PREFS_KEY = "sl-prefs";
 
@@ -19,14 +23,24 @@ export interface PrefsStorage {
 }
 
 /** What may be stored: anything an earlier version wrote, or nothing. */
-type StoredPrefs = { controls?: Partial<ControlSettings>; muted?: boolean; language?: unknown };
+type StoredPrefs = {
+  controls?: Partial<ControlSettings>;
+  muted?: boolean;
+  language?: unknown;
+};
 
 /** A plain object, or an empty one for anything else (`null`, a number, an array, ...): stored JSON may be any value. */
 const asObject = (v: unknown): Record<string, unknown> =>
-  typeof v === "object" && v !== null && !Array.isArray(v) ? (v as Record<string, unknown>) : {};
+  typeof v === "object" && v !== null && !Array.isArray(v)
+    ? (v as Record<string, unknown>)
+    : {};
 
 function readJson(storage: () => PrefsStorage): unknown {
-  try { return JSON.parse(storage().getItem(PREFS_KEY) || "{}"); } catch { return {}; }
+  try {
+    return JSON.parse(storage().getItem(PREFS_KEY) || "{}");
+  } catch {
+    return {};
+  }
 }
 
 /**
@@ -50,5 +64,16 @@ export function loadPrefs(storage: () => PrefsStorage): Preferences {
 
 /** Saves the preferences; does nothing if the storage is unavailable. */
 export function savePrefs(storage: () => PrefsStorage, prefs: Preferences) {
-  try { storage().setItem(PREFS_KEY, JSON.stringify({ controls: prefs.controls, muted: prefs.muted, language: prefs.language })); } catch { /* ignore */ }
+  try {
+    storage().setItem(
+      PREFS_KEY,
+      JSON.stringify({
+        controls: prefs.controls,
+        muted: prefs.muted,
+        language: prefs.language,
+      }),
+    );
+  } catch {
+    /* ignore */
+  }
 }

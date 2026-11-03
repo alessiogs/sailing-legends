@@ -1,6 +1,14 @@
-import { Mesh, MeshBuilder, TransformNode, type Material, type Scene, type Vector3 } from "@babylonjs/core";
+import {
+  Mesh,
+  MeshBuilder,
+  TransformNode,
+  type Material,
+  type Scene,
+  type Vector3,
+} from "@babylonjs/core";
 import { clamp, DEG, lerpAngle } from "../core/math";
 import type { BoatState, Telemetry, TrimState } from "../sailing/BoatPhysics";
+import { BowSpray } from "./BowSpray";
 import { surfaceAt, type Wave } from "./Waves";
 
 /** How a boat class moves on the water: the numbers that differ between the Optimist and the 420. */
@@ -19,14 +27,25 @@ export type BoatMotion = {
   boomRate: number;
   /** Rudder angle drawn at full helm (degrees). */
   rudderDeg: number;
+  /** Bow-up pitch (rad) at full planing. */
+  bowLift: number;
+  /** How far ahead of the middle of the boat the bow is (m). */
+  bowZ: number;
 };
 
 /** Distance (m) from the camera within which sailors are drawn in full; a boat that was near stays so a little further out. */
-const NEAR = 30, NEAR_LEAVE = 36;
+const NEAR = 30,
+  NEAR_LEAVE = 36;
 
 /** How full and how flapping a sail is drawn: camber 0..1, luff 0..1. */
-export function sailLook(sail: { trimState: TrimState; aoa: number }): { camber: number; luff: number } {
-  const luff = sail.trimState === "luffing" || sail.trimState === "irons" ? clamp(1 - sail.aoa / (6 * DEG), 0.25, 1) : 0;
+export function sailLook(sail: { trimState: TrimState; aoa: number }): {
+  camber: number;
+  luff: number;
+} {
+  const luff =
+    sail.trimState === "luffing" || sail.trimState === "irons"
+      ? clamp(1 - sail.aoa / (6 * DEG), 0.25, 1)
+      : 0;
   const camber = clamp(sail.aoa / (14 * DEG), 0.15, 1) * (1 - luff * 0.7);
   return { camber, luff };
 }
@@ -51,19 +70,37 @@ export abstract class BoatViewBase {
   /** Whether the camera is close enough for the sailors to be drawn in full (see `NEAR`). */
   protected sailorsNear = true;
   private heelVisual = 0;
+  /** The bow spray of a planing boat the camera is near; its drops are made only then. */
+  private readonly spray: BowSpray;
 
-  constructor(scene: Scene, name: string, private readonly motion: BoatMotion) {
+  constructor(
+    scene: Scene,
+    name: string,
+    private readonly motion: BoatMotion,
+  ) {
+    this.spray = new BowSpray(scene);
     this.root = new TransformNode(name, scene);
     this.body = new TransformNode(`${name}-body`, scene);
     this.body.parent = this.root;
   }
 
   /** The masthead burgee at (0, y, z) on the body: a flag `width` long, hoisted by its luff, showing the apparent wind. */
-  protected addBurgee(scene: Scene, name: string, y: number, z: number, width: number, material: Material): TransformNode {
+  protected addBurgee(
+    scene: Scene,
+    name: string,
+    y: number,
+    z: number,
+    width: number,
+    material: Material,
+  ): TransformNode {
     const burgee = new TransformNode(`${name}-burgeePivot`, scene);
     burgee.position.set(0, y, z);
     burgee.parent = this.body;
-    const flag = MeshBuilder.CreatePlane(`${name}-burgee`, { width, height: 0.1, sideOrientation: Mesh.DOUBLESIDE }, scene);
+    const flag = MeshBuilder.CreatePlane(
+      `${name}-burgee`,
+      { width, height: 0.1, sideOrientation: Mesh.DOUBLESIDE },
+      scene,
+    );
     flag.rotation.y = Math.PI / 2;
     flag.position.z = -width / 2;
     flag.material = material;
@@ -72,21 +109,33 @@ export abstract class BoatViewBase {
   }
 
   /** One frame. `camera` is where the camera is (sailors far from it are drawn simply); without it they are drawn in full. */
-  update(dt: number, time: number, s: BoatState, tel: Telemetry, waves: Wave[], camera?: Vector3) {
+  update(
+    dt: number,
+    time: number,
+    s: BoatState,
+    tel: Telemetry,
+    waves: Wave[],
+    camera?: Vector3,
+  ) {
     const m = this.motion;
     this.flutter += dt;
     // Ride the waves: height, pitch and roll from the local surface slope.
     const surf = surfaceAt(waves, s.x, s.z, time);
-    const fx = Math.sin(s.heading), fz = Math.cos(s.heading);
+    const fx = Math.sin(s.heading),
+      fz = Math.cos(s.heading);
     const slopeFwd = surf.dx * fx + surf.dz * fz;
     const slopeSide = surf.dx * fz - surf.dz * fx;
     this.root.position.set(s.x, surf.h * m.waveHeight + 0.02, s.z);
     this.root.rotation.y = s.heading;
 
     // Heel (+ = to starboard) eases toward the physics value.
-    this.heelVisual += (tel.heelDeg - this.heelVisual) * Math.min(1, dt * m.heelRate);
-    this.body.rotation.x = -Math.atan(slopeFwd) * m.pitch;
-    this.body.rotation.z = -(this.heelVisual * DEG) * m.heel + Math.atan(slopeSide) * m.roll;
+    this.heelVisual +=
+      (tel.heelDeg - this.heelVisual) * Math.min(1, dt * m.heelRate);
+    // The bow lifts as the boat gets onto the plane (a transform, no cost).
+    this.body.rotation.x =
+      -Math.atan(slopeFwd) * m.pitch - tel.planeLevel * m.bowLift;
+    this.body.rotation.z =
+      -(this.heelVisual * DEG) * m.heel + Math.atan(slopeSide) * m.roll;
 
     // Boom swings to the leeward side; a gybe swings it across quickly.
     const target = s.boomSide * tel.boomAngle;
@@ -97,19 +146,39 @@ export abstract class BoatViewBase {
     this.drawSails(dt, s, tel);
     this.rudder.rotation.y = -s.rudder * m.rudderDeg * DEG;
     if (camera) {
-      const d = Math.hypot(camera.x - s.x, camera.z - s.z) + Math.abs(camera.y - this.root.position.y) * 0.5;
+      const d =
+        Math.hypot(camera.x - s.x, camera.z - s.z) +
+        Math.abs(camera.y - this.root.position.y) * 0.5;
       this.sailorsNear = d < (this.sailorsNear ? NEAR_LEAVE : NEAR);
     }
     this.placeSailors(dt, s, tel);
+    this.spray.update(
+      dt,
+      tel.planing && this.sailorsNear,
+      s.x + fx * m.bowZ,
+      this.root.position.y + 0.2,
+      s.z + fz * m.bowZ,
+      s.heading,
+      tel.speed,
+      tel.planeLevel,
+    );
 
     // Burgee points where the apparent wind goes.
-    this.burgee.rotation.y = lerpAngle(this.burgee.rotation.y, tel.awa, Math.min(1, dt * 8));
+    this.burgee.rotation.y = lerpAngle(
+      this.burgee.rotation.y,
+      tel.awa,
+      Math.min(1, dt * 8),
+    );
   }
 
   /** Shape the sails for this frame (the boom has already swung). */
   protected abstract drawSails(dt: number, s: BoatState, tel: Telemetry): void;
   /** Pose the sailors for this frame (`dt` is 0 when the race is paused). */
-  protected abstract placeSailors(dt: number, s: BoatState, tel: Telemetry): void;
+  protected abstract placeSailors(
+    dt: number,
+    s: BoatState,
+    tel: Telemetry,
+  ): void;
 
   /** Rock the hull while a sailor crosses it (`roll` rad, + to starboard): the drawn heel only, never the physics. */
   protected rollHull(roll: number) {
@@ -117,6 +186,7 @@ export abstract class BoatViewBase {
   }
 
   dispose() {
+    this.spray.dispose();
     this.root.dispose(false, false);
   }
 }

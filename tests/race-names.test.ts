@@ -12,12 +12,23 @@ import { RaceSession } from "../src/race/RaceSession";
 import { I420, OPTIMIST } from "../src/sailing/BoatClass";
 import { legName, racerName } from "../src/ui/raceNames";
 
-const names = (opts: FleetOptions) => new RaceSession({ fleet: makeFleet(opts) }).race.racers.map(r => `${r.id}=${racerName(r)}`);
+const names = (opts: FleetOptions) =>
+  new RaceSession({ fleet: makeFleet(opts) }).race.racers.map(
+    (r) => `${r.id}=${racerName(r)}`,
+  );
 
 describe("race names", () => {
   it("names the legs of the course", () => {
-    expect(new RaceSession().race.course.legs.map(legName)).toEqual(["Boa 1", "Boa 2", "Arrivo"]);
-    expect(new RaceSession({ fleet: makeFleet({ boatClass: I420 }) }).race.course.legs.map(legName)).toEqual(["Boa 1", "Boa 2", "Arrivo"]);
+    expect(new RaceSession().race.course.legs.map(legName)).toEqual([
+      "Boa 1",
+      "Boa 2",
+      "Arrivo",
+    ]);
+    expect(
+      new RaceSession({
+        fleet: makeFleet({ boatClass: I420 }),
+      }).race.course.legs.map(legName),
+    ).toEqual(["Boa 1", "Boa 2", "Arrivo"]);
   });
 
   it("shows the leg's name as the HUD target", () => {
@@ -30,22 +41,53 @@ describe("race names", () => {
   });
 
   it("names a single-handed boat by its Helm", () => {
-    expect(names({ boatClass: OPTIMIST })).toEqual(["player=Tu", "ai0=Luca", "ai1=Giulia", "ai2=Marco"]);
-    expect(names({ boatClass: OPTIMIST, withPlayer: false })).toEqual(["ai0=Luca", "ai1=Giulia", "ai2=Marco"]);
+    expect(names({ boatClass: OPTIMIST })).toEqual([
+      "player=Tu",
+      "ai0=Luca",
+      "ai1=Giulia",
+      "ai2=Marco",
+    ]);
+    expect(names({ boatClass: OPTIMIST, withPlayer: false })).toEqual([
+      "ai0=Luca",
+      "ai1=Giulia",
+      "ai2=Marco",
+    ]);
   });
 
   it("names a two-person boat Helm/Crew, with the player in their Role", () => {
     const rivals = ["ai0=Luca/Sara", "ai1=Marco/Tommaso", "ai2=Elena/Pietro"];
-    expect(names({ boatClass: I420, choice: HELM })).toEqual(["player=Tu/Giulia", ...rivals]);
-    expect(names({ boatClass: I420, choice: FULL_BOAT })).toEqual(["player=Tu/Giulia", ...rivals]);
-    expect(names({ boatClass: I420, choice: CREW })).toEqual(["player=Giulia/Tu", ...rivals]);
-    expect(names({ boatClass: I420, choice: CREW, partner: RIVALS[2] }))
-      .toEqual(["player=Marco/Tu", "ai0=Luca/Sara", "ai1=Giulia/Tommaso", "ai2=Elena/Pietro"]);
-    expect(names({ boatClass: I420, withPlayer: false })).toEqual(["ai0=Luca/Sara", "ai1=Giulia/Tommaso", "ai2=Marco/Pietro"]);
+    expect(names({ boatClass: I420, choice: HELM })).toEqual([
+      "player=Tu/Giulia",
+      ...rivals,
+    ]);
+    expect(names({ boatClass: I420, choice: FULL_BOAT })).toEqual([
+      "player=Tu/Giulia",
+      ...rivals,
+    ]);
+    expect(names({ boatClass: I420, choice: CREW })).toEqual([
+      "player=Giulia/Tu",
+      ...rivals,
+    ]);
+    expect(
+      names({ boatClass: I420, choice: CREW, partner: RIVALS[2] }),
+    ).toEqual([
+      "player=Marco/Tu",
+      "ai0=Luca/Sara",
+      "ai1=Giulia/Tommaso",
+      "ai2=Elena/Pietro",
+    ]);
+    expect(names({ boatClass: I420, withPlayer: false })).toEqual([
+      "ai0=Luca/Sara",
+      "ai1=Giulia/Tommaso",
+      "ai2=Marco/Pietro",
+    ]);
   });
 
   it("shows the name in the standings tag", () => {
-    const player = new RaceSession({ fleet: makeFleet({ boatClass: I420 }) }).player!;
-    expect(t("hud.tag", { position: 2, name: racerName(player), ocs: true })).toBe("2° Tu/Giulia · OCS");
+    const player = new RaceSession({ fleet: makeFleet({ boatClass: I420 }) })
+      .player!;
+    expect(
+      t("hud.tag", { position: 2, name: racerName(player), ocs: true }),
+    ).toBe("2° Tu/Giulia · OCS");
   });
 });

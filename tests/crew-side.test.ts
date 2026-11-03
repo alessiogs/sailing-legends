@@ -7,10 +7,22 @@ import { crewOnWrongSide } from "../src/ai/CrewAI";
 import { DEG } from "../src/core/math";
 import type { BoatState, Telemetry } from "../src/sailing/BoatPhysics";
 
-type Sides = { backed?: boolean; onWindward?: boolean; spiWrong?: boolean; spiHoist?: number; awaDeg?: number };
+type Sides = {
+  backed?: boolean;
+  onWindward?: boolean;
+  spiWrong?: boolean;
+  spiHoist?: number;
+  awaDeg?: number;
+};
 
 /** A boat with just the fields the check reads. */
-function boat({ backed = false, onWindward = true, spiWrong = false, spiHoist = 0, awaDeg = 45 }: Sides) {
+function boat({
+  backed = false,
+  onWindward = true,
+  spiWrong = false,
+  spiHoist = 0,
+  awaDeg = 45,
+}: Sides) {
   const state = { spiHoist } as BoatState;
   const telemetry = {
     awa: awaDeg * DEG,
@@ -28,12 +40,16 @@ describe("crewOnWrongSide", () => {
 
   it("is true with a backed jib, or the Crew to leeward, once the bow is through the wind", () => {
     expect(crewOnWrongSide(boat({ backed: true }))).toBe(true);
-    expect(crewOnWrongSide(boat({ onWindward: false, awaDeg: -40 }))).toBe(true);
+    expect(crewOnWrongSide(boat({ onWindward: false, awaDeg: -40 }))).toBe(
+      true,
+    );
   });
 
   it("counts the spinnaker only while it is hoisted", () => {
     expect(crewOnWrongSide(boat({ spiWrong: true, spiHoist: 0.8 }))).toBe(true);
-    expect(crewOnWrongSide(boat({ spiWrong: true, spiHoist: 0.3 }))).toBe(false);
+    expect(crewOnWrongSide(boat({ spiWrong: true, spiHoist: 0.3 }))).toBe(
+      false,
+    );
   });
 
   it("waits until the apparent wind is more than 22 degrees off the bow", () => {
@@ -43,6 +59,16 @@ describe("crewOnWrongSide", () => {
 
   it("is false for a boat without a jib or Crew", () => {
     const { state, telemetry } = boat({});
-    expect(crewOnWrongSide({ state, telemetry: { ...telemetry, jib: undefined, spi: undefined, crew: undefined } })).toBe(false);
+    expect(
+      crewOnWrongSide({
+        state,
+        telemetry: {
+          ...telemetry,
+          jib: undefined,
+          spi: undefined,
+          crew: undefined,
+        },
+      }),
+    ).toBe(false);
   });
 });

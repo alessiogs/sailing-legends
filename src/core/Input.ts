@@ -5,22 +5,45 @@ import { clamp } from "./math";
 /**
  * Keyboard + gamepad. Produces smooth tiller and sheet commands plus one-shot actions.
  * Keyboard: A/D or ←/→ move the tiller, W/↑ sheet in, S/↓ ease, T Auto-trim, C camera, R restart,
- * H/M menu, P/Esc pause, V sound. Gamepad: left stick tiller, RT sheet in, LT ease, Y camera,
- * X Auto-trim, Start pause, Back restart. Drag: the UI layer drags the gauge and the sheet through `dragGauge` and
+ * H/M menu, P/Esc pause, V sound, G Auto-hike, Q/Z hike out/in (Shift for fine steps). Gamepad: left stick tiller, RT sheet in, LT ease, Y camera,
+ * X Auto-trim, RB/LB hike out/in, Start pause, Back restart. Drag: the UI layer drags the gauge and the sheet through `dragGauge` and
  * `dragSheet` (touch or mouse) and presses actions with `press`; this module knows nothing of the HUD.
  * How the keys steer is set by `settings` (see ControlSettings.ts).
  */
-export type Action = "autoTrim" | "camera" | "restart" | "help" | "pause" | "start" | "menu" | "mute" | "controls" | "spi" | "switch";
+export type Action =
+  | "autoTrim"
+  | "autoHike"
+  | "camera"
+  | "restart"
+  | "help"
+  | "pause"
+  | "start"
+  | "menu"
+  | "mute"
+  | "controls"
+  | "spi"
+  | "switch";
 
 /** The key events `Input` listens to, as far as it uses them: the browser's `window` in the game, a stub in tests. */
 export type InputTarget = {
-  addEventListener(type: "keydown", listener: (e: { key: string; repeat: boolean; preventDefault(): void }) => void): void;
+  addEventListener(
+    type: "keydown",
+    listener: (e: {
+      key: string;
+      repeat: boolean;
+      preventDefault(): void;
+    }) => void,
+  ): void;
   addEventListener(type: "keyup", listener: (e: { key: string }) => void): void;
   addEventListener(type: "blur", listener: () => void): void;
 };
 
 /** A gamepad, as far as `Input` reads it (the browser's `Gamepad`). */
-type Pad = { connected: boolean; axes: readonly number[]; buttons: readonly { pressed: boolean; value: number }[] };
+type Pad = {
+  connected: boolean;
+  axes: readonly number[];
+  buttons: readonly { pressed: boolean; value: number }[];
+};
 
 export class Input {
   /** Tiller position: -1 = pushed fully to port (left), +1 = fully to starboard (right). */
@@ -31,21 +54,33 @@ export class Input {
   role: Role = "helm";
   /** Crew weight 0 (in) .. 0.5 (hiking) .. 1 (trapeze). */
   crewOut = 0.3;
-  get steering() { return this.settings.steering; }
+  /** Helm weight, from `helmOutMin` (sitting to leeward, 420 only; 0 elsewhere) through 0 (in) to 1 (fully out). */
+  helmOut = 0;
+  /** The lowest `helmOut` the boat's class allows; the game sets it when a race starts. */
+  helmOutMin = 0;
+  get steering() {
+    return this.settings.steering;
+  }
   private keys = new Set<string>();
   private pressed: Action[] = [];
   private padPrev: boolean[] = [];
   usingPad = false;
   /** Where a finger or mouse holds the gauge and the sheet, 0 (left / sheeted in) .. 1 (right / eased), or null when released. */
-  private drag: { gauge: number | null; sheet: number | null } = { gauge: null, sheet: null };
+  private drag: {
+    gauge: number | null;
+    sheet: number | null;
+    hike: number | null;
+  } = { gauge: null, sheet: null, hike: null };
 
   /** `target` defaults to the browser's `window`. */
   constructor(target: InputTarget = globalThis as unknown as InputTarget) {
-    target.addEventListener("keydown", e => {
+    target.addEventListener("keydown", (e) => {
       const k = e.key.toLowerCase();
-      if (["arrowup", "arrowdown", "arrowleft", "arrowright", " "].includes(k)) e.preventDefault();
+      if (["arrowup", "arrowdown", "arrowleft", "arrowright", " "].includes(k))
+        e.preventDefault();
       if (!e.repeat) {
         if (k === "t") this.pressed.push("autoTrim");
+        if (k === "g") this.pressed.push("autoHike");
         if (k === "c") this.pressed.push("camera");
         if (k === "r") this.pressed.push("restart");
         if (k === "h") this.pressed.push("help");
@@ -60,7 +95,9 @@ export class Input {
       this.keys.add(k);
       this.usingPad = false;
     });
-    target.addEventListener("keyup", e => this.keys.delete(e.key.toLowerCase()));
+    target.addEventListener("keyup", (e) =>
+      this.keys.delete(e.key.toLowerCase()),
+    );
     target.addEventListener("blur", () => this.keys.clear());
   }
 
@@ -72,10 +109,23 @@ export class Input {
     const fine = k.has("shift");
     // The key direction is where the tiller (or, in arcade mode, the bow) goes.
     const keyDir = (right ? 1 : 0) - (left ? 1 : 0);
+    // Q hikes out and Z comes in, for whichever weight the player moves; Shift makes the steps fine.
+    const hikeDir = (k.has("q") ? 1 : 0) - (k.has("z") ? 1 : 0);
+    const hikeStep = hikeDir * dt * (fine ? 0.25 : 0.8);
     if (this.role === "crew") {
-      this.crewOut = clamp(this.crewOut + keyDir * dt * 0.8, 0, 1);
-      if (k.has("w") || k.has("arrowup")) this.sheet = clamp(this.sheet - dt * 0.45 * this.settings.sheetSpeed, 0, 1);
-      if (k.has("s") || k.has("arrowdown")) this.sheet = clamp(this.sheet + dt * 0.45 * this.settings.sheetSpeed, 0, 1);
+      this.crewOut = clamp(this.crewOut + keyDir * dt * 0.8 + hikeStep, 0, 1);
+      if (k.has("w") || k.has("arrowup"))
+        this.sheet = clamp(
+          this.sheet - dt * 0.45 * this.settings.sheetSpeed,
+          0,
+          1,
+        );
+      if (k.has("s") || k.has("arrowdown"))
+        this.sheet = clamp(
+          this.sheet + dt * 0.45 * this.settings.sheetSpeed,
+          0,
+          1,
+        );
       this.tiller = 0;
       this.pollPad(dt);
       this.applyDrag();
@@ -83,12 +133,19 @@ export class Input {
     }
     const want = this.steering === "tiller" ? keyDir : -keyDir;
     const limit = fine ? 0.35 : 1;
-    const ts = this.settings.tillerSpeed, ss = this.settings.sheetSpeed;
-    if (want !== 0) this.tiller = clamp(this.tiller + want * dt * 2.6 * ts, -limit, limit);
-    else if (this.settings.autoCenter) this.tiller -= Math.sign(this.tiller) * Math.min(Math.abs(this.tiller), dt * 3.5 * ts);
+    this.helmOut = clamp(this.helmOut + hikeStep, this.helmOutMin, 1);
+    const ts = this.settings.tillerSpeed,
+      ss = this.settings.sheetSpeed;
+    if (want !== 0)
+      this.tiller = clamp(this.tiller + want * dt * 2.6 * ts, -limit, limit);
+    else if (this.settings.autoCenter)
+      this.tiller -=
+        Math.sign(this.tiller) * Math.min(Math.abs(this.tiller), dt * 3.5 * ts);
 
-    if (k.has("w") || k.has("arrowup")) this.sheet = clamp(this.sheet - dt * 0.45 * ss, 0, 1);
-    if (k.has("s") || k.has("arrowdown")) this.sheet = clamp(this.sheet + dt * 0.45 * ss, 0, 1);
+    if (k.has("w") || k.has("arrowup"))
+      this.sheet = clamp(this.sheet - dt * 0.45 * ss, 0, 1);
+    if (k.has("s") || k.has("arrowdown"))
+      this.sheet = clamp(this.sheet + dt * 0.45 * ss, 0, 1);
 
     this.pollPad(dt);
     this.applyDrag();
@@ -110,22 +167,41 @@ export class Input {
     if (position !== null) this.usingPad = false;
   }
 
+  /** A drag holds the hike slider at `position` (0 = in, or the lowest for the class .. 1 = fully out), or lets it go. */
+  dragHike(position: number | null) {
+    this.drag.hike = position === null ? null : clamp(position, 0, 1);
+    if (position !== null) this.usingPad = false;
+  }
+
   /** An action the player tapped on screen, handled like its key. */
   press(action: Action) {
     this.pressed.push(action);
   }
 
   private applyDrag() {
-    const { gauge, sheet } = this.drag;
+    const { gauge, sheet, hike } = this.drag;
+    if (hike !== null) {
+      if (this.role === "crew") this.crewOut = hike;
+      else
+        this.helmOut =
+          hike >= 1
+            ? 1
+            : hike <= 0
+              ? this.helmOutMin
+              : this.helmOutMin + hike * (1 - this.helmOutMin);
+    }
     if (gauge !== null) {
       if (this.role === "crew") this.crewOut = gauge;
-      else this.tiller = (this.steering === "tiller" ? 1 : -1) * (gauge * 2 - 1);
+      else
+        this.tiller = (this.steering === "tiller" ? 1 : -1) * (gauge * 2 - 1);
     }
     if (sheet !== null) this.sheet = sheet;
   }
 
   private pollPad(dt: number) {
-    const nav = (globalThis as { navigator?: { getGamepads?(): ArrayLike<Pad | null> } }).navigator;
+    const nav = (
+      globalThis as { navigator?: { getGamepads?(): ArrayLike<Pad | null> } }
+    ).navigator;
     const pads = nav?.getGamepads ? nav.getGamepads() : [];
     const pad = Array.from(pads).find((p): p is Pad => !!p && p.connected);
     if (!pad) return;
@@ -133,16 +209,44 @@ export class Input {
     const rt = pad.buttons[7]?.value ?? 0;
     const lt = pad.buttons[6]?.value ?? 0;
     if (Math.abs(lx) > 0.12 || rt > 0.05 || lt > 0.05) this.usingPad = true;
+    // Shoulder buttons hike: RB out, LB in.
+    const hike = (pad.buttons[5]?.value ?? 0) - (pad.buttons[4]?.value ?? 0);
+    if (Math.abs(hike) > 0.05) {
+      this.usingPad = true;
+      if (this.role === "crew")
+        this.crewOut = clamp(this.crewOut + hike * dt * 0.8, 0, 1);
+      else
+        this.helmOut = clamp(
+          this.helmOut + hike * dt * 0.8,
+          this.helmOutMin,
+          1,
+        );
+    }
     if (this.usingPad) {
       const dz = Math.abs(lx) < 0.12 ? 0 : (lx - Math.sign(lx) * 0.12) / 0.88;
-      if (this.role === "crew") this.crewOut = clamp(this.crewOut + dz * dt * 0.8, 0, 1);
+      if (this.role === "crew")
+        this.crewOut = clamp(this.crewOut + dz * dt * 0.8, 0, 1);
       else this.tiller = this.steering === "tiller" ? dz : -dz;
-      this.sheet = clamp(this.sheet + (lt - rt) * dt * 0.6 * this.settings.sheetSpeed, 0, 1);
+      this.sheet = clamp(
+        this.sheet + (lt - rt) * dt * 0.6 * this.settings.sheetSpeed,
+        0,
+        1,
+      );
     }
-    const map: [number, Action[]][] = [[3, ["camera"]], [2, ["autoTrim"]], [9, ["pause"]], [8, ["restart"]], [0, ["start", "spi"]], [1, ["switch"]]];
+    const map: [number, Action[]][] = [
+      [3, ["camera"]],
+      [2, ["autoTrim"]],
+      [9, ["pause"]],
+      [8, ["restart"]],
+      [0, ["start", "spi"]],
+      [1, ["switch"]],
+    ];
     for (const [i, acts] of map) {
       const now = !!pad.buttons[i]?.pressed;
-      if (now && !this.padPrev[i]) { this.pressed.push(...acts); this.usingPad = true; }
+      if (now && !this.padPrev[i]) {
+        this.pressed.push(...acts);
+        this.usingPad = true;
+      }
       this.padPrev[i] = now;
     }
   }
@@ -153,10 +257,11 @@ export class Input {
   }
 
   reset() {
-    this.drag = { gauge: null, sheet: null };
+    this.drag = { gauge: null, sheet: null, hike: null };
     this.tiller = 0;
     this.sheet = 0.55;
     this.crewOut = 0.3;
+    this.helmOut = 0;
   }
 
   consume(): Action[] {

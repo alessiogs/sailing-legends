@@ -11,14 +11,17 @@ Plays on desktop (keyboard or gamepad) and on phones, portrait or landscape (tou
 Italian or English (picker in the main menu); labels quoted below are the Italian ones, with their meaning.
 
 ## Getting started
+
 ```bash
 npm install
 npm run dev        # open the address Vite prints (usually http://localhost:5173)
 npm run build      # optimised build into dist/
 ```
+
 Requirements: Node.js 20+, a desktop browser with WebGL 2.
 
 ## Tests and publishing
+
 - `npm test` (Vitest, no browser):
   - smoke races: AI-only Optimist and 420 races in light, medium and strong wind; every boat finishes and every
     penalty is served;
@@ -34,28 +37,34 @@ Requirements: Node.js 20+, a desktop browser with WebGL 2.
   https://alessiogs.github.io/sailing-legends/dev/. Pull requests are only tested and type-checked, never deployed.
 
 ## Controls
-| Keyboard | Gamepad | Touch | Action |
-|---|---|---|---|
-| A / D, ← / → (Shift = fine) | Left stick | Drag the tiller bar (bottom) | Tiller; as Crew, your weight |
-| W / ↑ · S / ↓ | RT · LT | Drag the sheet slider (right edge) | Sheet in · ease |
-| T | X | Auto-trim button | Auto-trim (an Assist) |
-| Space | — | Spi button | Hoist / drop the spinnaker (420) |
-| E | — | Switch button | Switch sides (420 Crew) |
-| C | Y | Camera button | Camera: chase / free / tactical |
-| P / Esc | Start | Pause button | Pause |
-| R | Back | Pause → Restart | New race (Quick race only) |
-| M / H | — | — | Menu |
-| K | — | — | Commands menu ("Comandi") |
-| V | — | — | Audio on/off |
 
-**Commands menu (K, or from the main menu or the pause screen):** *Muovi la barra* ("move the tiller", default and
-realistic: → moves the tiller right and the boat turns left) or *Direzione della barca* ("boat direction": → turns
+| Keyboard                    | Gamepad    | Touch                                          | Action                                      |
+| --------------------------- | ---------- | ---------------------------------------------- | ------------------------------------------- |
+| A / D, ← / → (Shift = fine) | Left stick | Drag the tiller bar (bottom)                   | Tiller; as Crew, your weight                |
+| Q / Z (Shift = fine)        | RB / LB    | Drag the hike slider (only with Auto-hike off) | Hike out / in: your weight, as Helm or Crew |
+| W / ↑ · S / ↓               | RT · LT    | Drag the sheet slider (right edge)             | Sheet in · ease                             |
+| T                           | X          | Auto-trim button                               | Auto-trim (an Assist)                       |
+| G                           | —          | —                                              | Auto-hike (an Assist)                       |
+| Space                       | —          | Spi button                                     | Hoist / drop the spinnaker (420)            |
+| E                           | —          | Switch button                                  | Switch sides (420 Crew)                     |
+| C                           | Y          | Camera button                                  | Camera: chase / free / tactical             |
+| P / Esc                     | Start      | Pause button                                   | Pause                                       |
+| R                           | Back       | Pause → Restart                                | New race (Quick race only)                  |
+| M / H                       | —          | —                                              | Menu                                        |
+| K                           | —          | —                                              | Commands menu ("Comandi")                   |
+| V                           | —          | —                                              | Audio on/off                                |
+
+**Commands menu (K, or from the main menu or the pause screen):** _Muovi la barra_ ("move the tiller", default and
+realistic: → moves the tiller right and the boat turns left) or _Direzione della barca_ ("boat direction": → turns
 the boat right); the tiller springs back to the centre or stays put; tiller and sheet speed. Remembered in the browser.
 
 ## Playing
-- **Quick race:** pick the boat (Optimist or 420), the wind and, for the 420, your Role (*Timoniere* = Helm,
-  *Prodiere* = Crew, *Barca completa* = Full Boat Control) and your Partner.
-- **Career:** choose your starting age (8–12). A **Season** is one year: four **Regattas** (club, regional, national,
+
+- **Quick race:** pick the boat (Optimist or 420), the wind and, for the 420, your Role (_Timoniere_ = Helm,
+  _Prodiere_ = Crew, _Barca completa_ = Full Boat Control) and your Partner. Auto-hike (_Peso automatico_) sits beside
+  Auto-trim: on by default for the Helm and Full Boat Control, off for the Crew.
+- **Career:** choose your starting age (8–12) and your build (light, average or heavy: lighter is quicker in light
+  air, heavier in a breeze). A **Season** is one year: four **Regattas** (club, regional, national,
   international) of three races ("prove") each, scored low-point with a Discard from the third Regatta. Fleets grow
   from 6 to 12 boats with the level. After each Regatta you see the standings and how you did against Luca, Giulia
   and Marco; after the Season, a summary. Then stay in the Optimist or move to the 420 and pick a Partner from the
@@ -65,24 +74,34 @@ the boat right); the tiller springs back to the centre or stays put; tiller and 
   **finish** upwind, marks to port. Over the line at the gun you are **OCS** and must return. Darker, rippled
   patches are puffs. Right-of-way rules 10, 11, 12, 13 and 31 are judged on contact, with penalty turns; a penalty
   still owed at the finish means DSQ.
+- **Weight and hiking:** a 420 Pair's weight and the Helm's hike decide whether the boat stays flat. Too much weight
+  out in light air heels the boat to windward and slows it. Roll tacks and gybes: hiking hard on the new side within
+  about a second of the boom crossing loses less speed (a small burst in very light air). The 420 **planes** on a
+  breezy reach or run (a _Planing_ tag); the Optimist gains a little speed downwind with the bow up. Fore-aft weight
+  is placed automatically. Every sailor's body weight comes from age and build.
 
 ## Changelog
+
 <details>
-<summary><b>0.6</b> — new HUD (in progress)</summary>
+<summary><b>0.6</b> — new HUD, body weight and planing (in progress)</summary>
+
+- **0.6c** — Helm hike control (Q/Z, RB/LB, touch slider) with the Auto-hike Assist (G); body weight from age and
+  Build, chosen when starting a Career; roll tacks and gybes; 420 planing and Optimist bow-up downwind; a hike gauge,
+  a Planing tag, bow lift, bow spray and water sound while planing.
 
 - Original "Sail number" HUD: a slim top strip (place, clock, next mark, pause), a compass pill with speed, round
   Camera and Standings/map buttons, one message at a time with calm status colours.
 - Thumb controls for phones in portrait: a centred tiller bar at the bottom, a vertical sheet slider on the right
   edge with Auto-trim (and Spinnaker, Switch side) under it; the same layout, scaled, on every screen.
 - The chase camera pulls back in portrait. Menus and the loading screen share the HUD's style and scroll on small
-  screens.
+screens.
 </details>
 
 <details>
 <summary><b>0.5.1</b> — touch controls</summary>
 
 - Drag the HUD's tiller and trim gauges with a finger or the mouse (two fingers at once), tap buttons for the race
-  actions, and touch wording for every hint.
+actions, and touch wording for every hint.
 </details>
 
 <details>
@@ -105,11 +124,11 @@ the boat right); the tiller springs back to the centre or stays put; tiller and 
   dead astern, and the Pair's weight (in, hiking, on the trapeze) must be to windward and balance the boat:
   too little and it heels and loses power, too much and it heels to windward and slows down.
 - **Three choices** (menu → Boat: 420), a Role plus a Control mode:
-  - *Timoniere* (Helm): rudder and mainsail; the AI Crew does the rest and decides when to hoist the spinnaker.
-  - *Prodiere* (Crew): the Partner steers; you trim the jib or spinnaker with W/S, move your weight in/out up to
+  - _Timoniere_ (Helm): rudder and mainsail; the AI Crew does the rest and decides when to hoist the spinnaker.
+  - _Prodiere_ (Crew): the Partner steers; you trim the jib or spinnaker with W/S, move your weight in/out up to
     the trapeze with A/D, switch sides with E, hoist/drop with Space. The Partner calls the manoeuvres
     ("Vira!" = tack, "Cambia lato!" = switch sides, "Issa lo spi!" = hoist the spinnaker).
-  - *Barca completa* (Full Boat Control): rudder and mainsail, and you call the spinnaker yourself (Space);
+  - _Barca completa_ (Full Boat Control): rudder and mainsail, and you call the spinnaker yourself (Space);
     the Crew carries it out.
 - **Choose your Partner from the Optimist Rivals** (Luca, Giulia, Marco). **Crew Chemistry** (0–100, in game
   "Intesa") comes from shared history, technique and reliability: more chemistry = quicker reactions and more
@@ -138,8 +157,8 @@ the boat right); the tiller springs back to the centre or stays put; tiller and 
 <summary><b>0.1–0.2</b> — physics, wind, race and AI</summary>
 
 - **Sailing physics** (`src/sailing/BoatPhysics.ts`): true wind + boat speed → apparent wind; the
-  sheet limits the boom angle; the angle of attack gives lift and drag (the sail *luffs* if eased too much and
-  *stalls* if sheeted in too much); no drive within ~40° of the wind; hull drag with a "wall" at hull speed;
+  sheet limits the boom angle; the angle of attack gives lift and drag (the sail _luffs_ if eased too much and
+  _stalls_ if sheeted in too much); no drive within ~40° of the wind; hull drag with a "wall" at hull speed;
   leeway resisted by the centreboard (worse at low speed); the rudder only works with speed; tacks cost speed;
   in a puff the boat heels and depowers.
 - **Wind** (`src/sailing/Wind.ts`): direction shifts + puffs that move down the course.
@@ -152,10 +171,11 @@ the boat right); the tiller springs back to the centre or stays put; tiller and 
 - **Boat graphics** (`src/world/BoatView.ts`): pram hull, sprit rig, sail with camber, twist and
   luffing, Helm hiking out, heel and pitch on the waves, masthead wind indicator.
 - **HUD**: trim bar with the optimal zone, wind compass (no-go zone, optimal close-hauled angle, mark
-  direction), favourable/unfavourable wind shift indicator, minimap with puffs and laylines, live standings.
+direction), favourable/unfavourable wind shift indicator, minimap with puffs and laylines, live standings.
 </details>
 
 ## Architecture
+
 ```
 src/
 ├── core/        math.ts (angles, RNG), Input.ts (keyboard + gamepad), ControlSettings.ts, Sound.ts
@@ -172,16 +192,19 @@ src/
 ├── game/        GameController.ts (game state and modes), PlayerControls, RaceFeedback, CameraRig, Preferences
 └── main.ts      startup wiring and render loop
 ```
+
 The simulation and the Career (`sailing/`, `race/`, `ai/`, `sailors/`, `career/`) doesn't depend on Babylon: it runs at a fixed 60 Hz and can
 be tested in Node without a browser. It emits data, never text: every in-game text lives in the catalogs in
 `src/i18n/`. A new class (ILCA…) starts from a new entry in `BoatClass.ts`. The full module map and the
 conventions are in the developer guide, [AGENTS.md](AGENTS.md).
 
 ## Known limitations
+
 - The physics model is tuned by feel, not validated against real data. Optimist at 11 knots: ~2.3 kn upwind,
   ~3.9 kn reaching, ~3.5 kn downwind.
 - Simplified rules: no mark-room (rule 18), no rule 16; breaches only count if there is contact.
 - AI starts are still sometimes late; no covering tactics.
 - In light wind the AI sometimes struggles to keep clear of right-of-way boats and takes penalties.
-- Sailors are simple figures with no animation yet (0.6b), and body weight fore and aft is not simulated (0.6c).
+- Sailors are simple figures with no animation yet (0.6b). Fore-aft weight is automatic (no player control), and
+  surfing on waves waits for 0.9.
 - `window.__game` exposes debug hooks (autopilot, fast-forward) used by the automated tests.

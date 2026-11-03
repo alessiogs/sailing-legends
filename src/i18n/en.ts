@@ -7,28 +7,38 @@ import { plurals } from "./plural";
 
 const plural = plurals("en");
 const ordinals = new Intl.PluralRules("en", { type: "ordinal" });
-const SUFFIX: Partial<Record<Intl.LDMLPluralRule, string>> = { one: "st", two: "nd", few: "rd" };
+const SUFFIX: Partial<Record<Intl.LDMLPluralRule, string>> = {
+  one: "st",
+  two: "nd",
+  few: "rd",
+};
 /** 1 → "1st", 2 → "2nd", 11 → "11th". */
 const ordinal = (n: number) => `${n}${SUFFIX[ordinals.select(n)] ?? "th"}`;
 
 export const english: Catalog = {
   // Main menu.
-  "menu.lede.twoPerson": "420 racing, in a Pair with jib, spinnaker and trapeze",
+  "menu.lede.twoPerson":
+    "420 racing, in a Pair with jib, spinnaker and trapeze",
   "menu.lede.single": "Optimist racing",
   "menu.versionChip": ({ boatClass }) => `PROTOTYPE 0.6 · ${boatClass}`,
-  "menu.roleHelp.helm": "Helm and mainsail. Your Partner, as Crew, trims the jib and spinnaker, goes out on the trapeze and decides when to hoist the spinnaker.",
-  "menu.roleHelp.crew": "Your Partner steers. You: W/S jib (or spinnaker) sheet, A/D weight in/out up to the trapeze, E switch sides after tacks and gybes, Space hoist/drop the spinnaker. Listen for their calls.",
-  "menu.roleHelp.fullBoat": "Helm and mainsail, and you call the manoeuvres: Space = hoist/drop the spinnaker. The Crew carries them out (faster when Crew Chemistry is high).",
+  "menu.roleHelp.helm":
+    "Helm and mainsail. Your Partner, as Crew, trims the jib and spinnaker, goes out on the trapeze and decides when to hoist the spinnaker.",
+  "menu.roleHelp.crew":
+    "Your Partner steers. You: W/S jib (or spinnaker) sheet, A/D weight in/out up to the trapeze, E switch sides after tacks and gybes, Space hoist/drop the spinnaker. Listen for their calls.",
+  "menu.roleHelp.fullBoat":
+    "Helm and mainsail, and you call the manoeuvres: Space = hoist/drop the spinnaker. The Crew carries them out (faster when Crew Chemistry is high).",
   "menu.partnerStats": ({ chemistry, technique, discipline }) =>
     `Chemistry ${chemistry}/100 · technique ${technique} · reliability ${discipline}`,
 
   // Main menu, static page text (index.html, data-i18n attributes).
   "menu.loading": "Loading race…",
-  "menu.lede.course": "Windward-leeward course (upwind – downwind – upwind). 45-second start sequence. Read the wind: the darker patches of water are gusts.",
+  "menu.lede.course":
+    "Windward-leeward course (upwind – downwind – upwind). 45-second start sequence. Read the wind: the darker patches of water are gusts.",
   "menu.keys.tiller": "Tiller (Shift = fine)",
   "menu.keys.camera": "Camera: chase / free / tactical",
   "menu.keys.audio": "Audio",
-  "menu.keys.gamepad": "Gamepad: left stick tiller · RT/LT sheet in/out · Y camera · X Auto-trim",
+  "menu.keys.gamepad":
+    "Gamepad: left stick tiller · RT/LT sheet in/out · Y camera · X Auto-trim · RB/LB hike out/in",
   "menu.label.boat": "BOAT",
   "menu.label.wind": "WIND",
   "menu.wind.light": "Light 7 kn",
@@ -36,6 +46,7 @@ export const english: Catalog = {
   "menu.wind.strong": "Strong 15 kn",
   "menu.label.controls": "CONTROLS",
   "menu.openControls": "Controls…",
+  "menu.autoHike": "Auto-hike (Assist)",
   "menu.autoTrim": "Auto-trim (Assist)",
   "menu.label.role": "YOUR ROLE",
   "menu.role.helm": "Helm",
@@ -43,11 +54,16 @@ export const english: Catalog = {
   "menu.role.fullBoat": "Full Boat Control",
   "menu.label.partner": "YOUR PARTNER · CREW CHEMISTRY",
   "menu.tips.title": "How to go fast",
-  "menu.tips.upwind": "You can't sail straight into the wind: below ~40° the sail luffs. Work upwind in a zig-zag, tacking.",
-  "menu.tips.trimBar": "The bar at the bottom shows the ideal trim (green zone): keep the indicator inside it.",
-  "menu.tips.tacks": "Tacks cost speed: do them while the boat is moving, not from a standstill.",
-  "menu.tips.marksAndStart": "Leave the marks to port. At the start, stay behind the line until the gun.",
-  "menu.tips.rightOfWay": "Right of way: port tack gives way to starboard tack, windward gives way to leeward, the boat astern keeps clear of the boat ahead. If you touch because of your own fault: 2 penalty turns; if you touch a mark: 1 turn.",
+  "menu.tips.upwind":
+    "You can't sail straight into the wind: below ~40° the sail luffs. Work upwind in a zig-zag, tacking.",
+  "menu.tips.trimBar":
+    "The bar at the bottom shows the ideal trim (green zone): keep the indicator inside it.",
+  "menu.tips.tacks":
+    "Tacks cost speed: do them while the boat is moving, not from a standstill.",
+  "menu.tips.marksAndStart":
+    "Leave the marks to port. At the start, stay behind the line until the gun.",
+  "menu.tips.rightOfWay":
+    "Right of way: port tack gives way to starboard tack, windward gives way to leeward, the boat astern keeps clear of the boat ahead. If you touch because of your own fault: 2 penalty turns; if you touch a mark: 1 turn.",
   "menu.start": "Start race",
   "menu.label.language": "LANGUAGE",
   "menu.language.it": "Italiano",
@@ -61,8 +77,10 @@ export const english: Catalog = {
   "pause.restartHint": "R to restart the race",
 
   // Controls menu.
-  "controls.steerHelp.tiller": "→ pushes the tiller to starboard and the boat turns to port, as on a real boat.",
-  "controls.steerHelp.boat": "→ turns the boat to starboard (the tiller goes the other way by itself).",
+  "controls.steerHelp.tiller":
+    "→ pushes the tiller to starboard and the boat turns to port, as on a real boat.",
+  "controls.steerHelp.boat":
+    "→ turns the boat to starboard (the tiller goes the other way by itself).",
   "controls.keyLeft.tiller": "Tiller to port (the boat turns to starboard)",
   "controls.keyLeft.boat": "Turn to port",
   "controls.keyRight.tiller": "Tiller to starboard (the boat turns to port)",
@@ -74,7 +92,8 @@ export const english: Catalog = {
   "controls.steering.tiller": "Move the tiller",
   "controls.steering.boat": "The boat's direction",
   "controls.autoCenter.label": "Tiller returns to centre",
-  "controls.autoCenter.help": "When off, the tiller stays where you leave it, like a real tiller.",
+  "controls.autoCenter.help":
+    "When off, the tiller stays where you leave it, like a real tiller.",
   "controls.autoCenter.on": "Automatic",
   "controls.autoCenter.off": "Stays put",
   "controls.tillerSpeed": "Tiller speed",
@@ -91,6 +110,8 @@ export const english: Catalog = {
   "controls.action.fineTiller": "Fine tiller movement",
   "controls.action.sheetIn": "Sheet in",
   "controls.action.sheetOut": "Ease the sheet",
+  "controls.action.autoHike": "Auto-hike",
+  "controls.action.hike": "Hike out / in (Shift = fine)",
   "controls.action.autoTrim": "Auto-trim",
   "controls.action.camera": "Camera",
   "controls.action.pause": "Pause",
@@ -113,6 +134,8 @@ export const english: Catalog = {
   "toast.audioOff": "Audio off",
   "toast.audioOn": "Audio on",
   "toast.autoTrimOn": "Auto-trim: ON",
+  "toast.autoHikeOn": "Auto-hike: ON",
+  "toast.autoHikeOff": "Hiking: manual",
   "toast.autoTrimOff": "Trim: manual",
   "toast.switchSide": "Switch sides",
   "toast.camera.chase": "Camera: chase",
@@ -122,7 +145,8 @@ export const english: Catalog = {
   "toast.spi.drop": "Drop the spinnaker!",
   "toast.spi.callHoist": "You: “Hoist!”",
   "toast.spi.callDrop": "You: “Drop it!”",
-  "toast.spi.partnerDecides": ({ name }) => `${name} decides on the spinnaker (in "Full Boat Control" you call it)`,
+  "toast.spi.partnerDecides": ({ name }) =>
+    `${name} decides on the spinnaker (in "Full Boat Control" you call it)`,
   "toast.spi.crewDecides": `The Crew decides on the spinnaker (in "Full Boat Control" you call it)`,
 
   // Names in a race (ui/raceNames.ts): the course's legs, the player, and a boat as "Helm/Crew".
@@ -161,22 +185,31 @@ export const english: Catalog = {
   "coach.gybe": "Gybe!",
   "coach.partnerTack": ({ name }) => `${name}: “Tacking!” — switch sides (E)`,
   "coach.partnerGybe": ({ name }) => `${name}: “Gybing!” — switch sides (E)`,
-  "coach.partnerReadyAbout": ({ name }) => `${name}: “Ready about… Hard a-lee!”`,
-  "coach.irons.tiller": "You're stuck head to wind: ease the sheet (S) and push the tiller to bear away",
-  "coach.irons.boat": "You're stuck head to wind: ease the sheet (S) and bear away with the helm",
+  "coach.partnerReadyAbout": ({ name }) =>
+    `${name}: “Ready about… Hard a-lee!”`,
+  "coach.irons.tiller":
+    "You're stuck head to wind: ease the sheet (S) and push the tiller to bear away",
+  "coach.irons.boat":
+    "You're stuck head to wind: ease the sheet (S) and bear away with the helm",
 
   // Partner calls the player (as Crew) should act on.
   "call.switchSide": ({ name }) => `${name}: “Switch sides!” → press E`,
   "call.spiHoist": ({ name }) => `${name}: “Hoist the spinnaker!” → Space`,
   "call.spiDrop": ({ name }) => `${name}: “Drop it!” → Space`,
   "call.hikeOut": ({ name }) => `${name}: “Hike out! We're heeling” → D / →`,
-  "call.comeIn": ({ name }) => `${name}: “In! We'll capsize to windward” → A / ←`,
+  "call.comeIn": ({ name }) =>
+    `${name}: “In! We'll capsize to windward” → A / ←`,
+  "call.flatten": ({ name }) => `${name}: “Flatten! Ease the main” → S / ↓`,
+  "call.easeHike": ({ name }) => `${name}: “Ease and hike!” → S / ↓ and Q`,
 
   // HUD: race card, instruments, bottom panel.
   "hud.label.position": "POSITION",
   "hud.pillLine": ({ vmg, wind }) => `VMG ${vmg} · WIND ${wind}`,
   "hud.panelToggle": "Standings and map",
   "hud.slider.in": "IN",
+  "hud.slider.hikeOut": "OUT",
+  "hud.slider.hikeIn": "IN",
+  "hud.slider.hikeLeeward": "LEEWARD",
   "hud.slider.ease": "EASE",
   "hud.label.trueWind": "TRUE WIND",
   "hud.label.heel": "HEEL",
@@ -189,8 +222,10 @@ export const english: Catalog = {
   "hud.leg.prestart": "Behind the line",
   "hud.leg.cross": "Cross the line",
   "hud.leg.done": "Race finished",
-  "hud.leg.sailing": ({ leg, legs, target }) => `Leg ${leg}/${legs} · ${target}`,
-  "hud.twa": ({ angle, starboard }) => `${angle}° ${starboard ? "stbd" : "port"}`,
+  "hud.leg.sailing": ({ leg, legs, target }) =>
+    `Leg ${leg}/${legs} · ${target}`,
+  "hud.twa": ({ angle, starboard }) =>
+    `${angle}° ${starboard ? "stbd" : "port"}`,
   "hud.leeway": ({ angle }) => `leeway ${angle}°`,
   "hud.shift.lift": ({ shift }) => `Lifted ${shift}° · hold this tack`,
   "hud.shift.header": ({ shift }) => `Headed ${shift}° · consider tacking`,
@@ -202,14 +237,19 @@ export const english: Catalog = {
   "hud.gauge.left": "◀ PORT",
   "hud.gauge.right": "STBD ▶",
   "hud.gauge.weight": ({ position }) => `${position.toUpperCase()}`,
+  "hud.gauge.hike": "HELM WEIGHT",
+  "hud.planing": "PLANING",
+  "hud.gauge.leeward": "◀ LEEWARD",
   "hud.gauge.in": "◀ IN",
   "hud.gauge.out": "OUT ▶",
   "hud.sail.main": "MAINSAIL",
   "hud.sail.single": "SAIL TRIM",
   "hud.sail.jib": "JIB",
   "hud.sail.spinnaker": "SPINNAKER",
-  "hud.partnerLine.helm": ({ name, spi }) => `${name} on the helm and mainsheet · spinnaker: ${spi}`,
-  "hud.partnerLine.crew": ({ name, weight, spi }) => `${name}: ${weight} · spinnaker ${spi}`,
+  "hud.partnerLine.helm": ({ name, spi }) =>
+    `${name} on the helm and mainsheet · spinnaker: ${spi}`,
+  "hud.partnerLine.crew": ({ name, weight, spi }) =>
+    `${name}: ${weight} · spinnaker ${spi}`,
   "hud.partnerLine.crewOnCall": ({ name, weight, spi }) =>
     `${name}: ${weight} · spinnaker ${spi} · Space = hoist/drop`,
   // Crew weight and spinnaker state (sailing/BoatStates), worded by ui/boatStateText for the lines above and the weight gauge.
@@ -221,7 +261,8 @@ export const english: Catalog = {
   "hud.spi.moving": "moving",
   "hud.spi.down": "down",
   "hud.minimap.wind": "WIND",
-  "hud.tag": ({ position, name, ocs }) => `${ordinal(position)} ${name}${ocs ? " · OCS" : ""}`,
+  "hud.tag": ({ position, name, ocs }) =>
+    `${ordinal(position)} ${name}${ocs ? " · OCS" : ""}`,
 
   // Sail trim state under the trim bar.
   "trim.good": "Sail trimmed ✓",
@@ -252,18 +293,28 @@ export const english: Catalog = {
   "career.back": "Back",
   "career.mainMenu": "Main menu",
   "career.age.title": "How old are you?",
-  "career.age.help": "You start the career in the Optimist at this age: every Season makes you a year older.",
+  "career.age.help":
+    "You start the career in the Optimist at this age: every Season makes you a year older.",
   "career.age.replaces": "The saved career will be replaced.",
+  "career.build.help":
+    "What is your build? Lighter is quicker in light air, heavier in a breeze.",
+  "career.build.light": "Light",
+  "career.build.average": "Average",
+  "career.build.heavy": "Heavy",
   "career.age.start": "Start the career",
   "career.unreadable.title": "Save unreadable",
-  "career.unreadable.text": "The career save cannot be read (it may be old or damaged). Start a new career?",
+  "career.unreadable.text":
+    "The career save cannot be read (it may be old or damaged). Start a new career?",
   "career.unreadable.yes": "New career",
   "career.unreadable.no": "Back to the menu",
-  "career.calendar.title": ({ season, age }) => `Season ${season} · ${plural(age, { one: `${age} year old`, other: `${age} years old` })}`,
-  "career.calendar.regatta": ({ number, venue }) => `Regatta ${number} · ${venue}`,
+  "career.calendar.title": ({ season, age }) =>
+    `Season ${season} · ${plural(age, { one: `${age} year old`, other: `${age} years old` })}`,
+  "career.calendar.regatta": ({ number, venue }) =>
+    `Regatta ${number} · ${venue}`,
   "career.calendar.detail": ({ boatClass, boats, races }) =>
     `${boatClass} · ${plural(boats, { one: `${boats} boat`, other: `${boats} boats` })} · ${plural(races, { one: `${races} race`, other: `${races} races` })}`,
-  "career.calendar.stage": ({ stage, stages }) => `Zonale – stage ${stage} of ${stages}`,
+  "career.calendar.stage": ({ stage, stages }) =>
+    `Zonale – stage ${stage} of ${stages}`,
   "career.level.club": "Club",
   "career.level.regional": "Regional",
   "career.level.national": "National",
@@ -276,49 +327,79 @@ export const english: Catalog = {
   "career.results.next": "Next race",
   "career.results.calendar": "Calendar",
   "career.results.standings": "Standings",
-  "career.standings.title": ({ number, venue }) => `Standings · Regatta ${number} · ${venue}`,
+  "career.standings.title": ({ number, venue }) =>
+    `Standings · Regatta ${number} · ${venue}`,
   "career.standings.regatta": "Regatta ranking",
   "career.standings.season": "Season ranking",
   "career.standings.you": "You",
-  "career.standings.points": ({ points }) => plural(points, { one: `${points} point`, other: `${points} points` }),
+  "career.standings.kg": ({ name, kg }) => `${name} · ${kg} kg`,
+  "career.standings.points": ({ points }) =>
+    plural(points, { one: `${points} point`, other: `${points} points` }),
   "career.standings.last": "Latest standings",
   "career.standings.continue": "Continue",
-  "career.rival.beatYou": ({ name, gap }) => `${name} beat you by ${plural(gap, { one: `${gap} point`, other: `${gap} points` })}`,
-  "career.rival.youBeat": ({ name, gap }) => `You beat ${name} by ${plural(gap, { one: `${gap} point`, other: `${gap} points` })}`,
-  "career.rival.tieBeatYou": ({ name }) => `${name} finished ahead of you on a tie-break`,
-  "career.rival.youTie": ({ name }) => `You finished ahead of ${name} on a tie-break`,
+  "career.rival.beatYou": ({ name, gap }) =>
+    `${name} beat you by ${plural(gap, { one: `${gap} point`, other: `${gap} points` })}`,
+  "career.rival.youBeat": ({ name, gap }) =>
+    `You beat ${name} by ${plural(gap, { one: `${gap} point`, other: `${gap} points` })}`,
+  "career.rival.tieBeatYou": ({ name }) =>
+    `${name} finished ahead of you on a tie-break`,
+  "career.rival.youTie": ({ name }) =>
+    `You finished ahead of ${name} on a tie-break`,
   "career.summary.title": ({ season }) => `Season ${season} finished`,
   "career.summary.result": ({ place, points }) =>
     `You finish the Season in ${ordinal(place)} place with ${plural(points, { one: `${points} point`, other: `${points} points` })}.`,
   "career.summary.places": "Regatta places",
   "career.summary.rivals": "Against your Rivals",
+  "career.summary.outgrown": ({ kg }) =>
+    `At ${kg} kg you are growing out of the Optimist's sweet spot (about 35-50 kg): the 420 awaits.`,
   "career.summary.next": "Next Season",
   "career.next.title": ({ season }) => `Season ${season}: what next?`,
-  "career.next.help": "Stay in the Optimist, or move to the 420 with a Partner you have raced against?",
+  "career.next.help":
+    "Stay in the Optimist, or move to the 420 with a Partner you have raced against?",
   "career.next.stay": "Stay in the Optimist",
   "career.next.move": "Move to the 420",
-  "career.next.partner": "Pick your Partner among the sailors you raced against. Chemistry grows with the Seasons raced together.",
-  "career.next.chemistry": ({ chemistry }) => `Chemistry ${chemistry}/100`,
+  "career.next.partner":
+    "Pick your Partner among the sailors you raced against. Chemistry grows with the Seasons raced together.",
+  "career.next.chemistry": ({ chemistry, kg }) =>
+    `Chemistry ${chemistry}/100 · ${kg} kg`,
+  "career.next.pair": ({ kg, hint }) => `Pair ${kg} kg · ${hint}`,
+  "career.next.hint.light": "light",
+  "career.next.hint.ideal": "ideal weight",
+  "career.next.hint.heavy": "heavy",
   "career.next.start": "Start the Season",
 
   // Touch wording: on a touch screen `t` and `lookup` read "<key>.touch" instead of "<key>" when it exists
   // (see index.ts), for the messages that name a key. A variant takes the same parameters as its message.
-  "menu.roleHelp.crew.touch": "Your Partner steers. You: drag the sail trim bar for the jib (or spinnaker) sheet and the top bar for your weight, in/out up to the trapeze; tap Switch sides after tacks and gybes and Spi to hoist/drop the spinnaker. Listen for their calls.",
-  "menu.roleHelp.fullBoat.touch": "Helm and mainsail, and you call the manoeuvres: tap Spi to hoist/drop the spinnaker. The Crew carries them out (faster when Crew Chemistry is high).",
+  "menu.roleHelp.crew.touch":
+    "Your Partner steers. You: drag the sail trim bar for the jib (or spinnaker) sheet and the top bar for your weight, in/out up to the trapeze; tap Switch sides after tacks and gybes and Spi to hoist/drop the spinnaker. Listen for their calls.",
+  "menu.roleHelp.fullBoat.touch":
+    "Helm and mainsail, and you call the manoeuvres: tap Spi to hoist/drop the spinnaker. The Crew carries them out (faster when Crew Chemistry is high).",
   "pause.restartHint.touch": "Tap Restart to sail the race again",
   "results.hint.touch": "Tap Another race or Menu",
   "hud.hint.touch": "Tiller on the left, sheet on the right: use both thumbs",
   "hud.partnerLine.crewOnCall.touch": ({ name, weight, spi }) =>
     `${name}: ${weight} · spinnaker ${spi} · tap Spi to hoist/drop`,
-  "call.switchSide.touch": ({ name }) => `${name}: “Switch sides!” → tap Switch sides`,
-  "call.spiHoist.touch": ({ name }) => `${name}: “Hoist the spinnaker!” → tap Spi`,
+  "call.switchSide.touch": ({ name }) =>
+    `${name}: “Switch sides!” → tap Switch sides`,
+  "call.spiHoist.touch": ({ name }) =>
+    `${name}: “Hoist the spinnaker!” → tap Spi`,
   "call.spiDrop.touch": ({ name }) => `${name}: “Drop it!” → tap Spi`,
-  "call.hikeOut.touch": ({ name }) => `${name}: “Hike out! We're heeling” → drag your weight right`,
-  "call.comeIn.touch": ({ name }) => `${name}: “In! We'll capsize to windward” → drag your weight left`,
-  "coach.partnerTack.touch": ({ name }) => `${name}: “Tacking!” — tap Switch sides`,
-  "coach.partnerGybe.touch": ({ name }) => `${name}: “Gybing!” — tap Switch sides`,
-  "coach.irons.tiller.touch": "You're stuck head to wind: ease the sheet and push the tiller to bear away",
-  "coach.irons.boat.touch": "You're stuck head to wind: ease the sheet and bear away with the helm",
+  "call.hikeOut.touch": ({ name }) =>
+    `${name}: “Hike out! We're heeling” → drag your weight right`,
+  "call.comeIn.touch": ({ name }) =>
+    `${name}: “In! We'll capsize to windward” → drag your weight left`,
+  "call.flatten.touch": ({ name }) =>
+    `${name}: “Flatten! Ease the main” → drag the sheet to EASE`,
+  "call.easeHike.touch": ({ name }) =>
+    `${name}: “Ease and hike!” → ease the main and drag your weight to OUT`,
+  "coach.partnerTack.touch": ({ name }) =>
+    `${name}: “Tacking!” — tap Switch sides`,
+  "coach.partnerGybe.touch": ({ name }) =>
+    `${name}: “Gybing!” — tap Switch sides`,
+  "coach.irons.tiller.touch":
+    "You're stuck head to wind: ease the sheet and push the tiller to bear away",
+  "coach.irons.boat.touch":
+    "You're stuck head to wind: ease the sheet and bear away with the helm",
   "trim.jibBacked.touch": "Jib backed! Tap Switch sides",
   "toast.camera.free.touch": "Camera: free (drag with your finger)",
 
@@ -326,6 +407,7 @@ export const english: Catalog = {
   "touch.pause": "Pause",
   "touch.camera": "Camera",
   "touch.autoTrim": "Auto-trim",
+  "touch.autoHike": "Auto-hike",
   "touch.spinnaker": "Spi",
   "touch.switchSide": "Switch sides",
   "touch.restart": "Restart",

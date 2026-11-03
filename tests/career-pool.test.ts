@@ -14,7 +14,9 @@ describe("sailor pool", () => {
 
   it("is the same for the same seed and age, and differs with the seed", () => {
     expect(generatePool(2024, 10)).toEqual(pool);
-    expect(generatePool(2025, 10).map(s => s.name)).not.toEqual(pool.map(s => s.name));
+    expect(generatePool(2025, 10).map((s) => s.name)).not.toEqual(
+      pool.map((s) => s.name),
+    );
   });
 
   it("starts with the three Rivals in character but as talented kids of their age", () => {
@@ -30,22 +32,26 @@ describe("sailor pool", () => {
   it("adds 27 generated sailors with Italian names that no roster sailor has, and unique ids", () => {
     const generated = pool.slice(3);
     expect(generated.length).toBe(27);
-    const taken = [...RIVALS, ...CREWS, EXTRA_HELM].flatMap(s => [s.id, s.name.toLowerCase()]);
+    const taken = [...RIVALS, ...CREWS, EXTRA_HELM].flatMap((s) => [
+      s.id,
+      s.name.toLowerCase(),
+    ]);
     for (const s of generated) {
       expect(s.name).toMatch(/^[A-Z][a-z]+$/);
       expect(s.id).toBe(s.name.toLowerCase());
       expect(taken.includes(s.id)).toBe(false);
     }
-    expect(new Set(pool.map(s => s.id)).size).toBe(30);
-    expect(new Set(pool.map(s => s.name)).size).toBe(30);
+    expect(new Set(pool.map((s) => s.id)).size).toBe(30);
+    expect(new Set(pool.map((s) => s.name)).size).toBe(30);
   });
 
   it("keeps every attribute within 0..1 and gives generated sailors no shared history yet", () => {
-    for (const s of pool) for (const a of ATTRIBUTES) {
-      expect(s[a]).toBeGreaterThanOrEqual(0);
-      expect(s[a]).toBeLessThanOrEqual(1);
-    }
-    expect(pool.slice(3).every(s => s.bond === undefined)).toBe(true);
+    for (const s of pool)
+      for (const a of ATTRIBUTES) {
+        expect(s[a]).toBeGreaterThanOrEqual(0);
+        expect(s[a]).toBeLessThanOrEqual(1);
+      }
+    expect(pool.slice(3).every((s) => s.bond === undefined)).toBe(true);
   });
 
   it("draws sailors of every level, from club to international", () => {

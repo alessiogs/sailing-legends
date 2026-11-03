@@ -17,7 +17,12 @@ import { english } from "./en";
 import { italian } from "./it";
 import type { Language } from "./language";
 
-export { chooseLanguage, isLanguage, LANGUAGES, type Language } from "./language";
+export {
+  chooseLanguage,
+  isLanguage,
+  LANGUAGES,
+  type Language,
+} from "./language";
 
 /** The messages of one language. */
 export type Catalog = { readonly [K in MessageKey]: (typeof italian)[K] };
@@ -25,9 +30,16 @@ export type Catalog = { readonly [K in MessageKey]: (typeof italian)[K] };
 export type MessageKey = keyof typeof italian;
 
 /** The parameters a message takes, as a rest tuple: empty for a plain string. */
-export type MessageParams<K extends MessageKey> = (typeof italian)[K] extends (params: infer P) => string ? [params: P] : [];
+export type MessageParams<K extends MessageKey> = (typeof italian)[K] extends (
+  params: infer P,
+) => string
+  ? [params: P]
+  : [];
 
-const catalogs: Readonly<Record<Language, Catalog>> = { it: italian, en: english };
+const catalogs: Readonly<Record<Language, Catalog>> = {
+  it: italian,
+  en: english,
+};
 
 /** Italian until `setLanguage` says otherwise, so code and tests that never choose a language read Italian. */
 let language: Language = "it";
@@ -58,9 +70,14 @@ function message(key: string): unknown {
 }
 
 /** The text of a message in the active language. */
-export function t<K extends MessageKey>(key: K, ...params: MessageParams<K>): string {
+export function t<K extends MessageKey>(
+  key: K,
+  ...params: MessageParams<K>
+): string {
   const found = message(key) as string | ((params: never) => string);
-  return typeof found === "string" ? found : (found as (p: unknown) => string)(params[0]);
+  return typeof found === "string"
+    ? found
+    : (found as (p: unknown) => string)(params[0]);
 }
 
 /**

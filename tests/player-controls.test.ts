@@ -3,21 +3,52 @@
  * Crew weight, side switch, the spinnaker key, Auto-trim and the browser autopilot.
  */
 import { describe, expect, it } from "vitest";
-import { PlayerControls, type Assists, type PlayerInput } from "../src/game/PlayerControls";
+import {
+  defaultAutoHike,
+  PlayerControls,
+  type Assists,
+  type PlayerInput,
+} from "../src/game/PlayerControls";
 import { t } from "../src/i18n";
-import { CREW, FULL_BOAT, HELM, type PlayerChoice } from "../src/race/PlayerChoice";
+import {
+  CREW,
+  FULL_BOAT,
+  HELM,
+  type PlayerChoice,
+} from "../src/race/PlayerChoice";
 import { makeFleet } from "../src/race/Fleet";
 import { RaceSession } from "../src/race/RaceSession";
 import { I420, OPTIMIST, type BoatClass } from "../src/sailing/BoatClass";
 import { AUTOPILOT_HELM } from "../src/sailors/Sailors";
 
-function setup(choice: PlayerChoice, boatClass: BoatClass = I420, autoTrim = false) {
-  const session = new RaceSession({ seed: 7, fleet: makeFleet({ boatClass, choice }) });
+function setup(
+  choice: PlayerChoice,
+  boatClass: BoatClass = I420,
+  autoTrim = false,
+  autoHike = false,
+) {
+  const session = new RaceSession({
+    seed: 7,
+    fleet: makeFleet({ boatClass, choice }),
+  });
   session.step(1 / 60); // fills the telemetry
-  const input: PlayerInput = { role: choice.role, rudder: 0.4, sheet: 0.3, crewOut: 0.8 };
-  const assists: Assists = { autoTrim };
+  const input: PlayerInput = {
+    role: choice.role,
+    rudder: 0.4,
+    sheet: 0.3,
+    crewOut: 0.8,
+    helmOut: 0.6,
+  };
+  const assists: Assists = { autoTrim, autoHike };
   const controls = new PlayerControls(input, assists);
-  return { session, input, assists, controls, pc: session.playerControls, p: session.player! };
+  return {
+    session,
+    input,
+    assists,
+    controls,
+    pc: session.playerControls,
+    p: session.player!,
+  };
 }
 
 describe("player controls", () => {
@@ -72,21 +103,33 @@ describe("player controls", () => {
   });
 
   it("answers the spinnaker key per Role and Control mode", () => {
-    expect(setup(HELM, OPTIMIST).controls.callSpinnaker(setup(HELM, OPTIMIST).session)).toBe(null);
+    expect(
+      setup(HELM, OPTIMIST).controls.callSpinnaker(
+        setup(HELM, OPTIMIST).session,
+      ),
+    ).toBe(null);
 
     const crew = setup(CREW);
-    expect(crew.controls.callSpinnaker(crew.session)).toBe(t("toast.spi.hoist"));
+    expect(crew.controls.callSpinnaker(crew.session)).toBe(
+      t("toast.spi.hoist"),
+    );
     expect(crew.pc.spi).toBe(true);
     expect(crew.controls.callSpinnaker(crew.session)).toBe(t("toast.spi.drop"));
     expect(crew.pc.spi).toBe(false);
 
     const full = setup(FULL_BOAT);
-    expect(full.controls.callSpinnaker(full.session)).toBe(t("toast.spi.callHoist"));
+    expect(full.controls.callSpinnaker(full.session)).toBe(
+      t("toast.spi.callHoist"),
+    );
     expect(full.session.partnerCrew!.spiCommand).toBe(true);
-    expect(full.controls.callSpinnaker(full.session)).toBe(t("toast.spi.callDrop"));
+    expect(full.controls.callSpinnaker(full.session)).toBe(
+      t("toast.spi.callDrop"),
+    );
 
     const helm = setup(HELM);
-    expect(helm.controls.callSpinnaker(helm.session)).toBe(t("toast.spi.partnerDecides", { name: helm.session.partner!.name }));
+    expect(helm.controls.callSpinnaker(helm.session)).toBe(
+      t("toast.spi.partnerDecides", { name: helm.session.partner!.name }),
+    );
     expect(helm.pc.spi).toBe(false);
   });
 
@@ -114,6 +157,41 @@ describe("player controls", () => {
     controls.autopilotOn = true;
     controls.apply(1 / 60, session);
     expect([pc.rudder, pc.sheet]).toEqual(before);
-    expect([pc.jibSheet, pc.crewOut]).toEqual([p.sim.telemetry.jib!.optimal, p.sim.telemetry.crew!.ideal]);
+    expect([pc.jibSheet, pc.crewOut]).toEqual([
+      p.sim.telemetry.jib!.optimal,
+      p.sim.telemetry.crew!.ideal,
+    ]);
+  });
+
+  it("has Auto-hike on by default for the Helm and Full Boat Control, off for the Crew", () => {
+    expect(defaultAutoHike(HELM)).toBe(true);
+    expect(defaultAutoHike(FULL_BOAT)).toBe(true);
+    expect(defaultAutoHike(CREW)).toBe(false);
+  });
+
+  it("hikes the Helm by hand without Auto-hike and leaves the weight to the physics with it", () => {
+    const hand = setup(HELM);
+    hand.controls.apply(1 / 60, hand.session);
+    expect(hand.pc.helmOut).toBe(0.6);
+    const auto = setup(HELM, I420, false, true);
+    auto.controls.apply(1 / 60, auto.session);
+    expect(auto.pc.helmOut).toBe(undefined);
+  });
+
+  it("hikes the Crew to the ideal with Auto-hike, and by hand without it", () => {
+    const auto = setup(CREW, I420, false, true);
+    auto.controls.apply(1 / 60, auto.session);
+    expect(auto.pc.crewOut).toBe(auto.p.sim.telemetry.crew!.ideal);
+  });
+
+  it("hands back the weight where it is when Auto-hike is switched off", () => {
+    const helm = setup(HELM, I420, false, true);
+    helm.p.sim.state.helmOut = 0.35;
+    helm.controls.autoHikeOff(helm.session);
+    expect(helm.input.helmOut).toBe(0.35);
+    const crew = setup(CREW, I420, false, true);
+    crew.p.sim.state.crewOut = 0.45;
+    crew.controls.autoHikeOff(crew.session);
+    expect(crew.input.crewOut).toBe(0.45);
   });
 });

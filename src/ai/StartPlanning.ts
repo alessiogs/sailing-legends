@@ -11,7 +11,13 @@ import { CLOSE_HAULED } from "./angles";
  */
 export interface CourseSteering {
   /** Heading toward a point, tacking upwind when it lies inside the no-go zone. */
-  headingToward(p: Point, fromDir: number, x: number, z: number, heading: number): number;
+  headingToward(
+    p: Point,
+    fromDir: number,
+    x: number,
+    z: number,
+    heading: number,
+  ): number;
   /** Seconds since the Helm last decided to tack. */
   sinceTack(): number;
   /** Record a tack decided now. */
@@ -40,15 +46,23 @@ export class StartPlanning {
    * Draws two numbers from `rand` (the line point, then the start bias), in that order.
    * `k` is the Helm's size factor: the holding spot and the run speed scale with boat length.
    */
-  constructor(private race: Race, private profile: SailorProfile, private k: number, rand: () => number, slot: number) {
+  constructor(
+    private race: Race,
+    private profile: SailorProfile,
+    private k: number,
+    rand: () => number,
+    slot: number,
+  ) {
     const c = race.course;
     const t = 0.2 + slot * 0.25 + (rand() - 0.5) * 0.1;
     this.linePoint = {
       x: c.start.a.x + (c.start.b.x - c.start.a.x) * t,
       z: c.start.a.z + (c.start.b.z - c.start.a.z) * t,
     };
-    const back = 15 * k, right = 13 * k;
-    const rx = dirX(c.windDir + Math.PI / 2), rz = dirZ(c.windDir + Math.PI / 2);
+    const back = 15 * k,
+      right = 13 * k;
+    const rx = dirX(c.windDir + Math.PI / 2),
+      rz = dirZ(c.windDir + Math.PI / 2);
     this.holdSpot = {
       x: this.linePoint.x - dirX(c.windDir) * back + rx * right,
       z: this.linePoint.z - dirZ(c.windDir) * back + rz * right,
@@ -69,7 +83,13 @@ export class StartPlanning {
   }
 
   /** Before the gun: hold below the line, then run to it so as to cross around the gun. */
-  prestart(steering: CourseSteering, s: BoatState, tel: Telemetry, windSpeed: number, fromDir: number): StartSteer {
+  prestart(
+    steering: CourseSteering,
+    s: BoatState,
+    tel: Telemetry,
+    windSpeed: number,
+    fromDir: number,
+  ): StartSteer {
     const race = this.race;
     let desired: number;
     let sheet = tel.optimalSheet;
@@ -88,7 +108,13 @@ export class StartPlanning {
         desired = wrapPi(fromDir + Math.PI * 0.75 * (tel.twa >= 0 ? -1 : 1));
         debug = "back off";
       } else if (!this.holding) {
-        desired = steering.headingToward(this.holdSpot, fromDir, s.x, s.z, s.heading);
+        desired = steering.headingToward(
+          this.holdSpot,
+          fromDir,
+          s.x,
+          s.z,
+          s.heading,
+        );
         debug = "to hold";
       } else {
         // Hold position: close reach with the sail luffing.
@@ -101,45 +127,75 @@ export class StartPlanning {
       desired = this.toStartLine(steering, fromDir, s.x, s.z, s.heading);
       // Early? Spill wind to kill time (disciplined sailors are more careful).
       const eta = runDist / Math.max(tel.speed, 0.5);
-      const margin = 1.5 * this.profile.discipline - (1 - this.profile.discipline) * 2;
-      if (race.clock + eta < -margin - 1.5 && above < -1.5 && tel.speed > 0.6) sheet = Math.min(1, tel.optimalSheet + 0.3);
+      const margin =
+        1.5 * this.profile.discipline - (1 - this.profile.discipline) * 2;
+      if (race.clock + eta < -margin - 1.5 && above < -1.5 && tel.speed > 0.6)
+        sheet = Math.min(1, tel.optimalSheet + 0.3);
       debug = "go";
     }
     return { desired, sheet, debug };
   }
 
   /** After the gun, until the boat has started: an OCS boat ducks back below the line, then sails across. */
-  afterGun(steering: CourseSteering, racer: Racer, tel: Telemetry, fromDir: number): StartSteer {
+  afterGun(
+    steering: CourseSteering,
+    racer: Racer,
+    tel: Telemetry,
+    fromDir: number,
+  ): StartSteer {
     const s = racer.sim.state;
     if (racer.ocs && !racer.clearedBack) {
       // Bear away on the current side (never tack) to get back below the line.
-      return { desired: wrapPi(fromDir + Math.PI - (Math.sign(tel.twa) || 1) * 0.35), sheet: 1, debug: "ocs return" };
+      return {
+        desired: wrapPi(fromDir + Math.PI - (Math.sign(tel.twa) || 1) * 0.35),
+        sheet: 1,
+        debug: "ocs return",
+      };
     }
-    return { desired: this.toStartLine(steering, fromDir, s.x, s.z, s.heading), sheet: tel.optimalSheet, debug: "restart" };
+    return {
+      desired: this.toStartLine(steering, fromDir, s.x, s.z, s.heading),
+      sheet: tel.optimalSheet,
+      debug: "restart",
+    };
   }
 
   /**
    * Heading for crossing the start line: stay close-hauled on starboard if that course hits the line
    * between the committee boat and the pin, otherwise head for the middle of the line.
    */
-  private toStartLine(steering: CourseSteering, fromDir: number, x: number, z: number, heading: number): number {
+  private toStartLine(
+    steering: CourseSteering,
+    fromDir: number,
+    x: number,
+    z: number,
+    heading: number,
+  ): number {
     const c = this.race.course;
-    const a = c.start.a, b = c.start.b;
-    const ex = b.x - a.x, ez = b.z - a.z, len = Math.hypot(ex, ez);
+    const a = c.start.a,
+      b = c.start.b;
+    const ex = b.x - a.x,
+      ez = b.z - a.z,
+      len = Math.hypot(ex, ez);
     const fetches = (h: number) => {
-      const dx = Math.sin(h), dz = Math.cos(h);
+      const dx = Math.sin(h),
+        dz = Math.cos(h);
       const den = dx * ez - dz * ex;
       if (Math.abs(den) < 1e-6) return false;
       const t = ((a.x - x) * ez - (a.z - z) * ex) / den;
       const u = ((a.x - x) * dz - (a.z - z) * dx) / den;
       return t > 0 && u > 4 / len && u < 1 - 6 / len;
     };
-    const stbd = wrapPi(fromDir - CLOSE_HAULED), port = wrapPi(fromDir + CLOSE_HAULED);
+    const stbd = wrapPi(fromDir - CLOSE_HAULED),
+      port = wrapPi(fromDir + CLOSE_HAULED);
     const onStbd = angleDiff(heading, fromDir) > 0;
-    const cur = onStbd ? stbd : port, other = onStbd ? port : stbd;
+    const cur = onStbd ? stbd : port,
+      other = onStbd ? port : stbd;
     // Keep the current tack if it reaches the line; tack only when necessary (and not too often).
     if (fetches(cur)) return cur;
-    if (fetches(other) && steering.sinceTack() > 6) { steering.tackNow(); return other; }
+    if (fetches(other) && steering.sinceTack() > 6) {
+      steering.tackNow();
+      return other;
+    }
     const mid = { x: (a.x + b.x) / 2, z: (a.z + b.z) / 2 };
     return steering.headingToward(mid, fromDir, x, z, heading);
   }

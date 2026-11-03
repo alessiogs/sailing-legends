@@ -12,14 +12,24 @@ const DT = 1 / 60;
 const MAX_RACE_S = 900;
 
 /** [seed, wind in knots]: medium, light and strong wind. */
-const RACES: [number, number][] = [[11, 11], [3, 7], [5, 16]];
+const RACES: [number, number][] = [
+  [11, 11],
+  [3, 7],
+  [5, 16],
+];
 
 describe("AI-only races", () => {
   for (const cls of [OPTIMIST, I420]) {
     for (const [seed, windKn] of RACES) {
       it(`${cls.name} seed ${seed} ${windKn} kn: every boat finishes and serves every penalty`, () => {
-        const s = new RaceSession({ seed, windKn, fleet: makeFleet({ boatClass: cls, withPlayer: false }) });
-        let t = 0, given = 0, served = 0;
+        const s = new RaceSession({
+          seed,
+          windKn,
+          fleet: makeFleet({ boatClass: cls, withPlayer: false }),
+        });
+        let t = 0,
+          given = 0,
+          served = 0;
         while (s.race.phase !== "done" && t < MAX_RACE_S) {
           s.step(DT);
           t += DT;
@@ -28,8 +38,12 @@ describe("AI-only races", () => {
             if (e.kind === "penalty-done") served++;
           }
         }
-        const finished = s.race.racers.filter(r => r.finishTime !== null).length;
-        console.log(`${cls.name.padEnd(8)} seed ${seed} ${windKn} kn: ${finished}/${s.race.racers.length} finished in ${t.toFixed(0)} s, penalties ${served}/${given} served`);
+        const finished = s.race.racers.filter(
+          (r) => r.finishTime !== null,
+        ).length;
+        console.log(
+          `${cls.name.padEnd(8)} seed ${seed} ${windKn} kn: ${finished}/${s.race.racers.length} finished in ${t.toFixed(0)} s, penalties ${served}/${given} served`,
+        );
 
         expect(s.race.phase).toBe("done");
         expect(finished).toBe(s.race.racers.length);

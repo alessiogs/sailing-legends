@@ -11,18 +11,25 @@ const TRIMMED = "trimmed";
 
 /** Trims the panel until its bottom is above every control below it, or nothing is left to trim. */
 export function fitPanel(panel: HTMLElement) {
-  for (const el of [panel, ...Array.from(panel.querySelectorAll(`.${TRIMMED}`))]) el.classList.remove(TRIMMED);
+  for (const el of [
+    panel,
+    ...Array.from(panel.querySelectorAll(`.${TRIMMED}`)),
+  ])
+    el.classList.remove(TRIMMED);
   if (panel.classList.contains("hidden")) return;
 
   /** The lowest the panel's bottom may be: just above the first box below it that shares its columns, else the screen's edge. */
   const limit = () => {
     const mine = panel.getBoundingClientRect();
     let bottom = window.innerHeight - 8;
-    for (const other of Array.from(document.querySelectorAll<HTMLElement>("#hud [data-hud]"))) {
+    for (const other of Array.from(
+      document.querySelectorAll<HTMLElement>("#hud [data-hud]"),
+    )) {
       if (other === panel) continue;
       const r = other.getBoundingClientRect();
       if (r.width === 0 || r.height === 0) continue;
-      if (r.left < mine.right && r.right > mine.left && r.top >= mine.top) bottom = Math.min(bottom, r.top - 8);
+      if (r.left < mine.right && r.right > mine.left && r.top >= mine.top)
+        bottom = Math.min(bottom, r.top - 8);
     }
     return bottom;
   };
@@ -36,7 +43,9 @@ export function fitPanel(panel: HTMLElement) {
 
   trim(...Array.from(panel.querySelectorAll(".panel-line")));
   trim(...Array.from(panel.querySelectorAll("#minimap")));
-  const rows = Array.from(panel.querySelectorAll("#standings li")).filter(li => !li.classList.contains("me"));
+  const rows = Array.from(panel.querySelectorAll("#standings li")).filter(
+    (li) => !li.classList.contains("me"),
+  );
   trim(...rows.slice(3).reverse());
   trim(...Array.from(panel.querySelectorAll(".panel-stats")));
   // Nothing left to trim and still no room (messages fill the column): the panel steps aside until they go.

@@ -29,7 +29,14 @@ export class WindField {
   private rand: () => number;
   private phase: number[];
 
-  constructor(opts: { seed?: number; meanDirDeg?: number; meanSpeedKn?: number; puffCount?: number } = {}) {
+  constructor(
+    opts: {
+      seed?: number;
+      meanDirDeg?: number;
+      meanSpeedKn?: number;
+      puffCount?: number;
+    } = {},
+  ) {
     this.rand = rng(opts.seed ?? 7);
     this.meanDir = (opts.meanDirDeg ?? 0) * DEG;
     this.meanSpeed = (opts.meanSpeedKn ?? 11) / 1.943844;
@@ -44,7 +51,8 @@ export class WindField {
   private spawnPuff(anywhere: boolean): Puff {
     const b = this.bounds;
     // Puffs enter from the windward (upwind) edge of the course and drift downwind.
-    const upwindX = Math.sin(this.meanDir), upwindZ = Math.cos(this.meanDir);
+    const upwindX = Math.sin(this.meanDir),
+      upwindZ = Math.cos(this.meanDir);
     let x = b.minX + this.rand() * (b.maxX - b.minX);
     let z = b.minZ + this.rand() * (b.maxZ - b.minZ);
     if (!anywhere) {
@@ -52,9 +60,10 @@ export class WindField {
       z += upwindZ * 140;
     }
     return {
-      x, z,
+      x,
+      z,
       radius: 28 + this.rand() * 34,
-      strength: (0.9 + this.rand() * 1.6),
+      strength: 0.9 + this.rand() * 1.6,
       veer: (this.rand() - 0.5) * 14 * DEG,
       age: anywhere ? this.rand() * 40 : 0,
       life: 70 + this.rand() * 60,
@@ -73,7 +82,8 @@ export class WindField {
     this.time += dt;
     const dir = this.meanDir + this.shift();
     // Wind blows toward dir + PI.
-    const vx = -Math.sin(dir), vz = -Math.cos(dir);
+    const vx = -Math.sin(dir),
+      vz = -Math.cos(dir);
     for (let i = 0; i < this.puffs.length; i++) {
       const p = this.puffs[i];
       const drift = this.meanSpeed * 0.55;
@@ -81,7 +91,11 @@ export class WindField {
       p.z += vz * drift * dt;
       p.age += dt;
       const b = this.bounds;
-      const out = p.x < b.minX - 120 || p.x > b.maxX + 120 || p.z < b.minZ - 120 || p.z > b.maxZ + 120;
+      const out =
+        p.x < b.minX - 120 ||
+        p.x > b.maxX + 120 ||
+        p.z < b.minZ - 120 ||
+        p.z > b.maxZ + 120;
       if (p.age > p.life || out) this.puffs[i] = this.spawnPuff(false);
     }
   }
@@ -94,11 +108,13 @@ export class WindField {
   }
 
   sample(x: number, z: number): WindSample {
-    let speed = this.meanSpeed * (1 + 0.05 * Math.sin(this.time * 0.21 + this.phase[2]));
+    let speed =
+      this.meanSpeed * (1 + 0.05 * Math.sin(this.time * 0.21 + this.phase[2]));
     let dir = this.meanDir + this.shift();
     let puffAmt = 0;
     for (const p of this.puffs) {
-      const dx = x - p.x, dz = z - p.z;
+      const dx = x - p.x,
+        dz = z - p.z;
       const d2 = (dx * dx + dz * dz) / (p.radius * p.radius);
       if (d2 > 4) continue;
       const w = Math.exp(-d2 * 1.6) * WindField.puffFade(p);
