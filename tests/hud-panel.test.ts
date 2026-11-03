@@ -49,7 +49,7 @@ describe("HUD hike gauge", () => {
     s.helmOut = 0.5;
     const hike = panel(0, false, false).hike!;
     expect(hike.label).toBe("PESO TIMONIERE");
-    expect(hike.ends).toEqual(["◀ SOTTOVENTO", "FUORI ▶"]);
+    expect(hike.ends).toEqual(["SOTTOVENTO", "FUORI"]);
     // the 420 gauge runs from sitting to leeward (-0.4) to fully out (1)
     expect(hike.value).toBeCloseTo(0.9 / 1.4, 5);
     expect(hike.ideal).toBeCloseTo((tel.helm!.ideal + 0.4) / 1.4, 5);
@@ -58,7 +58,7 @@ describe("HUD hike gauge", () => {
     const o = setup(HELM, OPTIMIST);
     o.s.helmOut = 0.25;
     expect(o.panel(0, false, false).hike!.value).toBe(0.25);
-    expect(o.panel(0, false, false).hike!.ends).toEqual(["◀ DENTRO", "FUORI ▶"]);
+    expect(o.panel(0, false, false).hike!.ends).toEqual(["DENTRO", "FUORI"]);
     expect(setup(CREW).panel(0, false, false).hike).toBe(undefined);
   });
 });

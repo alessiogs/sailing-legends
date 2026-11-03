@@ -66,7 +66,7 @@ export class PlayerControls {
     if (this.autopilotOn) {
       if (!this.autopilot || this.autopilot.racer !== p) this.autopilot = new RacingAI(p, AUTOPILOT_HELM, session.race, 99, 3);
       const c = this.autopilot.update(dt, session.wind);
-      if (!session.partnerHelm) { pc.rudder = c.rudder; pc.sheet = c.sheet; }
+      if (!session.partnerHelm) { pc.rudder = c.rudder; pc.sheet = c.sheet; pc.helmOut = c.helmOut; pc.roll = c.roll; }
       if (input.role === "crew") this.autopilotCrew(session, pc, p);
       return;
     }

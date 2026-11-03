@@ -94,7 +94,7 @@ export function buildPanel({ session, role, control, twoPerson: two, tiller, aut
     const low = p.sim.cls.helmRighting.leewardMin, along = (out: number) => (out - low) / (1 - low);
     panel.hike = {
       label: t("hud.gauge.hike"), value: along(s.helmOut), centered: false, ideal: along(tel.helm!.ideal),
-      ends: [t(low < 0 ? "hud.gauge.leeward" : "hud.gauge.in"), t("hud.gauge.out")],
+      ends: [t(low < 0 ? "hud.slider.hikeLeeward" : "hud.slider.hikeIn"), t("hud.slider.hikeOut")],
     };
   }
   return panel;

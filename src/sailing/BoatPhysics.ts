@@ -113,6 +113,10 @@ export type Telemetry = {
 const AIR = 1.225;
 /** Roll tack: seconds after the boom crosses in which the roll counts, how long its effect lasts, and its peak push (m/s^2). */
 const ROLL_WINDOW = 1.2, ROLL_SPAN = 2.2, ROLL_ACCEL = 0.1;
+/** A hike this far up inside the window is a perfect roll (a hard hike rises about 0.84 in it); no rise at all is the worst. */
+const ROLL_FULL_RISE = 0.6;
+/** Unbalanced side force (N) below which the boat still counts as held flat, so a Helm hiking exactly at the ideal doesn't flicker. */
+const OVERPOWER_DEADBAND = 5;
 
 export function createBoat(x: number, z: number, heading: number): BoatState {
   return {
@@ -270,10 +274,13 @@ export function helmForce(cls: BoatClass, out: number, hike: number): number {
   return hike * h.inFrac * (1 + 2 * o / -h.leewardMin);
 }
 
-/** Inverse of helmForce for a force of at least `inFrac` of `hike`; sitting in below that. */
+/** Inverse of helmForce over the whole range, including the negative force of sitting to leeward (clamped to what the Helm can do). */
 export function helmOutFor(cls: BoatClass, force: number, hike: number): number {
   const h = cls.helmRighting;
-  return clamp(((force / hike) - h.inFrac) / (1 - h.inFrac), 0, 1);
+  const f = force / hike;
+  if (f >= h.inFrac) return clamp((f - h.inFrac) / (1 - h.inFrac), 0, 1);
+  if (h.leewardMin >= 0 || h.inFrac <= 0) return 0;
+  return clamp((f / h.inFrac - 1) * -h.leewardMin / 2, h.leewardMin, 0);
 }
 
 /** Inverse of crewForce: the weight position that gives `force` (clamped). */
@@ -309,6 +316,9 @@ export class BoatSim {
   private rollT = Infinity;
   private rollSum = 0;
   private rollQ = 0.5;
+  /** Manual roll: the Helm's weight (>= 0) when the boom crossed, and the furthest it has risen above that since. */
+  private rollBase = 0;
+  private rollRise = 0;
   /** Where the sailors' weight sits fore-aft, 0 aft .. 1 forward. Automatic: the ideal for the wind (not a player control). */
   private weightFore = 1;
   /** How far the boat is planing (or has its bow up), 0..1; builds slowly and is lost quickly. */
@@ -332,16 +342,19 @@ export class BoatSim {
   }
 
   /**
-   * Roll tack or gybe: the quality is sampled over the first ROLL_WINDOW s after the boom crosses; then, for ROLL_SPAN s, an
+   * Roll tack or gybe: the quality is judged over the first ROLL_WINDOW s after the boom crosses; then, for ROLL_SPAN s, an
    * average roll changes nothing, a good one gives a push and a late or missing one a drag. It fades out from 6 to 10 kn.
+   * A manual Helm is judged by how far their hike rises inside the window from where it was at the crossing (a Helm already
+   * sitting to leeward before a gybe counts as starting from 0); the AI gives a quality and Auto-hike an average one.
    */
   private rollAccel(dt: number, controls: Controls, kn: number): number {
     if (this.rollT === Infinity) return 0;
     this.rollT += dt;
     if (this.rollT <= ROLL_WINDOW) {
-      const q = controls.roll ?? (controls.helmOut === undefined ? 0.5 : clamp(this.state.helmOut, 0, 1));
-      this.rollSum += q * dt;
-      if (this.rollT + dt > ROLL_WINDOW) this.rollQ = this.rollSum / ROLL_WINDOW;
+      const manual = controls.roll === undefined && controls.helmOut !== undefined;
+      if (manual) this.rollRise = Math.max(this.rollRise, clamp(this.state.helmOut, 0, 1) - this.rollBase);
+      else this.rollSum += (controls.roll ?? 0.5) * dt;
+      if (this.rollT + dt > ROLL_WINDOW) this.rollQ = manual ? clamp(this.rollRise / ROLL_FULL_RISE, 0, 1) : this.rollSum / ROLL_WINDOW;
       return 0;
     }
     const x = (this.rollT - ROLL_WINDOW) / ROLL_SPAN;
@@ -387,7 +400,8 @@ export class BoatSim {
     }
     if (leeward !== s.boomSide && (Math.abs(awa) < 170 * DEG || Math.abs(awa) < 2 * DEG)) {
       s.boomSide = leeward;
-      this.rollT = 0; this.rollSum = 0;
+      this.rollT = 0; this.rollSum = 0; this.rollRise = 0;
+      this.rollBase = clamp(s.helmOut, 0, 1);
     }
     if (controls.switchSide) {
       s.jibSide = s.spiSide = leeward;
@@ -415,21 +429,27 @@ export class BoatSim {
     drive += windage * -Math.cos(awa);
     side += windage * -Math.sin(awa);
 
-    // Weight is power in a breeze: heavier sailors hold the boat flatter and carry more sail, lighter ones less (fades out below ~9 kn).
-    const breeze = clamp((w.speed * KNOTS - 9) / 4, 0, 1);
-    drive *= 1 + 0.5 * (this.rightingScale - 1) * breeze;
-
-    // Righting: Crew weight (if any) plus the Helm hiking as much as needed.
+    // Weight is power in a breeze: heavier sailors hold the boat flatter and carry more sail, lighter ones less (fades out below
+    // ~9 kn). It only helps as far as righting is needed, so it vanishes downwind.
+    const tKn = w.speed * KNOTS, absTwa = Math.abs(twa);
+    const breeze = clamp((tKn - 9) / 4, 0, 1);
     const rawSide = side;
     const need = Math.abs(side);
+    const maxRighting = this.helmHike + (cls.crewRighting ? cls.crewRighting.trapezeForce * this.crewScale : 0);
+    drive *= 1 + 0.5 * (this.rightingScale - 1) * breeze * clamp(need / maxRighting, 0, 1);
+
+    // Righting: Crew weight (if any) plus the Helm hiking as much as needed.
     const crewOnWindward = s.crewSide === -leeward;
     const crewF = cls.crewRighting ? crewForce(cls, s.crewOut, this.crewScale) * (crewOnWindward ? 1 : -1) : 0;
     const hr = cls.helmRighting;
     const inF = hr.inFrac * this.helmHike;
-    const wanted = clamp(need - crewF, 0, this.helmHike); // the Helm hiking exactly as needed
-    // Where the Helm would sit for that: to leeward on a broad reach or run when almost nothing is needed (420), else as far out as needed.
-    const ideal = wanted > inF ? helmOutFor(cls, wanted, this.helmHike)
-      : hr.leewardMin < 0 && Math.abs(twa) > 110 * DEG && wanted < inF * 0.5 ? hr.leewardMin : 0;
+    const rawWanted = need - crewF;
+    const wanted = clamp(rawWanted, 0, this.helmHike); // the Helm hiking exactly as needed
+    // Where the Helm would sit for that: to leeward on a broad reach or run in light air when almost nothing is needed (420), only
+    // as far across as the heel that adds allows; else as far out as needed. Never to leeward while planing or in a breeze.
+    const toLeeward = hr.leewardMin < 0 && absTwa > 110 * DEG && wanted < inF * 0.5 && this.plane < 0.3 && tKn < 12;
+    const leewardF = clamp(rawWanted, -inF, inF);
+    const ideal = wanted > inF ? helmOutFor(cls, wanted, this.helmHike) : toLeeward ? helmOutFor(cls, leewardF, this.helmHike) : 0;
     let helmF: number;
     if (controls.helmOut === undefined) {
       // Auto-hike: as needed (the Optimist Helm never less than sitting on the side deck); the body follows with lag.
@@ -442,7 +462,7 @@ export class BoatSim {
     const balance = need - crewF - helmF; // > 0 overpowered, < 0 too much weight to windward
     const baseline = hr.windwardOnly ? inF : 0; // the Optimist Helm's weight on the side deck is free
     let overpowered = false;
-    if (balance > 0 && need > 0) {
+    if (balance > OVERPOWER_DEADBAND && need > 0) {
       // The sailors can't hold the boat flat: it heels and spills power.
       const k = Math.max(need - balance, 1) / need;
       drive *= Math.sqrt(k); // drive drops less than side force (sails twist off)
@@ -457,7 +477,6 @@ export class BoatSim {
     const au = Math.abs(u);
     // Fore-aft weight: forward upwind and in light air, aft on a reach or run in a breeze (planing). Once the weight is aft and the
     // boat is flat, the bow lifts (and a planing class gets onto the plane) and wave drag falls.
-    const tKn = w.speed * KNOTS, absTwa = Math.abs(twa);
     const breezy = clamp(tKn - 12, 0, 1); // 0 at 12 kn, 1 at 13 kn: nothing at 11 kn
     const downwind = clamp((absTwa - 75 * DEG) / (15 * DEG), 0, 1) * (cls.planing.planes ? clamp((172 * DEG - absTwa) / (10 * DEG), 0, 1) : 1);
     const aftRate = dt * 0.6 * (0.3 + 0.7 * this.foreAftSkill);
@@ -517,8 +536,7 @@ export class BoatSim {
       const heel = clamp(balance * cls.heelPerN * 1.4 + (need > 20 ? 4 : need * 0.2), -25, 40);
       t.heelDeg = heel * -Math.sign(awa || 1);
     } else {
-      const hiked = controls.helmOut === undefined ? Math.min(balance, 0) : balance; // weight out beyond need heels to windward
-      t.heelDeg = clamp(Math.abs(rawSide) * cls.heelPerN * 0.55 + hiked * cls.heelPerN * 0.8, -25, 32) * -Math.sign(awa || 1);
+      t.heelDeg = clamp(Math.abs(rawSide) * cls.heelPerN * 0.55 + balance * cls.heelPerN * 0.8, -25, 32) * -Math.sign(awa || 1);
     }
     t.optimalSheet = optimalSheet(cls, awa, aws, this.rightingScale);
     const irons = Math.abs(twa) < 36 * DEG && u < 1.2;

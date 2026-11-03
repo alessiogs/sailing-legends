@@ -8,11 +8,12 @@ import { I420, OPTIMIST, type BoatClass } from "../src/sailing/BoatClass";
 import { BoatSim, createBoat, type Controls } from "../src/sailing/BoatPhysics";
 import { WindField } from "../src/sailing/Wind";
 
-type Roll = "none" | "good" | "late" | "auto";
+type Roll = "none" | "good" | "early" | "late" | "auto";
 
 /**
  * Sails close-hauled on starboard tack, tacks, and returns the mean speed (kn) from 1.2 s to 9 s after the boom crossed.
- * `roll` is how the Helm hikes: not at all, hard from the start of the turn, only 1.6 s after the boom crossed, or
+ * `roll` is how the Helm hikes: not at all, hard from the instant the boom crosses ("good"), hard from the start of the turn so
+ * already out at the crossing ("early"), only 1.6 s after the boom crossed ("late"), or
  * leaving the weight to Auto-hike. `override` forces the roll quality (as the AI does) while the weight stays on Auto-hike.
  */
 function tack(cls: BoatClass, kn: number, roll: Roll, override?: number) {
@@ -37,7 +38,8 @@ function tack(cls: BoatClass, kn: number, roll: Roll, override?: number) {
     c.rudder = tacking && crossed < 0 ? 1 : Math.max(-1, Math.min(1, err * 2.6 - sim.state.yawRate * 0.6));
     if (tacking && crossed < 0 && sim.state.heading > 40 * DEG) c.rudder = 0.2;
     if (roll === "none") c.helmOut = 0;
-    else if (roll === "good") c.helmOut = tacking ? 0.9 : 0;
+    else if (roll === "good") c.helmOut = sinceCross >= 0 ? 0.9 : 0;
+    else if (roll === "early") c.helmOut = tacking ? 0.9 : 0;
     else if (roll === "late") c.helmOut = sinceCross > 1.6 ? 0.9 : 0;
     else c.helmOut = undefined;
     if (override !== undefined) c.roll = override;
@@ -58,6 +60,9 @@ describe("Roll tack", () => {
       expect(late).toBeLessThan(auto);
       expect(good).toBeGreaterThan(auto);
       expect(auto).toBeGreaterThan(none);
+    });
+    it(`${cls.name}: holding the hike from before the crossing does not score a perfect roll`, () => {
+      expect(tack(cls, 5, "early")).toBeLessThan(tack(cls, 5, "good"));
     });
     it(`${cls.name}: above 10 kn the roll hardly matters`, () => {
       const good = tack(cls, 14, "auto", 1), bad = tack(cls, 14, "auto", 0);
