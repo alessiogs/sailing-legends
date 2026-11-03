@@ -32,6 +32,11 @@ export type Controls = {
   spi?: boolean;
   /** Crew weight target: 0 = sitting in, 0.5 = hiking, 1 = on the trapeze. */
   crewOut?: number;
+  /**
+   * Helm weight target: 0 = sitting in, 1 = fully out; a 420 Helm may go below 0, sitting to leeward. Unset, the Helm
+   * hikes exactly as needed (Auto-hike).
+   */
+  helmOut?: number;
   /** One-shot: the Crew moves jib, spinnaker and their weight to the new side (after a tack/gybe). */
   switchSide?: boolean;
 };
@@ -55,6 +60,8 @@ export type BoatState = {
   spiSide: number;
   crewSide: number;
   crewOut: number;
+  /** The Helm's weight now, like `crewOut` but for the Helm (see `Controls.helmOut`). */
+  helmOut: number;
   /** 0 = spinnaker in its bag, 1 = fully hoisted. */
   spiHoist: number;
 };
@@ -84,6 +91,8 @@ export type Telemetry = {
   puff: number;
   jib?: { angle: number; aoa: number; optimal: number; trimState: TrimState; backed: boolean };
   spi?: { hoist: number; angle: number; optimal: number; trimState: TrimState; collapsed: boolean; wrongSide: boolean };
+  /** The Helm's weight: the ideal `helmOut` for the wind now, and the righting force (N) it gives. */
+  helm?: { ideal: number; force: number };
   crew?: {
     /** Where the Crew's weight should be (0..1) to keep the boat flat. */
     ideal: number;
@@ -98,7 +107,7 @@ const AIR = 1.225;
 export function createBoat(x: number, z: number, heading: number): BoatState {
   return {
     x, z, vx: 0, vz: 0, heading, yawRate: 0, rudder: 0, sheet: 0.5, boomSide: 1,
-    jibSheet: 0.5, spiSheet: 0.5, jibSide: 1, spiSide: 1, crewSide: -1, crewOut: 0.3, spiHoist: 0,
+    jibSheet: 0.5, spiSheet: 0.5, jibSide: 1, spiSide: 1, crewSide: -1, crewOut: 0.3, helmOut: 0, spiHoist: 0,
   };
 }
 
@@ -243,6 +252,20 @@ export function crewForce(cls: BoatClass, out: number, scale = 1): number {
   return f * scale;
 }
 
+/** Righting force (N) of the Helm at weight position `out`, given the force `hike` of hiking fully out (scaled to their weight). */
+export function helmForce(cls: BoatClass, out: number, hike: number): number {
+  const h = cls.helmRighting;
+  const o = clamp(out, h.leewardMin, 1);
+  if (o >= 0) return hike * (h.inFrac + (1 - h.inFrac) * o);
+  return hike * h.inFrac * (1 + 2 * o / -h.leewardMin);
+}
+
+/** Inverse of helmForce for a force of at least `inFrac` of `hike`; sitting in below that. */
+export function helmOutFor(cls: BoatClass, force: number, hike: number): number {
+  const h = cls.helmRighting;
+  return clamp(((force / hike) - h.inFrac) / (1 - h.inFrac), 0, 1);
+}
+
 /** Inverse of crewForce: the weight position that gives `force` (clamped). */
 export function crewOutFor(cls: BoatClass, forceIn: number, scale = 1): number {
   const c = cls.crewRighting;
@@ -358,8 +381,23 @@ export class BoatSim {
     const need = Math.abs(side);
     const crewOnWindward = s.crewSide === -leeward;
     const crewF = cls.crewRighting ? crewForce(cls, s.crewOut, this.crewScale) * (crewOnWindward ? 1 : -1) : 0;
-    const helmF = clamp(need - crewF, 0, this.helmHike);
+    const hr = cls.helmRighting;
+    const inF = hr.inFrac * this.helmHike;
+    const wanted = clamp(need - crewF, 0, this.helmHike); // the Helm hiking exactly as needed
+    // Where the Helm would sit for that: to leeward on a broad reach or run when almost nothing is needed (420), else as far out as needed.
+    const ideal = wanted > inF ? helmOutFor(cls, wanted, this.helmHike)
+      : hr.leewardMin < 0 && Math.abs(twa) > 110 * DEG && wanted < inF * 0.5 ? hr.leewardMin : 0;
+    let helmF: number;
+    if (controls.helmOut === undefined) {
+      // Auto-hike: as needed (the Optimist Helm never less than sitting on the side deck); the body follows with lag.
+      helmF = hr.windwardOnly ? Math.max(wanted, inF) : wanted;
+      s.helmOut += clamp(ideal - s.helmOut, -dt * 0.9, dt * 0.9);
+    } else {
+      s.helmOut += clamp(clamp(controls.helmOut, hr.leewardMin, 1) - s.helmOut, -dt * 0.9, dt * 0.7);
+      helmF = helmForce(cls, s.helmOut, this.helmHike);
+    }
     const balance = need - crewF - helmF; // > 0 overpowered, < 0 too much weight to windward
+    const baseline = hr.windwardOnly ? inF : 0; // the Optimist Helm's weight on the side deck is free
     let overpowered = false;
     if (balance > 0 && need > 0) {
       // The sailors can't hold the boat flat: it heels and spills power.
@@ -369,7 +407,7 @@ export class BoatSim {
       overpowered = true;
     } else if (balance < 0) {
       // Heeled to windward: the boat sails badly and the Helm fights it.
-      drive *= 1 - Math.min(0.4, -balance / 600);
+      drive *= 1 - Math.min(0.4, Math.max(0, -balance - baseline) / 600);
     }
 
     // Hull resistance (forward) and rudder drag.
@@ -424,7 +462,8 @@ export class BoatSim {
       const heel = clamp(balance * cls.heelPerN * 1.4 + (need > 20 ? 4 : need * 0.2), -25, 40);
       t.heelDeg = heel * -Math.sign(awa || 1);
     } else {
-      t.heelDeg = clamp(Math.abs(rawSide) * cls.heelPerN * 0.55, 0, 32) * -Math.sign(awa || 1);
+      const hiked = controls.helmOut === undefined ? Math.min(balance, 0) : balance; // weight out beyond need heels to windward
+      t.heelDeg = clamp(Math.abs(rawSide) * cls.heelPerN * 0.55 + hiked * cls.heelPerN * 0.8, -25, 32) * -Math.sign(awa || 1);
     }
     t.optimalSheet = optimalSheet(cls, awa, aws, this.rightingScale);
     const irons = Math.abs(twa) < 36 * DEG && u < 1.2;
@@ -446,6 +485,7 @@ export class BoatSim {
         trimState: trimStateFor(s.spiSheet, opt, awa),
       };
     }
+    t.helm = { ideal, force: helmF };
     if (cls.crewRighting) {
       // Ideal: the Helm hikes at ~80%, the Crew provides the rest.
       t.crew = { ideal: crewOutFor(cls, need - this.helmHike * 0.8, this.crewScale), onWindward: crewOnWindward, balance };

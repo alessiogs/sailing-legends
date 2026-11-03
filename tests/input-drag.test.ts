@@ -98,3 +98,60 @@ describe("Input drag source", () => {
     expect(i.consume()).toEqual([]);
   });
 });
+
+describe("Input hike keys", () => {
+  /** An Input whose key events the test fires itself. */
+  function keyed(role: "helm" | "crew" = "helm") {
+    const down: ((e: { key: string; repeat: boolean; preventDefault(): void }) => void)[] = [];
+    const up: ((e: { key: string }) => void)[] = [];
+    const i = new Input({
+      addEventListener(type: string, l: never) { if (type === "keydown") down.push(l); if (type === "keyup") up.push(l); },
+    } as never);
+    i.role = role;
+    const press = (key: string) => down.forEach(l => l({ key, repeat: false, preventDefault() {} }));
+    const release = (key: string) => up.forEach(l => l({ key }));
+    return { i, press, release };
+  }
+
+  it("hikes the Helm out with Q and in with Z, to the class's limits", () => {
+    const { i, press, release } = keyed();
+    i.helmOutMin = -0.4;
+    press("q");
+    for (let n = 0; n < 120; n++) i.update(1 / 60);
+    expect(i.helmOut).toBe(1);
+    release("q"); press("z");
+    for (let n = 0; n < 240; n++) i.update(1 / 60);
+    expect(i.helmOut).toBe(-0.4);
+  });
+  it("takes fine steps with Shift", () => {
+    const a = keyed(), b = keyed();
+    a.i.helmOut = b.i.helmOut = 0;
+    a.press("q"); b.press("shift"); b.press("q");
+    a.i.update(0.5); b.i.update(0.5);
+    expect(b.i.helmOut).toBeLessThan(a.i.helmOut / 2);
+    expect(b.i.helmOut).toBeGreaterThan(0);
+  });
+  it("moves the Crew's weight with Q and Z too", () => {
+    const { i, press } = keyed("crew");
+    i.crewOut = 0.5;
+    press("q");
+    i.update(0.25);
+    expect(i.crewOut).toBeGreaterThan(0.5);
+  });
+  it("presses the Auto-hike action with G", () => {
+    const { i, press } = keyed();
+    press("g");
+    expect(i.consume()).toEqual(["autoHike"]);
+  });
+  it("drags the hike slider: bottom in, top out, over the class's range", () => {
+    const i = input();
+    i.helmOutMin = -0.4;
+    i.dragHike(1); i.update(1 / 60);
+    expect(i.helmOut).toBe(1);
+    i.dragHike(0); i.update(1 / 60);
+    expect(i.helmOut).toBe(-0.4);
+    const c = input("crew");
+    c.dragHike(0.5); c.update(1 / 60);
+    expect(c.crewOut).toBe(0.5);
+  });
+});

@@ -1,5 +1,6 @@
 import { DEFAULT_CONTROLS } from "../core/ControlSettings";
 import type { Input } from "../core/Input";
+import { defaultAutoHike } from "../game/PlayerControls";
 import type { CareerResults, GameController, Mode, Screens } from "../game/GameController";
 import { LANGUAGES, t, type Language, type MessageKey } from "../i18n";
 import type { Racer } from "../race/Race";
@@ -31,6 +32,7 @@ export class Menus implements Screens {
   private readonly el = {
     menu: $("menu"), pause: $("pause"), results: $("results"), controls: $("controls"),
     autoTrim: $("auto-trim-opt") as HTMLInputElement,
+    autoHike: $("auto-hike-opt") as HTMLInputElement,
   };
   private game!: GameController;
   private readonly career = new CareerScreen({
@@ -94,6 +96,10 @@ export class Menus implements Screens {
   autoTrimChosen() { return this.el.autoTrim.checked; }
 
   showAutoTrim(on: boolean) { this.el.autoTrim.checked = on; }
+
+  autoHikeChosen() { return this.el.autoHike.checked; }
+
+  showAutoHike(on: boolean) { this.el.autoHike.checked = on; }
 
   // ---------- Wiring ----------
   /** Wires every menu button to `game` and shows the current settings and race setup. Call once, at startup. */
@@ -221,7 +227,11 @@ export class Menus implements Screens {
       });
     }
     for (const b of buttons("#role-opt button")) {
-      b.addEventListener("click", () => { game.choice = ROLE_OPTIONS[b.dataset.v as RoleOption].choice; this.syncBoatMenu(); });
+      b.addEventListener("click", () => {
+        game.choice = ROLE_OPTIONS[b.dataset.v as RoleOption].choice;
+        this.showAutoHike(defaultAutoHike(game.choice)); // Auto-hike starts on for the Helm and off for the Crew
+        this.syncBoatMenu();
+      });
     }
     this.syncBoatMenu();
   }

@@ -51,6 +51,12 @@ export type BoatClass = {
   turnLength: number;
   /** Max sideways sail force the Helm can hold by hiking (N). Above this the boat heels and spills power. */
   hikeForce: number;
+  /**
+   * Where the Helm's weight goes by `helmOut` (0 sitting in .. 1 fully out): sitting in still puts `inFrac` of `hikeForce` to
+   * windward, the least a Helm of this class ever does when `windwardOnly` (the Optimist Helm sits on the side deck, leaning in);
+   * otherwise `leewardMin` < 0 is how far below "in" the Helm may go, sitting to leeward.
+   */
+  helmRighting: { inFrac: number; windwardOnly: boolean; leewardMin: number };
   /** Two-person classes: righting force from the Crew sitting in, hiking, and on the trapeze (N). */
   crewRighting?: { inForce: number; hikeForce: number; trapezeForce: number };
   /** Visual heel angle per Newton of unbalanced side force (deg/N). */
@@ -74,6 +80,7 @@ export const OPTIMIST: BoatClass = {
   rudderMaxDeg: 34,
   turnLength: 1.25,
   hikeForce: 120,
+  helmRighting: { inFrac: 0.15, windwardOnly: true, leewardMin: 0 },
   heelPerN: 0.11,
 };
 
@@ -96,6 +103,7 @@ export const I420: BoatClass = {
   rudderMaxDeg: 32,
   turnLength: 2.2,
   hikeForce: 190,
+  helmRighting: { inFrac: 0.15, windwardOnly: false, leewardMin: -0.4 },
   crewRighting: { inForce: 40, hikeForce: 220, trapezeForce: 420 },
   heelPerN: 0.06,
 };

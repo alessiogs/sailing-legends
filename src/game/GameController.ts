@@ -30,7 +30,7 @@ import { Ocean } from "../world/Ocean";
 import { makeWaves, type Wave } from "../world/Waves";
 import type { CameraRig } from "./CameraRig";
 import { boatCrews } from "./boatCrews";
-import { PlayerControls, type Assists } from "./PlayerControls";
+import { defaultAutoHike, PlayerControls, type Assists } from "./PlayerControls";
 import { RaceFeedback, type Cue } from "./RaceFeedback";
 
 /** What the game is doing: each mode but racing shows its own screen. */
@@ -51,6 +51,10 @@ export interface Screens {
   autoTrimChosen(): boolean;
   /** Ticks or unticks the menu's Auto-trim option. */
   showAutoTrim(on: boolean): void;
+  /** Whether the menu's Auto-hike option is ticked. */
+  autoHikeChosen(): boolean;
+  /** Ticks or unticks the menu's Auto-hike option. */
+  showAutoHike(on: boolean): void;
 }
 
 /** What the controller works with, made once at startup. */
@@ -83,7 +87,7 @@ export class GameController {
   partner: SailorProfile = RIVALS[1];
   windKn = 11;
   /** The Assists the player has switched on. */
-  readonly assists: Assists = { autoTrim: false };
+  readonly assists: Assists = { autoTrim: false, autoHike: true };
 
   // ---------- Career ----------
   /** The Career being played, or `null` in Quick race and before one is started or continued. */
@@ -170,6 +174,7 @@ export class GameController {
     this.activeChoice = setup ? fleet.choice : this.choice;
     const session = this.session = new RaceSession({ seed, windKn, fleet });
     input.role = isTwoPerson(this.activeClass) ? this.activeChoice.role : "helm";
+    input.helmOutMin = this.activeClass.helmRighting.leewardMin;
     this.controls.newRace();
     this.feedback.newRace(session);
     this.waves = makeWaves(session.wind.meanDir, windKn);
@@ -197,6 +202,7 @@ export class GameController {
   startFromMenu() {
     this.sound.init();
     this.assists.autoTrim = this.screens.autoTrimChosen();
+    this.assists.autoHike = this.screens.autoHikeChosen();
     this.newRace();
     this.setMode("racing");
   }
@@ -274,6 +280,9 @@ export class GameController {
     if (!setup) return;
     this.sound.init();
     this.assists.autoTrim = this.screens.autoTrimChosen();
+    // A Career Race has its own Role: Auto-hike starts as that Role's default.
+    this.assists.autoHike = defaultAutoHike(isTwoPerson(setup.fleet.boatClass) ? setup.fleet.choice : { role: "helm", control: "playerCareer" });
+    this.screens.showAutoHike(this.assists.autoHike);
     this.newRace(setup);
     this.setMode("racing");
   }
@@ -347,6 +356,12 @@ export class GameController {
         this.screens.showAutoTrim(this.assists.autoTrim);
         if (!this.assists.autoTrim) this.controls.autoTrimOff(this.session);
         hud.toast(this.assists.autoTrim ? t("toast.autoTrimOn") : t("toast.autoTrimOff"));
+      }
+      if (a === "autoHike" && this._mode === "racing") {
+        this.assists.autoHike = !this.assists.autoHike;
+        this.screens.showAutoHike(this.assists.autoHike);
+        if (!this.assists.autoHike) this.controls.autoHikeOff(this.session);
+        hud.toast(this.assists.autoHike ? t("toast.autoHikeOn") : t("toast.autoHikeOff"));
       }
       if (a === "spi" && this._mode === "racing") {
         const text = this.controls.callSpinnaker(this.session);
@@ -443,7 +458,7 @@ export class GameController {
   private panel(session: RaceSession) {
     return buildPanel({
       session, role: this.input.role, control: this.activeChoice.control, twoPerson: isTwoPerson(this.activeClass),
-      tiller: this.input.tiller, autoTrim: this.assists.autoTrim,
+      tiller: this.input.tiller, autoTrim: this.assists.autoTrim, autoHike: this.assists.autoHike,
     });
   }
 }
