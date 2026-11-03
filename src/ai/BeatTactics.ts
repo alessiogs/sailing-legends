@@ -19,14 +19,23 @@ export class BeatTactics implements CourseSteering {
   label = "";
 
   /** `now` is the Helm's clock in seconds. */
-  constructor(private profile: SailorProfile, private now: () => number) {}
+  constructor(
+    private profile: SailorProfile,
+    private now: () => number,
+  ) {}
 
   /**
    * Heading toward a point, tacking upwind when it lies inside the no-go zone.
    * Picks the tack that points closer to the target; switches when the other tack is better by
    * a hysteresis margin (smaller for tactical sailors, so they tack on headers sooner).
    */
-  headingToward(p: Point, fromDir: number, x: number, z: number, heading: number): number {
+  headingToward(
+    p: Point,
+    fromDir: number,
+    x: number,
+    z: number,
+    heading: number,
+  ): number {
     const time = this.now();
     const brg = bearingTo(x, z, p.x, p.z);
     const offWind = Math.abs(angleDiff(fromDir, brg));
@@ -38,7 +47,8 @@ export class BeatTactics implements CourseSteering {
     const port = wrapPi(fromDir + CLOSE_HAULED);
     if (this.onStbd === null || time - this.lastBeat > 2) {
       // (Re)enter beating mode: keep whichever tack the boat is closest to now.
-      this.onStbd = Math.abs(angleDiff(heading, stbd)) < Math.abs(angleDiff(heading, port));
+      this.onStbd =
+        Math.abs(angleDiff(heading, stbd)) < Math.abs(angleDiff(heading, port));
     }
     this.lastBeat = time;
     const onStbd = this.onStbd;
@@ -47,16 +57,25 @@ export class BeatTactics implements CourseSteering {
     const hyst = (20 + (1 - this.profile.tactics) * 12) * DEG;
     const canTack = time - this.lastTack > 11;
     let useStbd = onStbd;
-    if (onStbd && errP + hyst < errS && canTack) { useStbd = false; this.lastTack = time; }
-    else if (!onStbd && errS + hyst < errP && canTack) { useStbd = true; this.lastTack = time; }
+    if (onStbd && errP + hyst < errS && canTack) {
+      useStbd = false;
+      this.lastTack = time;
+    } else if (!onStbd && errS + hyst < errP && canTack) {
+      useStbd = true;
+      this.lastTack = time;
+    }
     this.onStbd = useStbd;
     this.label = useStbd ? "beat stbd" : "beat port";
     return useStbd ? stbd : port;
   }
 
-  sinceTack(): number { return this.now() - this.lastTack; }
+  sinceTack(): number {
+    return this.now() - this.lastTack;
+  }
 
-  tackNow(): void { this.lastTack = this.now(); }
+  tackNow(): void {
+    this.lastTack = this.now();
+  }
 
   /** The Helm committed to a tack onto starboard (`stbd`) or port: the beat continues on that tack. */
   tackedOnto(stbd: boolean): void {
@@ -65,5 +84,7 @@ export class BeatTactics implements CourseSteering {
   }
 
   /** Leave the beat (penalty turns, stuck in irons): the tack is chosen afresh when beating resumes. */
-  leaveBeat(): void { this.onStbd = null; }
+  leaveBeat(): void {
+    this.onStbd = null;
+  }
 }

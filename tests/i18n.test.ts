@@ -13,13 +13,20 @@ describe("translation", () => {
   });
 
   it("fills a message's parameters", () => {
-    expect(t("call.switchSide", { name: "Giulia" })).toBe("Giulia: «Cambia lato!» → premi E");
+    expect(t("call.switchSide", { name: "Giulia" })).toBe(
+      "Giulia: «Cambia lato!» → premi E",
+    );
   });
 
   it("picks the plural form from the Italian plural rules", () => {
-    const owed = (turns: number) => t("hud.penalty", { turns, done: 0, total: turns * 360 });
-    expect(owed(1)).toBe("Penalità: 1 giro da fare (0° / 360°) · gira sempre nello stesso verso");
-    expect(owed(2)).toBe("Penalità: 2 giri da fare (0° / 720°) · gira sempre nello stesso verso");
+    const owed = (turns: number) =>
+      t("hud.penalty", { turns, done: 0, total: turns * 360 });
+    expect(owed(1)).toBe(
+      "Penalità: 1 giro da fare (0° / 360°) · gira sempre nello stesso verso",
+    );
+    expect(owed(2)).toBe(
+      "Penalità: 2 giri da fare (0° / 720°) · gira sempre nello stesso verso",
+    );
   });
 
   it("follows each language's own plural rules", () => {
@@ -33,10 +40,23 @@ describe("translation", () => {
   });
 
   it("words the Partner's line in the HUD panel as before", () => {
-    expect(t("hud.partnerLine.helm", { name: "Giulia", spi: "giù" })).toBe("Giulia al timone e alla randa · spi: giù");
-    expect(t("hud.partnerLine.crew", { name: "Giulia", weight: "al trapezio", spi: "su" })).toBe("Giulia: al trapezio · spi su");
-    expect(t("hud.partnerLine.crewOnCall", { name: "Giulia", weight: "dentro", spi: "giù" }))
-      .toBe("Giulia: dentro · spi giù · Spazio = issa/ammaina");
+    expect(t("hud.partnerLine.helm", { name: "Giulia", spi: "giù" })).toBe(
+      "Giulia al timone e alla randa · spi: giù",
+    );
+    expect(
+      t("hud.partnerLine.crew", {
+        name: "Giulia",
+        weight: "al trapezio",
+        spi: "su",
+      }),
+    ).toBe("Giulia: al trapezio · spi su");
+    expect(
+      t("hud.partnerLine.crewOnCall", {
+        name: "Giulia",
+        weight: "dentro",
+        spi: "giù",
+      }),
+    ).toBe("Giulia: dentro · spi giù · Spazio = issa/ammaina");
   });
 });
 

@@ -9,8 +9,16 @@ import type { CrewWeight, SpinnakerState } from "../sailing/BoatStates";
 export type WeightView = "own" | "partner";
 
 const WEIGHT = {
-  own: { in: "hud.weight.seated", hiking: "hud.weight.hiking", trapeze: "hud.weight.trapeze" },
-  partner: { in: "hud.weight.in", hiking: "hud.weight.hiking", trapeze: "hud.weight.trapeze" },
+  own: {
+    in: "hud.weight.seated",
+    hiking: "hud.weight.hiking",
+    trapeze: "hud.weight.trapeze",
+  },
+  partner: {
+    in: "hud.weight.in",
+    hiking: "hud.weight.hiking",
+    trapeze: "hud.weight.trapeze",
+  },
 } as const satisfies Record<WeightView, Record<CrewWeight, string>>;
 
 const SPINNAKER = {

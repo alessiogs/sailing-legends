@@ -5,7 +5,9 @@ import { MAX_STANDINGS_ROWS, standingsRows } from "../src/ui/standingsRows";
 describe("standings rows", () => {
   it("shows a fleet that fits whole", () => {
     expect(standingsRows(4, 2)).toEqual([0, 1, 2, 3]);
-    expect(standingsRows(MAX_STANDINGS_ROWS, 5)).toEqual([0, 1, 2, 3, 4, 5, 6, 7]);
+    expect(standingsRows(MAX_STANDINGS_ROWS, 5)).toEqual([
+      0, 1, 2, 3, 4, 5, 6, 7,
+    ]);
   });
 
   it("shows the first three and the boats around the player in a bigger fleet", () => {

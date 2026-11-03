@@ -1,4 +1,13 @@
-import { Effect, Mesh, MeshBuilder, ShaderMaterial, Vector2, Vector3, type Camera, type Scene } from "@babylonjs/core";
+import {
+  Effect,
+  Mesh,
+  MeshBuilder,
+  ShaderMaterial,
+  Vector2,
+  Vector3,
+  type Camera,
+  type Scene,
+} from "@babylonjs/core";
 import { WindField } from "../sailing/Wind";
 import { packWaves, type Wave } from "./Waves";
 
@@ -159,19 +168,44 @@ export class Ocean {
   readonly sunDir = new Vector3(-0.45, 0.42, 0.78).normalize();
 
   constructor(scene: Scene, waves: Wave[]) {
-    const size = 700, sub = 230;
+    const size = 700,
+      sub = 230;
     this.step = size / sub;
-    this.mesh = MeshBuilder.CreateGround("ocean", { width: size, height: size, subdivisions: sub }, scene);
+    this.mesh = MeshBuilder.CreateGround(
+      "ocean",
+      { width: size, height: size, subdivisions: sub },
+      scene,
+    );
     this.mesh.isPickable = false;
     this.mesh.alwaysSelectAsActiveMesh = true; // vertices move in the shader; skip CPU culling
 
-    const zenith = new Vector3(0.22, 0.45, 0.72), horizon = new Vector3(0.72, 0.83, 0.9);
+    const zenith = new Vector3(0.22, 0.45, 0.72),
+      horizon = new Vector3(0.72, 0.83, 0.9);
 
-    this.material = new ShaderMaterial("oceanMat", scene, { vertex: "ocean", fragment: "ocean" }, {
-      attributes: ["position"],
-      uniforms: ["world", "viewProjection", "time", "camPos", "waveA", "waveB", "sunDir", "windVel", "windStrength",
-        "puffs", "deepColor", "shallowColor", "skyZenith", "skyHorizon"],
-    });
+    this.material = new ShaderMaterial(
+      "oceanMat",
+      scene,
+      { vertex: "ocean", fragment: "ocean" },
+      {
+        attributes: ["position"],
+        uniforms: [
+          "world",
+          "viewProjection",
+          "time",
+          "camPos",
+          "waveA",
+          "waveB",
+          "sunDir",
+          "windVel",
+          "windStrength",
+          "puffs",
+          "deepColor",
+          "shallowColor",
+          "skyZenith",
+          "skyHorizon",
+        ],
+      },
+    );
     const packed = packWaves(waves);
     this.material.setArray4("waveA", packed.a);
     this.material.setArray4("waveB", packed.b);
@@ -184,13 +218,22 @@ export class Ocean {
     this.material.backFaceCulling = false;
     this.mesh.material = this.material;
 
-    this.sky = MeshBuilder.CreateSphere("sky", { diameter: 1600, segments: 24, sideOrientation: Mesh.BACKSIDE }, scene);
+    this.sky = MeshBuilder.CreateSphere(
+      "sky",
+      { diameter: 1600, segments: 24, sideOrientation: Mesh.BACKSIDE },
+      scene,
+    );
     this.sky.infiniteDistance = true;
     this.sky.isPickable = false;
-    this.skyMat = new ShaderMaterial("skyMat", scene, { vertex: "sky", fragment: "sky" }, {
-      attributes: ["position"],
-      uniforms: ["worldViewProjection", "sunDir", "skyZenith", "skyHorizon"],
-    });
+    this.skyMat = new ShaderMaterial(
+      "skyMat",
+      scene,
+      { vertex: "sky", fragment: "sky" },
+      {
+        attributes: ["position"],
+        uniforms: ["worldViewProjection", "sunDir", "skyZenith", "skyHorizon"],
+      },
+    );
     this.skyMat.setVector3("sunDir", this.sunDir);
     this.skyMat.setVector3("skyZenith", zenith);
     this.skyMat.setVector3("skyHorizon", horizon);
@@ -214,7 +257,10 @@ export class Ocean {
     this.material.setFloat("time", time);
     this.material.setVector3("camPos", cp);
     const dir = wind.meanDir + wind.shift();
-    this.windVel.set(-Math.sin(dir) * wind.meanSpeed, -Math.cos(dir) * wind.meanSpeed);
+    this.windVel.set(
+      -Math.sin(dir) * wind.meanSpeed,
+      -Math.cos(dir) * wind.meanSpeed,
+    );
     this.material.setVector2("windVel", this.windVel);
     this.material.setFloat("windStrength", Math.min(1, wind.meanSpeed / 8));
     for (let i = 0; i < MAX_PUFFS; i++) {
@@ -224,7 +270,8 @@ export class Ocean {
         this.puffData[o] = p.x;
         this.puffData[o + 1] = p.z;
         this.puffData[o + 2] = p.radius;
-        this.puffData[o + 3] = WindField.puffFade(p) * Math.min(1, p.strength / 2.2);
+        this.puffData[o + 3] =
+          WindField.puffFade(p) * Math.min(1, p.strength / 2.2);
       } else {
         this.puffData[o + 3] = 0;
       }

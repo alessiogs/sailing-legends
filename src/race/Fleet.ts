@@ -1,6 +1,16 @@
 import { DEG } from "../core/math";
-import { isTwoPerson, OPTIMIST, type BoatClass, type SailorWeights } from "../sailing/BoatClass";
-import { opponentCrew, opponentHelms, RIVALS, type SailorProfile } from "../sailors/Sailors";
+import {
+  isTwoPerson,
+  OPTIMIST,
+  type BoatClass,
+  type SailorWeights,
+} from "../sailing/BoatClass";
+import {
+  opponentCrew,
+  opponentHelms,
+  RIVALS,
+  type SailorProfile,
+} from "../sailors/Sailors";
 import { buildFactorOf } from "../sailors/BodyWeight";
 import { HELM, type PlayerChoice } from "./PlayerChoice";
 
@@ -76,7 +86,7 @@ export type FleetOptions = {
  * fleet, spread over the same 0..3 range in a bigger one. The player's boat has index `opponents.length`.
  */
 export function startSlot(index: number, boats: number): number {
-  return boats <= SMALL_FLEET ? index : index * 3 / (boats - 1);
+  return boats <= SMALL_FLEET ? index : (index * 3) / (boats - 1);
 }
 
 const PER_ROW = 6;
@@ -85,7 +95,8 @@ const LINE_BOATS = 5;
 
 /** The start spot of boat `index` of a big fleet: rows of `PER_ROW` boats, each row below the last, staggered. */
 function gridSpot(index: number, scale: number): StartSpot {
-  const row = Math.floor(index / PER_ROW), col = index % PER_ROW;
+  const row = Math.floor(index / PER_ROW),
+    col = index % PER_ROW;
   return {
     downwind: (24 + row * 12 + col * 2) * scale,
     across: ((col - (PER_ROW - 1) / 2) * 14 + (row % 2) * 7) * scale,
@@ -108,29 +119,58 @@ export function makeFleet(opts: FleetOptions = {}): Fleet {
   let partner: SailorProfile | null = null;
   let player: PlayerBoat | null = null;
   if (withPlayer) {
-    const start = big ? { ...gridSpot(given!.length, scale), heading: -70 * DEG } : { downwind: 30 * scale, across: 6 * scale, heading: -70 * DEG };
+    const start = big
+      ? { ...gridSpot(given!.length, scale), heading: -70 * DEG }
+      : { downwind: 30 * scale, across: 6 * scale, heading: -70 * DEG };
     if (two) {
       choice = opts.choice ?? HELM;
       partner = opts.partner ?? rivals[1];
-      player = choice.role === "crew"
-        ? { id: "player", helm: partner, crew: "player", start }
-        : { id: "player", helm: "player", crew: partner, start };
+      player =
+        choice.role === "crew"
+          ? { id: "player", helm: partner, crew: "player", start }
+          : { id: "player", helm: "player", crew: partner, start };
       // The Partner is on the player's boat, so race against the other Rivals plus the extra Helm.
       if (!given) rivals = opponentHelms(rivals, partner);
     } else {
       player = { id: "player", helm: "player", crew: null, start };
     }
   }
-  const seats: readonly OpponentSeats[] = given ?? rivals.map((helm, i) => ({ helm, crew: two ? opponentCrew(i) : null }));
-  const opponents = seats.map(({ helm, crew }, i): OpponentBoat => ({
-    id: `ai${i}`,
-    helm,
-    crew,
-    start: big ? gridSpot(i, scale) : { downwind: (24 + i * 2) * scale, across: (-16 + i * 14) * scale, heading: -80 * DEG },
-    // A quick race's AI sailors are the class's reference age with their own Build (from their id); the player stays average.
-    ...(given ? {} : { kg: { helmKg: cls.sailorKg.helm * buildFactorOf(helm.id), crewKg: crew ? cls.sailorKg.crew * buildFactorOf(crew.id) : 0 } }),
-  }));
+  const seats: readonly OpponentSeats[] =
+    given ??
+    rivals.map((helm, i) => ({ helm, crew: two ? opponentCrew(i) : null }));
+  const opponents = seats.map(
+    ({ helm, crew }, i): OpponentBoat => ({
+      id: `ai${i}`,
+      helm,
+      crew,
+      start: big
+        ? gridSpot(i, scale)
+        : {
+            downwind: (24 + i * 2) * scale,
+            across: (-16 + i * 14) * scale,
+            heading: -80 * DEG,
+          },
+      // A quick race's AI sailors are the class's reference age with their own Build (from their id); the player stays average.
+      ...(given
+        ? {}
+        : {
+            kg: {
+              helmKg: cls.sailorKg.helm * buildFactorOf(helm.id),
+              crewKg: crew ? cls.sailorKg.crew * buildFactorOf(crew.id) : 0,
+            },
+          }),
+    }),
+  );
   // A bigger fleet needs a longer line: the usual half-length (24 m, 34 m in two-person classes) per five boats.
-  const lineHalf = big ? (two ? 34 : 24) * Math.max(1, boats / LINE_BOATS) : undefined;
-  return { boatClass: cls, choice, partner, player, opponents, ...(lineHalf === undefined ? {} : { lineHalf }) };
+  const lineHalf = big
+    ? (two ? 34 : 24) * Math.max(1, boats / LINE_BOATS)
+    : undefined;
+  return {
+    boatClass: cls,
+    choice,
+    partner,
+    player,
+    opponents,
+    ...(lineHalf === undefined ? {} : { lineHalf }),
+  };
 }

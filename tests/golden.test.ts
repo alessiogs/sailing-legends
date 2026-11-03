@@ -8,14 +8,22 @@
 import { existsSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { GOLDEN_RACES, sailGoldenRace, SNAPSHOT_URL, type GoldenRecord } from "./golden/races";
+import {
+  GOLDEN_RACES,
+  sailGoldenRace,
+  SNAPSHOT_URL,
+  type GoldenRecord,
+} from "./golden/races";
 
 const path = fileURLToPath(SNAPSHOT_URL);
 
 describe("golden races", () => {
   it("the snapshot exists and lists exactly the golden races", () => {
-    expect(existsSync(path), `missing ${path}: run npm run golden:update on unchanged code`).toBe(true);
-    expect(Object.keys(load())).toEqual(GOLDEN_RACES.map(g => g.name));
+    expect(
+      existsSync(path),
+      `missing ${path}: run npm run golden:update on unchanged code`,
+    ).toBe(true);
+    expect(Object.keys(load())).toEqual(GOLDEN_RACES.map((g) => g.name));
   });
 
   for (const g of GOLDEN_RACES) {
@@ -29,6 +37,12 @@ describe("golden races", () => {
 
 let cache: Record<string, GoldenRecord> | null = null;
 function load(): Record<string, GoldenRecord> {
-  if (!existsSync(path)) throw new Error(`missing ${path}: run npm run golden:update on unchanged code`);
-  return (cache ??= JSON.parse(readFileSync(path, "utf8")) as Record<string, GoldenRecord>);
+  if (!existsSync(path))
+    throw new Error(
+      `missing ${path}: run npm run golden:update on unchanged code`,
+    );
+  return (cache ??= JSON.parse(readFileSync(path, "utf8")) as Record<
+    string,
+    GoldenRecord
+  >);
 }

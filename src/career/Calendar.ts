@@ -34,28 +34,61 @@ export function venueName(r: Pick<Regatta, "club" | "town">): string {
   return r.club === "" ? r.town : `${r.club}, ${r.town}`;
 }
 
-type Slot = { level: RegattaLevel; club: string; town: string; races: number; discard: boolean };
+type Slot = {
+  level: RegattaLevel;
+  club: string;
+  town: string;
+  races: number;
+  discard: boolean;
+};
 
 /** The Sardinian Zonale's four stages. */
-const ZONALE = ["LNI Olbia|Olbia", "Circolo Nautico La Caletta|La Caletta", "Yacht Club Porto Rotondo|Porto Rotondo", "Yacht Club Cagliari|Cagliari"];
+const ZONALE = [
+  "LNI Olbia|Olbia",
+  "Circolo Nautico La Caletta|La Caletta",
+  "Yacht Club Porto Rotondo|Porto Rotondo",
+  "Yacht Club Cagliari|Cagliari",
+];
 
 const SLOTS: readonly Slot[] = [
-  { level: "club", club: "Circolo del Mare Fertilia", town: "Alghero", races: 3, discard: true },
+  {
+    level: "club",
+    club: "Circolo del Mare Fertilia",
+    town: "Alghero",
+    races: 3,
+    discard: true,
+  },
   ...ZONALE.map((z): Slot => {
     const [club, town] = z.split("|");
     return { level: "regional", club, town, races: 2, discard: false };
   }),
   { level: "national", club: "", town: "Follonica", races: 3, discard: true },
-  { level: "international", club: "Fraglia Vela Riva", town: "Riva del Garda", races: 3, discard: true },
+  {
+    level: "international",
+    club: "Fraglia Vela Riva",
+    town: "Riva del Garda",
+    races: 3,
+    discard: true,
+  },
 ];
 
 /** The calendar of a class: the home club, the four Zonale stages, then the national and international Regattas. */
 function standardCalendar(classId: ClassId): readonly Regatta[] {
   return SLOTS.map((slot, i) => {
-    const stage = slot.level === "regional" ? { number: i, of: ZONALE.length } : null;
+    const stage =
+      slot.level === "regional" ? { number: i, of: ZONALE.length } : null;
     return {
-      id: stage ? `${classId}-regional-${stage.number}` : `${classId}-${slot.level}`,
-      club: slot.club, town: slot.town, level: slot.level, stage, classId, races: slot.races, discard: slot.discard, entry: "open",
+      id: stage
+        ? `${classId}-regional-${stage.number}`
+        : `${classId}-${slot.level}`,
+      club: slot.club,
+      town: slot.town,
+      level: slot.level,
+      stage,
+      classId,
+      races: slot.races,
+      discard: slot.discard,
+      entry: "open",
     };
   });
 }

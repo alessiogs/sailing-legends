@@ -6,7 +6,11 @@
  */
 import { writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { formatSnapshot, sailAllGoldenRaces, SNAPSHOT_URL } from "../tests/golden/races";
+import {
+  formatSnapshot,
+  sailAllGoldenRaces,
+  SNAPSHOT_URL,
+} from "../tests/golden/races";
 
 const path = fileURLToPath(SNAPSHOT_URL);
 writeFileSync(path, formatSnapshot(sailAllGoldenRaces()));

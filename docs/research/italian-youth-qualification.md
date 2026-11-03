@@ -6,7 +6,7 @@ Researched 2026-10-29. Terms follow the Italian sources; English glosses in brac
 **Confidence key:** [P] primary source read directly (FIV document, class conditions, a notice of race). [S] secondary
 (club news, press). [H] historic (2017 or 2018 documents, so the numbers have likely moved).
 
-**Gap that matters:** the current FIV *Schede di classe* for Optimist and 420 (the documents that give the exact
+**Gap that matters:** the current FIV _Schede di classe_ for Optimist and 420 (the documents that give the exact
 selection mechanics) could not be fetched; see "Not confirmed" at the end. Section 3 and 4 therefore mix the 2026
 general rules [P] with 2017/2018 class rules [H] and 2026 event notices [P].
 
@@ -26,11 +26,11 @@ determinations. Source: https://www.federvela.it/wp-content/uploads/2026/03/Norm
 
 **Optimist Italian divisions by birth year (a sliding 5-year window).**
 
-| Year | Juniores / Div. A | Cadetti / Div. B | Source |
-|---|---|---|---|
-| 2026 | 2011-2015 | 2016-2017 | Meeting del Garda notice: https://www.fragliavelariva.it/wp-content/uploads/2025/11/44-meeting-bando-14112025-FIN.pdf ; Interzonal notice (Div. A 2011-2015): https://www.yachtclubitaliano.it/storage/event-attachment-file/KFNDYM9ypWG9KrcjFZQ3qFZlZDsLTK95QGFXmpHz.pdf |
-| 2023 (Zona XIV) | "Under 16" 2008-2012 | "Under 11" 2013-2014 | https://www.campioneunivela.it/site/assets/files/14326/bando_aggiornato_il_20_giugno_selezione_zonale_xiv_zona.pdf [H] |
-| 2017 | Juniores 2002-2005 | Cadetti Under 12 2006-2008 (Under 9 2009-2011 is Gioco-Vela only) | https://www.optimist-it.com/admin/_static/files/testi/148533408341018/148533414874551.pdf [H] |
+| Year            | Juniores / Div. A    | Cadetti / Div. B                                                  | Source                                                                                                                                                                                                                                                                    |
+| --------------- | -------------------- | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026            | 2011-2015            | 2016-2017                                                         | Meeting del Garda notice: https://www.fragliavelariva.it/wp-content/uploads/2025/11/44-meeting-bando-14112025-FIN.pdf ; Interzonal notice (Div. A 2011-2015): https://www.yachtclubitaliano.it/storage/event-attachment-file/KFNDYM9ypWG9KrcjFZQ3qFZlZDsLTK95QGFXmpHz.pdf |
+| 2023 (Zona XIV) | "Under 16" 2008-2012 | "Under 11" 2013-2014                                              | https://www.campioneunivela.it/site/assets/files/14326/bando_aggiornato_il_20_giugno_selezione_zonale_xiv_zona.pdf [H]                                                                                                                                                    |
+| 2017            | Juniores 2002-2005   | Cadetti Under 12 2006-2008 (Under 9 2009-2011 is Gioco-Vela only) | https://www.optimist-it.com/admin/_static/files/testi/148533408341018/148533414874551.pdf [H]                                                                                                                                                                             |
 
 Consistency check: the oldest Junior in 2026 is born 2011 and turns 15 in 2026, matching the IODA cutoff. A 2011-born
 sailor sails their last Optimist year in 2026.
@@ -132,6 +132,7 @@ year, and Italy's Europeans/Worlds team is drawn from the national selections. T
 2018 [H]; check whether the 2026 class card has one.
 
 **Quota per Zona [H].** Seats are shared in proportion to the number of registrants per Zona at a cut-off date:
+
 - Campionato Giovanile: 120 x (Zona entries / total entries on 7 May) (2017); 140 places "calculated per Zona" with a
   20 May reference date (2018).
 - Coppe: 80 places per birth year, same logic (rounding can give more than 80; FIV makes the final list).
@@ -144,7 +145,7 @@ year, and Italy's Europeans/Worlds team is drawn from the national selections. T
 the overall ranking of the AICO Optimist zonal selection races; Optimist born 2013-2015, RS Feva 2012-2015; 3 athletes
 per region; best of 6 races, 3 a day, one discard from 4 races:
 https://www.coni.it/images/Trofeo_CONI/2026/estivo/FIV_Regolamento_Tecnico_Trofeo_CONI_2026.pdf (this confirms that
-the *zonal* results are the ranking of record).
+the _zonal_ results are the ranking of record).
 
 **420 [H].** 2018: Worlds: top 6 male, top 6 female, top 3 U17 male, top 3 U17 female plus the Coppa UNIQUA winner,
 excluding crews already selected; Junior Europeans: top 7 crews with at least 2 female and the top 3 U17; foreign crews
@@ -165,16 +166,16 @@ the 2017 SN final ranking used none up to 5 races, one for 6-11, two for 12-21 [
 
 **Typical race counts.**
 
-| Event | Races | Discards | Source |
-|---|---|---|---|
-| Optimist zonal selection | max 6-9, 3/day, valid with 2-4 | 1 from race 4 (or after 4th overall of two regattas) | Zona XIV 2023, 2017 class doc |
-| Optimist interzonal 2026 | max 9, 3/day | 1 from race 4; valid with 3 | YCI notice |
-| Optimist national selection | 9 + 12 (21 total) | table 0/1/2 by race count [H] | 2017 doc |
-| Optimist Campionato Giovanile | 10, 3/day | 1 from race 4 [H] | 2017/2018 docs |
-| Optimist Coppe | 3 days, 3/day | 1 from race 4 [H] | 2017 doc |
-| 420 Campionato / Coppa UNIQUA | 10, 3/day | 1 from race 4 [H] | 2018 doc |
-| 420 national ranking stage | about 10 (Livorno 10; 22 over three events; 32 over a whole Coppa Italia) | n/a | YCI articles |
-| Local/open regattas | 3-10 | 0-1 | Arilica, Meringa, Meeting notices |
+| Event                         | Races                                                                     | Discards                                             | Source                            |
+| ----------------------------- | ------------------------------------------------------------------------- | ---------------------------------------------------- | --------------------------------- |
+| Optimist zonal selection      | max 6-9, 3/day, valid with 2-4                                            | 1 from race 4 (or after 4th overall of two regattas) | Zona XIV 2023, 2017 class doc     |
+| Optimist interzonal 2026      | max 9, 3/day                                                              | 1 from race 4; valid with 3                          | YCI notice                        |
+| Optimist national selection   | 9 + 12 (21 total)                                                         | table 0/1/2 by race count [H]                        | 2017 doc                          |
+| Optimist Campionato Giovanile | 10, 3/day                                                                 | 1 from race 4 [H]                                    | 2017/2018 docs                    |
+| Optimist Coppe                | 3 days, 3/day                                                             | 1 from race 4 [H]                                    | 2017 doc                          |
+| 420 Campionato / Coppa UNIQUA | 10, 3/day                                                                 | 1 from race 4 [H]                                    | 2018 doc                          |
+| 420 national ranking stage    | about 10 (Livorno 10; 22 over three events; 32 over a whole Coppa Italia) | n/a                                                  | YCI articles                      |
+| Local/open regattas           | 3-10                                                                      | 0-1                                                  | Arilica, Meringa, Meeting notices |
 
 **Regattas per season (inference, not stated by any one document).** An Optimist Junior following the full pipeline
 sails roughly: 2 zonal selections, 1 interzonal, 2 national selections, the Campionato (and for some, a Worlds/Europeans
@@ -184,6 +185,7 @@ sails 2 zonal regattas, 3-4 national ranking stages, the championship, and, if s
 ## 5. Design hints for the game
 
 These are interpretations, not sourced facts.
+
 - Model the season as stages with a quota that shrinks (Zona 100+ -> interzonal 160 -> SN 120 -> Campionato ~150).
 - Use a birth-year window and a "last year" flag at the age-15 cutoff (31 Dec of the year of the 15th birthday).
 - Scoring: low-point, one discard from the 4th race, max 3 races a day; valid event needs 3 races.
@@ -192,7 +194,7 @@ These are interpretations, not sourced facts.
 
 ## Not confirmed
 
-- The 2026 FIV *Schede di classe* for Optimist and 420 (exact current selection mechanics, Zona quotas, ranking
+- The 2026 FIV _Schede di classe_ for Optimist and 420 (exact current selection mechanics, Zona quotas, ranking
   parameters, class ranking list): federvela.it scheda URLs were blocked in this environment (fetch allowlist), and the
   signed S3 link for the Optimist 2026 card was too long to fetch. Search showed it exists ("FIV - Scheda Normativa di
   classe Optimist 2026", updated 12/01/2026), and that 2026 schede for other classes are under

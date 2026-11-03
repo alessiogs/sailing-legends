@@ -21,12 +21,24 @@ describe("a Career Regatta of AI-only Races", () => {
     for (let n = 0; n < 3; n++) {
       const setup = nextRaceSetup(state)!;
       expect(setup.raceIndex).toBe(n);
-      const s = new RaceSession({ seed: setup.seed, windKn: setup.windKn, fleet: setup.fleet });
-      for (let t = 0; t < MAX_RACE_S && !s.race.racers.every(r => r.isPlayer || r.finishTime !== null); t += DT) s.step(DT);
+      const s = new RaceSession({
+        seed: setup.seed,
+        windKn: setup.windKn,
+        fleet: setup.fleet,
+      });
+      for (
+        let t = 0;
+        t < MAX_RACE_S &&
+        !s.race.racers.every((r) => r.isPlayer || r.finishTime !== null);
+        t += DT
+      )
+        s.step(DT);
       const entries = raceEntries(setup.fleet, s.race.racers);
       expect(entries).toHaveLength(FLEET_SIZE.club);
-      expect(entries.filter(e => e.status === "finished").length).toBeGreaterThanOrEqual(FLEET_SIZE.club - 2);
-      expect(entries.find(e => e.id === "player")!.status).toBe("dnf");
+      expect(
+        entries.filter((e) => e.status === "finished").length,
+      ).toBeGreaterThanOrEqual(FLEET_SIZE.club - 2);
+      expect(entries.find((e) => e.id === "player")!.status).toBe("dnf");
       state = recordRace(state, entries);
       expect(decodeCareer(encodeCareer(state))).toEqual({ ok: true, state });
     }
@@ -35,7 +47,11 @@ describe("a Career Regatta of AI-only Races", () => {
 
     const standing = scoreRegatta(state.results[0], false);
     expect(standing).toHaveLength(FLEET_SIZE.club);
-    expect(standing.map(s => s.place).sort((a, b) => a - b)).toEqual(Array.from({ length: FLEET_SIZE.club }, (_, i) => i + 1));
-    expect(standing.find(s => s.id === "player")!.place).toBe(FLEET_SIZE.club);
+    expect(standing.map((s) => s.place).sort((a, b) => a - b)).toEqual(
+      Array.from({ length: FLEET_SIZE.club }, (_, i) => i + 1),
+    );
+    expect(standing.find((s) => s.id === "player")!.place).toBe(
+      FLEET_SIZE.club,
+    );
   }, 120_000);
 });

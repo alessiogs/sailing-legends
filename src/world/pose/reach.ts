@@ -13,20 +13,39 @@ export type Reach = {
   reachable: boolean;
 };
 
-const sub = (a: V3, b: V3): V3 => ({ x: a.x - b.x, y: a.y - b.y, z: a.z - b.z });
+const sub = (a: V3, b: V3): V3 => ({
+  x: a.x - b.x,
+  y: a.y - b.y,
+  z: a.z - b.z,
+});
 const dot = (a: V3, b: V3) => a.x * b.x + a.y * b.y + a.z * b.z;
-const scale = (a: V3, k: number): V3 => ({ x: a.x * k, y: a.y * k, z: a.z * k });
-const add = (a: V3, b: V3): V3 => ({ x: a.x + b.x, y: a.y + b.y, z: a.z + b.z });
+const scale = (a: V3, k: number): V3 => ({
+  x: a.x * k,
+  y: a.y * k,
+  z: a.z * k,
+});
+const add = (a: V3, b: V3): V3 => ({
+  x: a.x + b.x,
+  y: a.y + b.y,
+  z: a.z + b.z,
+});
 const len = (a: V3) => Math.hypot(a.x, a.y, a.z);
 
 /**
  * Two-bone reach: a limb of bones `upper` and `fore` from `from` towards `target`. The elbow bends towards `hint`
  * (a direction, e.g. down and outboard). Out of range, the limb stretches straight at the target.
  */
-export function twoBoneReach(from: V3, target: V3, upper: number, fore: number, hint: V3): Reach {
+export function twoBoneReach(
+  from: V3,
+  target: V3,
+  upper: number,
+  fore: number,
+  hint: V3,
+): Reach {
   const to = sub(target, from);
   const dist = len(to);
-  const max = upper + fore, min = Math.abs(upper - fore) + 1e-6;
+  const max = upper + fore,
+    min = Math.abs(upper - fore) + 1e-6;
   const d = Math.min(max, Math.max(min, dist));
   const u = dist > 1e-9 ? scale(to, 1 / dist) : { x: 0, y: -1, z: 0 };
   const along = (upper * upper + d * d - fore * fore) / (2 * d);
@@ -37,7 +56,8 @@ export function twoBoneReach(from: V3, target: V3, upper: number, fore: number, 
   const elbow = add(add(from, scale(u, along)), scale(perp, h));
   const hand = add(from, scale(u, d));
   const shoulder = Math.acos(Math.min(1, Math.max(-1, along / upper)));
-  const cosInterior = (upper * upper + fore * fore - d * d) / (2 * upper * fore);
+  const cosInterior =
+    (upper * upper + fore * fore - d * d) / (2 * upper * fore);
   const bend = Math.PI - Math.acos(Math.min(1, Math.max(-1, cosInterior)));
   return { elbow, hand, shoulder, bend, reachable: dist <= max && dist >= min };
 }

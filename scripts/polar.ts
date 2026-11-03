@@ -16,7 +16,14 @@ for (const cls of [OPTIMIST, I420]) {
         const wind = new WindField({ puffCount: 0, meanSpeedKn: tws });
         wind.shift = () => 0;
         const sim = new BoatSim(cls, createBoat(0, 0, -twa * DEG));
-        const c: Controls = { rudder: 0, sheet: 0.5, jibSheet: 0.5, spiSheet: 0.5, spi, crewOut: 0.3 };
+        const c: Controls = {
+          rudder: 0,
+          sheet: 0.5,
+          jibSheet: 0.5,
+          spiSheet: 0.5,
+          spi,
+          crewOut: 0.3,
+        };
         for (let i = 0; i < 60 * 40; i++) {
           sim.state.heading = -twa * DEG;
           sim.state.yawRate = 0;
@@ -27,7 +34,9 @@ for (const cls of [OPTIMIST, I420]) {
           c.crewOut = t.crew?.ideal ?? 0;
           sim.step(1 / 60, c, wind);
         }
-        cells.push(`${twa}°${spi ? "+spi" : ""} ${(sim.telemetry.speed * KNOTS).toFixed(1)}`);
+        cells.push(
+          `${twa}°${spi ? "+spi" : ""} ${(sim.telemetry.speed * KNOTS).toFixed(1)}`,
+        );
       }
     }
     console.log(`  ${String(tws).padStart(2)} kn | ${cells.join(" · ")}`);

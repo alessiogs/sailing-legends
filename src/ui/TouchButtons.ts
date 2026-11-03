@@ -7,10 +7,15 @@ import type { Action, Input } from "../core/Input";
 
 /** Makes every `[data-action]` button of the HUD press its action. */
 export function attachTouchButtons(input: Pick<Input, "press">) {
-  for (const button of Array.from(document.querySelectorAll<HTMLElement>("#hud [data-action]"))) {
+  for (const button of Array.from(
+    document.querySelectorAll<HTMLElement>("#hud [data-action]"),
+  )) {
     const action = button.dataset.action as Action;
     // pointerdown, not click: a thumb on a moving boat should not wait for the finger to lift.
-    button.addEventListener("pointerdown", e => { e.preventDefault(); input.press(action); });
+    button.addEventListener("pointerdown", (e) => {
+      e.preventDefault();
+      input.press(action);
+    });
   }
 }
 

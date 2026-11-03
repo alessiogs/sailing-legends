@@ -1,4 +1,12 @@
-import { angleDiff, bearingTo, clamp, DEG, KNOTS, rng, wrapPi } from "../core/math";
+import {
+  angleDiff,
+  bearingTo,
+  clamp,
+  DEG,
+  KNOTS,
+  rng,
+  wrapPi,
+} from "../core/math";
 import type { Controls } from "../sailing/BoatPhysics";
 import type { WindField } from "../sailing/Wind";
 import { distanceTo, legTarget, type Point } from "../race/Course";
@@ -24,7 +32,8 @@ export class RacingAI {
   private trimBias = 0;
   private trimTimer = 0;
   private penaltyDir = 0;
-  private keepClear: { until: number; desired: number; sheet: number } | null = null;
+  private keepClear: { until: number; desired: number; sheet: number } | null =
+    null;
   /** Phases of the slow wanders (helming, pointing, wind reading), drawn from their own stream so `rand` keeps its order. */
   private readonly phase: readonly number[];
   /** The Helm's hiking and roll draws: their own stream, so `rand` (the start plan first) keeps its order. */
@@ -40,7 +49,13 @@ export class RacingAI {
   /** Size factor: distances (holding spot, rounding radius, look-ahead) scale with boat length. */
   private k: number;
 
-  constructor(public racer: Racer, public profile: SailorProfile, private race: Race, seed: number, slot: number) {
+  constructor(
+    public racer: Racer,
+    public profile: SailorProfile,
+    private race: Race,
+    seed: number,
+    slot: number,
+  ) {
     this.rand = rng(seed);
     this.k = Math.min(1.6, Math.max(1, racer.sim.cls.length / 2.31));
     // The start draws its numbers first: keep it constructed before anything else uses `rand`.
@@ -48,14 +63,15 @@ export class RacingAI {
     this.beat = new BeatTactics(profile, () => this.time);
     this.tackMachine = new TackStateMachine(this.beat, this.k);
     const p = rng(seed ^ 0x5eed);
-    this.phase = [p(), p(), p(), p()].map(v => v * 2 * Math.PI);
+    this.phase = [p(), p(), p(), p()].map((v) => v * 2 * Math.PI);
     this.hikeRand = rng(seed ^ 0x41ce);
   }
 
   /** The Helm's weight: the ideal for the wind, seen late (more so the lower the technique) and with a wandering error; and a roll quality per tack or gybe. */
   private hike(dt: number) {
     const { technique } = this.profile;
-    const s = this.racer.sim.state, tel = this.racer.sim.telemetry;
+    const s = this.racer.sim.state,
+      tel = this.racer.sim.telemetry;
     this.hikeTimer -= dt;
     if (this.hikeTimer <= 0) {
       this.hikeTimer = hikeLag(technique);
@@ -66,7 +82,11 @@ export class RacingAI {
       this.hikeBiasTimer = 2 + this.hikeRand() * 3;
       this.hikeBias = hikeError(technique, this.hikeRand());
     }
-    this.controls.helmOut = clamp(this.hikeTarget + this.hikeBias * hikeScale(tel.puff, tel.tws * KNOTS), this.racer.sim.cls.helmRighting.leewardMin, 1);
+    this.controls.helmOut = clamp(
+      this.hikeTarget + this.hikeBias * hikeScale(tel.puff, tel.tws * KNOTS),
+      this.racer.sim.cls.helmRighting.leewardMin,
+      1,
+    );
     if (s.boomSide !== this.boomSide) {
       this.boomSide = s.boomSide;
       this.controls.roll = rollQuality(technique, this.hikeRand());
@@ -76,7 +96,10 @@ export class RacingAI {
   /** A smooth wander in -1..1 with periods of tens of seconds (`i` picks the phase). */
   private wander(i: number, rate: number): number {
     const t = this.time * rate;
-    return 0.6 * Math.sin(t + this.phase[i]) + 0.4 * Math.sin(t * 2.3 + this.phase[(i + 1) % 4]);
+    return (
+      0.6 * Math.sin(t + this.phase[i]) +
+      0.4 * Math.sin(t * 2.3 + this.phase[(i + 1) % 4])
+    );
   }
 
   /** Start the race already waiting at the holding spot, ready for the run to the line. */
@@ -85,7 +108,9 @@ export class RacingAI {
   }
 
   /** True while the Helm is committed to a tack (used for the "Vira!" call). */
-  get tacking() { return this.tackMachine.mode === "tack"; }
+  get tacking() {
+    return this.tackMachine.mode === "tack";
+  }
 
   update(dt: number, wind: WindField): Controls {
     this.time += dt;
@@ -107,7 +132,11 @@ export class RacingAI {
     if (r.leg !== this.lastLeg) {
       // Just rounded a mark: keep orbiting until the path to the next target clears it.
       const prev = this.lastLeg >= 0 ? c.legs[this.lastLeg] : null;
-      if (prev && prev.kind === "mark" && r.leg > this.lastLeg) this.exitMark = { mark: prev.mark, dir: prev.rounding === "port" ? -1 : 1 };
+      if (prev && prev.kind === "mark" && r.leg > this.lastLeg)
+        this.exitMark = {
+          mark: prev.mark,
+          dir: prev.rounding === "port" ? -1 : 1,
+        };
       this.lastLeg = r.leg;
     }
 
@@ -118,18 +147,26 @@ export class RacingAI {
       this.debug = "finished";
     } else if (race.phase === "prestart" || r.leg === -1) {
       // Not started yet: the start plan steers (before the gun, or OCS / late after it).
-      const steer = race.phase === "prestart"
-        ? this.startPlan.prestart(this.beat, s, tel, w.speed, fromDir)
-        : this.startPlan.afterGun(this.beat, r, tel, fromDir);
+      const steer =
+        race.phase === "prestart"
+          ? this.startPlan.prestart(this.beat, s, tel, w.speed, fromDir)
+          : this.startPlan.afterGun(this.beat, r, tel, fromDir);
       ({ desired, sheet } = steer);
       this.debug = steer.debug;
     } else {
       const leg = c.legs[r.leg];
       let target = legTarget(leg);
-      if (leg.kind === "mark") target = this.orbitPoint(leg.mark, leg.rounding === "port" ? -1 : 1, s.x, s.z);
+      if (leg.kind === "mark")
+        target = this.orbitPoint(
+          leg.mark,
+          leg.rounding === "port" ? -1 : 1,
+          s.x,
+          s.z,
+        );
       if (this.exitMark) {
         const m = this.exitMark.mark;
-        if (this.pathBlocked(s.x, s.z, target, m)) target = this.orbitPoint(m, this.exitMark.dir, s.x, s.z);
+        if (this.pathBlocked(s.x, s.z, target, m))
+          target = this.orbitPoint(m, this.exitMark.dir, s.x, s.z);
         else this.exitMark = null;
       }
       desired = this.beat.headingToward(target, fromDir, s.x, s.z, s.heading);
@@ -139,11 +176,25 @@ export class RacingAI {
     // Keep clear of boats that have right of way (a disciplined sailor looks further ahead and leaves more room).
     let avoiding = false;
     if (r.finishTime === null) {
-      const way = giveWay(r, race, this.k, desired, sheet, fromDir, this.profile.discipline);
+      const way = giveWay(
+        r,
+        race,
+        this.k,
+        desired,
+        sheet,
+        fromDir,
+        this.profile.discipline,
+      );
       // Once giving way, hold the avoiding course a moment (longer for a disciplined sailor) instead of heading
       // straight back up as soon as the next look-ahead clears.
-      if (way.rule !== null) this.keepClear = { until: this.time + 0.5 + 1.5 * this.profile.discipline, desired: way.desired, sheet: way.sheet };
-      else if (this.keepClear && this.time >= this.keepClear.until) this.keepClear = null;
+      if (way.rule !== null)
+        this.keepClear = {
+          until: this.time + 0.5 + 1.5 * this.profile.discipline,
+          desired: way.desired,
+          sheet: way.sheet,
+        };
+      else if (this.keepClear && this.time >= this.keepClear.until)
+        this.keepClear = null;
       avoiding = this.keepClear !== null;
       ({ desired, sheet } = this.keepClear ?? way);
       if (way.rule) this.debug += ` avoid r${way.rule}`;
@@ -154,7 +205,8 @@ export class RacingAI {
       if (this.penaltyDir === 0) this.penaltyDir = tel.twa >= 0 ? -1 : 1;
       this.tackMachine.breakOff();
       this.controls.sheet = tel.optimalSheet;
-      this.controls.rudder = tel.speed < -0.05 ? -this.penaltyDir : this.penaltyDir;
+      this.controls.rudder =
+        tel.speed < -0.05 ? -this.penaltyDir : this.penaltyDir;
       this.debug = "penalty";
       return this.controls;
     }
@@ -170,8 +222,13 @@ export class RacingAI {
 
     // Tack state machine: may commit to a tack, gybe round instead, or recover from irons.
     const helm = this.tackMachine.steer({
-      time: this.time, dt, heading: s.heading, speed: tel.speed, desired, fromDir,
-      boatWithin: dist => boatWithin(r, race, dist),
+      time: this.time,
+      dt,
+      heading: s.heading,
+      speed: tel.speed,
+      desired,
+      fromDir,
+      boatWithin: (dist) => boatWithin(r, race, dist),
     });
     desired = helm.desired;
     if (helm.easeSheet) this.controls.sheet = 1;
@@ -179,8 +236,15 @@ export class RacingAI {
     this.debug += ` [${this.tackMachine.mode}]`;
     // Helming: a pointing error that wanders slowly (technique) and a weave about the course (speed), both
     // costing pace; a top sailor steers almost straight at the right angle.
-    if (this.tackMachine.mode === "sail" && r.finishTime === null && r.leg >= 0 && !avoiding) {
-      desired += this.wander(1, 0.07) * (1 - technique) * 18 * DEG + this.wander(2, 1.3) * (1 - speed) * 20 * DEG;
+    if (
+      this.tackMachine.mode === "sail" &&
+      r.finishTime === null &&
+      r.leg >= 0 &&
+      !avoiding
+    ) {
+      desired +=
+        this.wander(1, 0.07) * (1 - technique) * 18 * DEG +
+        this.wander(2, 1.3) * (1 - speed) * 20 * DEG;
     }
     const err = angleDiff(s.heading, desired);
     const gain = 2.6;
@@ -197,17 +261,22 @@ export class RacingAI {
     const d = distanceTo(mark, x, z);
     const lead = d < 20 ? 60 * DEG : 35 * DEG;
     const a = b + dir * lead;
-    return { x: mark.x + Math.sin(a) * ORBIT_R * this.k, z: mark.z + Math.cos(a) * ORBIT_R * this.k };
+    return {
+      x: mark.x + Math.sin(a) * ORBIT_R * this.k,
+      z: mark.z + Math.cos(a) * ORBIT_R * this.k,
+    };
   }
 
   /** True if the straight path to `target` passes within 6 m of mark `m` (ahead of the boat). */
   private pathBlocked(x: number, z: number, target: Point, m: Point) {
-    const dx = target.x - x, dz = target.z - z;
+    const dx = target.x - x,
+      dz = target.z - z;
     const len2 = dx * dx + dz * dz;
     if (len2 < 1) return false;
     const t = ((m.x - x) * dx + (m.z - z) * dz) / len2;
     if (t <= 0 || t >= 1) return false;
-    const px = x + dx * t - m.x, pz = z + dz * t - m.z;
+    const px = x + dx * t - m.x,
+      pz = z + dz * t - m.z;
     return px * px + pz * pz < 36;
   }
 }

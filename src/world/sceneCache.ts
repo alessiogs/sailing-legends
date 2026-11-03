@@ -9,9 +9,15 @@ export class SceneCache<S extends object, V> {
   /** The value for `key` in `scene`, made with `make` the first time it is asked for. */
   get(scene: S, key: string, make: () => V): V {
     let values = this.byScene.get(scene);
-    if (!values) { values = new Map(); this.byScene.set(scene, values); }
+    if (!values) {
+      values = new Map();
+      this.byScene.set(scene, values);
+    }
     let value = values.get(key);
-    if (value === undefined) { value = make(); values.set(key, value); }
+    if (value === undefined) {
+      value = make();
+      values.set(key, value);
+    }
     return value;
   }
 }

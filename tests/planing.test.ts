@@ -9,11 +9,28 @@ import { BoatSim, createBoat, type Controls } from "../src/sailing/BoatPhysics";
 import { WindField } from "../src/sailing/Wind";
 
 /** Holds `twa` for 40 s in steady wind with ideal sheets and weight. `crewOut` overrides the Crew's weight (to heel the boat). */
-function sail(cls: BoatClass, kn: number, twa: number, opts: { spi?: boolean; crewOut?: number; skill?: number } = {}) {
+function sail(
+  cls: BoatClass,
+  kn: number,
+  twa: number,
+  opts: { spi?: boolean; crewOut?: number; skill?: number } = {},
+) {
   const wind = new WindField({ puffCount: 0, meanSpeedKn: kn });
   wind.shift = () => 0;
-  const sim = new BoatSim(cls, createBoat(0, 0, -twa * DEG), undefined, opts.skill);
-  const c: Controls = { rudder: 0, sheet: 0.5, jibSheet: 0.5, spiSheet: 0.5, crewOut: 0.3, spi: opts.spi ?? false };
+  const sim = new BoatSim(
+    cls,
+    createBoat(0, 0, -twa * DEG),
+    undefined,
+    opts.skill,
+  );
+  const c: Controls = {
+    rudder: 0,
+    sheet: 0.5,
+    jibSheet: 0.5,
+    spiSheet: 0.5,
+    crewOut: 0.3,
+    spi: opts.spi ?? false,
+  };
   for (let i = 0; i < 60 * 40; i++) {
     sim.state.heading = -twa * DEG;
     sim.state.yawRate = 0;
@@ -56,9 +73,13 @@ describe("Planing", () => {
 
   it("gives the Optimist 3-5% downwind above 12 kn at every angle, none at 11 kn, and never reports planing", () => {
     // Against the same Optimist without the bow-up effect, unrounded.
-    const plain: BoatClass = { ...OPTIMIST, planing: { waveCut: 0, planes: false } };
+    const plain: BoatClass = {
+      ...OPTIMIST,
+      planing: { waveCut: 0, planes: false },
+    };
     for (const twa of [120, 150, 180]) {
-      const gain = knots(sail(OPTIMIST, 16, twa)) / knots(sail(plain, 16, twa)) - 1;
+      const gain =
+        knots(sail(OPTIMIST, 16, twa)) / knots(sail(plain, 16, twa)) - 1;
       expect(gain).toBeGreaterThanOrEqual(0.03);
       expect(gain).toBeLessThanOrEqual(0.05);
     }
@@ -69,6 +90,8 @@ describe("Planing", () => {
   it("has a Helm of poor technique get the weight aft less far, so the 420 does not plane where a good one does", () => {
     expect(sail(I420, 16, 100, { skill: 1 }).telemetry.planing).toBe(true);
     expect(sail(I420, 16, 100, { skill: 0.2 }).telemetry.planing).toBe(false);
-    expect(knots(sail(I420, 16, 100, { skill: 0.2 }))).toBeLessThan(knots(sail(I420, 16, 100, { skill: 1 })));
+    expect(knots(sail(I420, 16, 100, { skill: 0.2 }))).toBeLessThan(
+      knots(sail(I420, 16, 100, { skill: 1 })),
+    );
   });
 });

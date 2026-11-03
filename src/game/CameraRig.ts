@@ -17,8 +17,18 @@ export class CameraRig {
   /** The screen's aspect ratio (width / height) the distances were last set for. */
   private aspect = 1;
 
-  constructor(private readonly scene: Scene, canvas: HTMLCanvasElement) {
-    const camera = this.camera = new ArcRotateCamera("cam", -Math.PI / 2, chaseView(false, 1).beta, 12, Vector3.Zero(), scene);
+  constructor(
+    private readonly scene: Scene,
+    canvas: HTMLCanvasElement,
+  ) {
+    const camera = (this.camera = new ArcRotateCamera(
+      "cam",
+      -Math.PI / 2,
+      chaseView(false, 1).beta,
+      12,
+      Vector3.Zero(),
+      scene,
+    ));
     camera.lowerRadiusLimit = 5;
     camera.upperRadiusLimit = 120;
     camera.lowerBetaLimit = 0.08;
@@ -31,12 +41,16 @@ export class CameraRig {
     camera.inputs.removeByType("ArcRotateCameraKeyboardMoveInput");
   }
 
-  get mode(): CameraMode { return this._mode; }
+  get mode(): CameraMode {
+    return this._mode;
+  }
 
   /** The screen's shape now: width / height of the rendered canvas. */
   private screenAspect(): number {
     const engine = this.scene.getEngine();
-    return engine.getRenderHeight() > 0 ? engine.getRenderWidth() / engine.getRenderHeight() : 1;
+    return engine.getRenderHeight() > 0
+      ? engine.getRenderWidth() / engine.getRenderHeight()
+      : 1;
   }
 
   private chase(twoPerson: boolean) {
@@ -57,9 +71,14 @@ export class CameraRig {
   /** Switches to the next view (chase → free → top → chase) and returns it. */
   nextMode(twoPerson: boolean): CameraMode {
     const { camera } = this;
-    this._mode = this._mode === "chase" ? "free" : this._mode === "free" ? "top" : "chase";
+    this._mode =
+      this._mode === "chase" ? "free" : this._mode === "free" ? "top" : "chase";
     if (this._mode === "chase") this.chase(twoPerson);
-    if (this._mode === "top") { camera.beta = 0.12; camera.radius = (twoPerson ? 70 : 48) * chasePullBack(this.screenAspect()); }
+    if (this._mode === "top") {
+      camera.beta = 0.12;
+      camera.radius =
+        (twoPerson ? 70 : 48) * chasePullBack(this.screenAspect());
+    }
     return this._mode;
   }
 
@@ -70,7 +89,8 @@ export class CameraRig {
     const aspect = this.screenAspect();
     if (Math.abs(aspect - this.aspect) > 0.05) {
       camera.radius *= chasePullBack(aspect) / chasePullBack(this.aspect);
-      if (this._mode === "chase") camera.beta = chaseView(twoPerson, aspect).beta;
+      if (this._mode === "chase")
+        camera.beta = chaseView(twoPerson, aspect).beta;
       this.aspect = aspect;
     }
     const far = Math.hypot(s.x - camera.target.x, s.z - camera.target.z) > 25;
@@ -79,7 +99,9 @@ export class CameraRig {
     camera.target.z += (s.z - camera.target.z) * k;
     camera.target.y = twoPerson ? 1.6 : 0.9;
     if (this._mode === "chase") {
-      camera.alpha = far ? behind(s) : lerpAngle(camera.alpha, behind(s), Math.min(1, dt * 1.6));
+      camera.alpha = far
+        ? behind(s)
+        : lerpAngle(camera.alpha, behind(s), Math.min(1, dt * 1.6));
     } else if (this._mode === "top") {
       // North-up tactical view (wind from the top of the screen).
       camera.alpha = lerpAngle(camera.alpha, -Math.PI / 2, Math.min(1, dt * 2));
@@ -88,4 +110,5 @@ export class CameraRig {
 }
 
 /** The camera angle that looks along the boat's heading from behind. */
-const behind = (s: BoatState) => Math.atan2(-Math.cos(s.heading), -Math.sin(s.heading));
+const behind = (s: BoatState) =>
+  Math.atan2(-Math.cos(s.heading), -Math.sin(s.heading));

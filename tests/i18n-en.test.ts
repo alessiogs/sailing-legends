@@ -19,10 +19,15 @@ describe("English catalog", () => {
   });
 
   it("uses no empty message and keeps the message parameters", () => {
-    expect(t("call.switchSide", { name: "Giulia" })).toBe("Giulia: “Switch sides!” → press E");
-    expect(t("menu.versionChip", { boatClass: "420" })).toBe("PROTOTYPE 0.6 · 420");
+    expect(t("call.switchSide", { name: "Giulia" })).toBe(
+      "Giulia: “Switch sides!” → press E",
+    );
+    expect(t("menu.versionChip", { boatClass: "420" })).toBe(
+      "PROTOTYPE 0.6 · 420",
+    );
     for (const [key, message] of Object.entries(english)) {
-      if (typeof message === "string") expect(message.trim() !== "", key).toBe(true);
+      if (typeof message === "string")
+        expect(message.trim() !== "", key).toBe(true);
     }
   });
 
@@ -32,23 +37,47 @@ describe("English catalog", () => {
     expect(t("menu.role.fullBoat")).toBe("Full Boat Control");
     expect(t("menu.autoTrim")).toBe("Auto-trim (Assist)");
     expect(t("menu.label.partner")).toBe("YOUR PARTNER · CREW CHEMISTRY");
-    expect(t("hud.chem.pair", { name: "Giulia" })).toBe("Pair with Giulia · Chemistry");
+    expect(t("hud.chem.pair", { name: "Giulia" })).toBe(
+      "Pair with Giulia · Chemistry",
+    );
     for (const message of Object.values(english)) {
-      if (typeof message === "string") expect(message).not.toMatch(/skipper|teammate/i);
+      if (typeof message === "string")
+        expect(message).not.toMatch(/skipper|teammate/i);
     }
   });
 
   it("picks English plural forms for penalty turns", () => {
-    const owed = (turns: number) => t("hud.penalty", { turns, done: 0, total: turns * 360 });
-    expect(owed(1)).toBe("Penalty: 1 turn to do (0° / 360°) · always turn the same way");
-    expect(owed(2)).toBe("Penalty: 2 turns to do (0° / 720°) · always turn the same way");
-    expect(t("event.penalty", { turns: 1, reason: "rule 10" })).toBe("Penalty: one turn (rule 10)");
-    expect(t("event.penalty", { turns: 2, reason: "rule 10" })).toBe("Penalty: 2 turns (rule 10)");
+    const owed = (turns: number) =>
+      t("hud.penalty", { turns, done: 0, total: turns * 360 });
+    expect(owed(1)).toBe(
+      "Penalty: 1 turn to do (0° / 360°) · always turn the same way",
+    );
+    expect(owed(2)).toBe(
+      "Penalty: 2 turns to do (0° / 720°) · always turn the same way",
+    );
+    expect(t("event.penalty", { turns: 1, reason: "rule 10" })).toBe(
+      "Penalty: one turn (rule 10)",
+    );
+    expect(t("event.penalty", { turns: 2, reason: "rule 10" })).toBe(
+      "Penalty: 2 turns (rule 10)",
+    );
   });
 
   it("words places with English ordinals", () => {
-    const places = [1, 2, 3, 4, 11, 12, 13, 21, 22].map(place => t("results.place", { place }));
-    expect(places).toEqual(["1st", "2nd", "3rd", "4th", "11th", "12th", "13th", "21st", "22nd"]);
+    const places = [1, 2, 3, 4, 11, 12, 13, 21, 22].map((place) =>
+      t("results.place", { place }),
+    );
+    expect(places).toEqual([
+      "1st",
+      "2nd",
+      "3rd",
+      "4th",
+      "11th",
+      "12th",
+      "13th",
+      "21st",
+      "22nd",
+    ]);
     expect(t("event.finish", { place: 2 })).toBe("FINISH! 2nd place");
     expect(t("hud.placeOf", { boats: 6 })).toBe("/6");
   });

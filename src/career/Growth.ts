@@ -10,14 +10,21 @@ import { mixSeed } from "./Seeds";
 
 type Attribute = "technique" | "tactics" | "speed" | "discipline";
 /** In the order the random swings are drawn (fixed, so a seed always gives the same growth). */
-const ATTRIBUTES: readonly Attribute[] = ["technique", "tactics", "speed", "discipline"];
+const ATTRIBUTES: readonly Attribute[] = [
+  "technique",
+  "tactics",
+  "speed",
+  "discipline",
+];
 
 /** Per attribute: the usual gain in a Season at full growth, and how far a Season's gain may swing around it. */
 type Personality = Record<Attribute, { gain: number; swing: number }>;
 
 const TYPICAL: Personality = {
-  technique: { gain: 0.02, swing: 0.012 }, tactics: { gain: 0.02, swing: 0.012 },
-  speed: { gain: 0.02, swing: 0.012 }, discipline: { gain: 0.02, swing: 0.012 },
+  technique: { gain: 0.02, swing: 0.012 },
+  tactics: { gain: 0.02, swing: 0.012 },
+  speed: { gain: 0.02, swing: 0.012 },
+  discipline: { gain: 0.02, swing: 0.012 },
 };
 
 /**
@@ -27,16 +34,22 @@ const TYPICAL: Personality = {
  */
 const PERSONALITIES: Readonly<Record<string, Personality>> = {
   luca: {
-    technique: { gain: 0.055, swing: 0.01 }, tactics: { gain: 0.09, swing: 0.01 },
-    speed: { gain: 0.055, swing: 0.01 }, discipline: { gain: 0.055, swing: 0.01 },
+    technique: { gain: 0.055, swing: 0.01 },
+    tactics: { gain: 0.09, swing: 0.01 },
+    speed: { gain: 0.055, swing: 0.01 },
+    discipline: { gain: 0.055, swing: 0.01 },
   },
   giulia: {
-    technique: { gain: 0.062, swing: 0.005 }, tactics: { gain: 0.062, swing: 0.005 },
-    speed: { gain: 0.062, swing: 0.005 }, discipline: { gain: 0.062, swing: 0.005 },
+    technique: { gain: 0.062, swing: 0.005 },
+    tactics: { gain: 0.062, swing: 0.005 },
+    speed: { gain: 0.062, swing: 0.005 },
+    discipline: { gain: 0.062, swing: 0.005 },
   },
   marco: {
-    technique: { gain: 0.055, swing: 0.015 }, tactics: { gain: 0.05, swing: 0.015 },
-    speed: { gain: 0.1, swing: 0.05 }, discipline: { gain: 0.05, swing: 0.015 },
+    technique: { gain: 0.055, swing: 0.015 },
+    tactics: { gain: 0.05, swing: 0.015 },
+    speed: { gain: 0.1, swing: 0.05 },
+    discipline: { gain: 0.05, swing: 0.015 },
   },
 };
 
@@ -53,7 +66,11 @@ const round3 = (v: number) => Math.round(v * 1000) / 1000;
  * The sailor after one more Season, at `age` (the age they have in the Season that closes). `seed` should be mixed from
  * the Career seed, the Season and the sailor's place in the pool, so each sailor and Season swing differently.
  */
-export function growSailor<T extends SailorProfile>(sailor: T, age: number, seed: number): T {
+export function growSailor<T extends SailorProfile>(
+  sailor: T,
+  age: number,
+  seed: number,
+): T {
   const personality = PERSONALITIES[sailor.id] ?? TYPICAL;
   const factor = growthFactor(age);
   const rand = rng(seed);
@@ -67,4 +84,8 @@ export function growSailor<T extends SailorProfile>(sailor: T, age: number, seed
 }
 
 /** The seed of one sailor's growth in one Season. */
-export const growthSeed = (careerSeed: number, season: number, poolIndex: number) => mixSeed(careerSeed, 0x6120, season, poolIndex);
+export const growthSeed = (
+  careerSeed: number,
+  season: number,
+  poolIndex: number,
+) => mixSeed(careerSeed, 0x6120, season, poolIndex);

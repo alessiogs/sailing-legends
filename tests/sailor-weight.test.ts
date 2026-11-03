@@ -11,7 +11,10 @@ import { WindField } from "../src/sailing/Wind";
 function speed(kg: number, kn: number, twa: number) {
   const wind = new WindField({ puffCount: 0, meanSpeedKn: kn });
   wind.shift = () => 0;
-  const sim = new BoatSim(OPTIMIST, createBoat(0, 0, -twa * DEG), { helmKg: kg, crewKg: 0 });
+  const sim = new BoatSim(OPTIMIST, createBoat(0, 0, -twa * DEG), {
+    helmKg: kg,
+    crewKg: 0,
+  });
   const c: Controls = { rudder: 0, sheet: 0.5 };
   for (let i = 0; i < 60 * 40; i++) {
     sim.state.heading = -twa * DEG;

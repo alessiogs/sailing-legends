@@ -7,18 +7,25 @@ import { lookup } from "../i18n";
 
 function message(key: string): string {
   const text = lookup(key);
-  if (text === undefined) throw new Error(`index.html: no catalog message without parameters for "${key}"`);
+  if (text === undefined)
+    throw new Error(
+      `index.html: no catalog message without parameters for "${key}"`,
+    );
   return text;
 }
 
 /** Fills the page's static text from the catalog. Run once at startup, before any screen is shown. */
 export function fillPageText(root: ParentNode = document) {
-  for (const el of Array.from(root.querySelectorAll<HTMLElement>("[data-i18n]"))) {
+  for (const el of Array.from(
+    root.querySelectorAll<HTMLElement>("[data-i18n]"),
+  )) {
     const text = message(el.dataset.i18n!);
     if (el.childElementCount === 0) el.textContent = text;
     else el.insertBefore(document.createTextNode(text), el.firstChild);
   }
-  for (const el of Array.from(root.querySelectorAll<HTMLElement>("[data-i18n-aria-label]"))) {
+  for (const el of Array.from(
+    root.querySelectorAll<HTMLElement>("[data-i18n-aria-label]"),
+  )) {
     el.setAttribute("aria-label", message(el.dataset.i18nAriaLabel!));
   }
 }

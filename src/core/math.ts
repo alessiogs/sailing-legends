@@ -3,19 +3,26 @@
 export const DEG = Math.PI / 180;
 export const KNOTS = 1.943844; // m/s -> knots
 
-export const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
+export const clamp = (v: number, lo: number, hi: number) =>
+  Math.max(lo, Math.min(hi, v));
 export const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 /** Wrap an angle to (-PI, PI]. */
 export const wrapPi = (a: number) => Math.atan2(Math.sin(a), Math.cos(a));
 /** Shortest signed difference b - a. */
 export const angleDiff = (a: number, b: number) => wrapPi(b - a);
-export const lerpAngle = (a: number, b: number, t: number) => a + angleDiff(a, b) * t;
+export const lerpAngle = (a: number, b: number, t: number) =>
+  a + angleDiff(a, b) * t;
 
 /**
  * World convention (matches Babylon's left-handed frame seen from above):
  * +Z is "north", +X is "east". A compass bearing of 0 points to +Z and grows clockwise toward +X.
  */
-export const bearingTo = (fromX: number, fromZ: number, toX: number, toZ: number) => Math.atan2(toX - fromX, toZ - fromZ);
+export const bearingTo = (
+  fromX: number,
+  fromZ: number,
+  toX: number,
+  toZ: number,
+) => Math.atan2(toX - fromX, toZ - fromZ);
 export const dirX = (bearing: number) => Math.sin(bearing);
 export const dirZ = (bearing: number) => Math.cos(bearing);
 
@@ -33,8 +40,14 @@ export function rng(seed: number) {
 
 /** Segment intersection test, used for start and finish lines. */
 export function segmentsCross(
-  ax: number, az: number, bx: number, bz: number,
-  cx: number, cz: number, dx: number, dz: number,
+  ax: number,
+  az: number,
+  bx: number,
+  bz: number,
+  cx: number,
+  cz: number,
+  dx: number,
+  dz: number,
 ): boolean {
   const d1 = (dx - cx) * (az - cz) - (dz - cz) * (ax - cx);
   const d2 = (dx - cx) * (bz - cz) - (dz - cz) * (bx - cx);

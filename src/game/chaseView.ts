@@ -22,6 +22,12 @@ export function chasePullBack(aspect: number): number {
 }
 
 /** The chase view for a boat on a screen of this aspect ratio: the distance to the boat and the angle above the water. */
-export function chaseView(twoPerson: boolean, aspect: number): { radius: number; beta: number } {
-  return { radius: chaseRadius(twoPerson) * chasePullBack(aspect), beta: CHASE_BETA };
+export function chaseView(
+  twoPerson: boolean,
+  aspect: number,
+): { radius: number; beta: number } {
+  return {
+    radius: chaseRadius(twoPerson) * chasePullBack(aspect),
+    beta: CHASE_BETA,
+  };
 }

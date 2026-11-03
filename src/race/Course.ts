@@ -12,7 +12,13 @@ export type Line = { a: Point; b: Point };
 export type LegId = "mark1" | "mark2" | "finish";
 
 export type Leg =
-  | { kind: "mark"; id: LegId; mark: Point; rounding: "port" | "starboard"; upwind: boolean }
+  | {
+      kind: "mark";
+      id: LegId;
+      mark: Point;
+      rounding: "port" | "starboard";
+      upwind: boolean;
+    }
   | { kind: "finish"; id: LegId; line: Line; upwind: boolean };
 
 export type Course = {
@@ -25,13 +31,21 @@ export type Course = {
   marks: Point[];
 };
 
-export function makeWindwardLeeward(windDir: number, opts: { beat?: number; lineHalf?: number; run?: number } = {}): Course {
+export function makeWindwardLeeward(
+  windDir: number,
+  opts: { beat?: number; lineHalf?: number; run?: number } = {},
+): Course {
   const beat = opts.beat ?? 75;
   const half = opts.lineHalf ?? 24;
   // Local frame: "up" = toward the wind, "right" = to starboard when sailing upwind.
-  const ux = dirX(windDir), uz = dirZ(windDir);
-  const rx = dirX(windDir + Math.PI / 2), rz = dirZ(windDir + Math.PI / 2);
-  const P = (right: number, up: number): Point => ({ x: rx * right + ux * up, z: rz * right + uz * up });
+  const ux = dirX(windDir),
+    uz = dirZ(windDir);
+  const rx = dirX(windDir + Math.PI / 2),
+    rz = dirZ(windDir + Math.PI / 2);
+  const P = (right: number, up: number): Point => ({
+    x: rx * right + ux * up,
+    z: rz * right + uz * up,
+  });
 
   const pin = P(-half, 0);
   const committee = P(half + 2, 0);
@@ -54,7 +68,11 @@ export function makeWindwardLeeward(windDir: number, opts: { beat?: number; line
 
 /** Point the AI (and the HUD arrow) should aim at for a leg. */
 export function legTarget(leg: Leg): Point {
-  if (leg.kind === "finish") return { x: (leg.line.a.x + leg.line.b.x) / 2, z: (leg.line.a.z + leg.line.b.z) / 2 };
+  if (leg.kind === "finish")
+    return {
+      x: (leg.line.a.x + leg.line.b.x) / 2,
+      z: (leg.line.a.z + leg.line.b.z) / 2,
+    };
   return leg.mark;
 }
 

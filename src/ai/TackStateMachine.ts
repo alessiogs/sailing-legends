@@ -21,7 +21,11 @@ export type TackSituation = {
 };
 
 /** The state machine's decision: the heading to steer, whether to ease the sheet right out, whether it gybes round. */
-export type TackSteer = { desired: number; easeSheet: boolean; gybeRound: boolean };
+export type TackSteer = {
+  desired: number;
+  easeSheet: boolean;
+  gybeRound: boolean;
+};
 
 /**
  * The Racing AI's tacking: turning through the wind is a committed tack (without commitment the AI
@@ -35,27 +39,38 @@ export class TackStateMachine {
   private tackWait = 0;
 
   /** `k` is the Helm's size factor: the rule-13 clearance scales with boat length. */
-  constructor(private beat: Pick<BeatTactics, "tackedOnto" | "leaveBeat">, private k: number) {}
+  constructor(
+    private beat: Pick<BeatTactics, "tackedOnto" | "leaveBeat">,
+    private k: number,
+  ) {}
 
   steer(at: TackSituation): TackSteer {
     const { time, fromDir } = at;
     let desired = at.desired;
-    let easeSheet = false, gybeRound = false;
+    let easeSheet = false,
+      gybeRound = false;
     const twaNow = angleDiff(at.heading, fromDir);
     const twaGoal = angleDiff(desired, fromDir);
-    const throughWind = (Math.sign(twaNow) || 1) !== (Math.sign(twaGoal) || 1) && Math.abs(twaNow) + Math.abs(twaGoal) < Math.PI;
+    const throughWind =
+      (Math.sign(twaNow) || 1) !== (Math.sign(twaGoal) || 1) &&
+      Math.abs(twaNow) + Math.abs(twaGoal) < Math.PI;
     if (this.mode === "tack") {
-      if (Math.abs(angleDiff(at.heading, this.tackHeading)) < 15 * DEG) this.mode = "sail";
+      if (Math.abs(angleDiff(at.heading, this.tackHeading)) < 15 * DEG)
+        this.mode = "sail";
       else if (time > this.tackUntil) this.mode = "recover";
       else desired = this.tackHeading;
     }
     if (this.mode === "sail" && throughWind) {
       const busy = at.boatWithin(7 * this.k);
-      if (busy) this.tackWait += at.dt; else this.tackWait = 0;
+      if (busy) this.tackWait += at.dt;
+      else this.tackWait = 0;
       if (at.speed > 0.45 && (!busy || this.tackWait > 6)) {
         this.tackWait = 0;
         this.mode = "tack";
-        this.tackHeading = Math.abs(twaGoal) < CLOSE_HAULED ? wrapPi(fromDir - Math.sign(twaGoal) * CLOSE_HAULED) : desired;
+        this.tackHeading =
+          Math.abs(twaGoal) < CLOSE_HAULED
+            ? wrapPi(fromDir - Math.sign(twaGoal) * CLOSE_HAULED)
+            : desired;
         this.tackUntil = time + 7;
         this.beat.tackedOnto(twaGoal > 0);
         desired = this.tackHeading;
@@ -65,7 +80,8 @@ export class TackStateMachine {
         gybeRound = true;
       }
     }
-    if (this.mode === "sail" && Math.abs(twaNow) < 35 * DEG && at.speed < 0.3) this.mode = "recover";
+    if (this.mode === "sail" && Math.abs(twaNow) < 35 * DEG && at.speed < 0.3)
+      this.mode = "recover";
     if (this.mode === "recover") {
       desired = wrapPi(fromDir - (Math.sign(twaNow) || 1) * 75 * DEG);
       easeSheet = true;

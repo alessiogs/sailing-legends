@@ -4,55 +4,125 @@ import { seasonCalendar, venueName } from "../career/Calendar";
 import type { CareerState } from "../career/CareerSave";
 import { PLAYER_ID } from "../career/RecordRace";
 import type { RegattaStanding, SeasonStanding } from "../career/Scoring";
-import type { RegattaReport, RivalComparison, SeasonSummary } from "../career/Standings";
+import type {
+  RegattaReport,
+  RivalComparison,
+  SeasonSummary,
+} from "../career/Standings";
 import { outgrownOptimist, playerKgNow, sailorKgNow } from "../career/Weight";
 import { RIVALS } from "../sailors/Sailors";
 import { h } from "./dom";
 import { rivalLine } from "./rivalText";
 
-const RIVAL_IDS: ReadonlySet<string> = new Set(RIVALS.map(r => r.id));
+const RIVAL_IDS: ReadonlySet<string> = new Set(RIVALS.map((r) => r.id));
 
 /** Names sailors by id: the player is "You", everyone else is named in the pool. */
 function namer(state: CareerState) {
-  return (id: string) => id === PLAYER_ID ? t("career.standings.you") : state.pool.find(s => s.id === id)?.name ?? id;
+  return (id: string) =>
+    id === PLAYER_ID
+      ? t("career.standings.you")
+      : (state.pool.find((s) => s.id === id)?.name ?? id);
 }
 
 /** Ranking names: the player and the Rivals also show their weight in kg. */
 function rowNamer(state: CareerState, name: (id: string) => string) {
-  return (id: string) => id === PLAYER_ID || RIVAL_IDS.has(id) ? t("career.standings.kg", { name: name(id), kg: Math.round(sailorKgNow(state, id)) }) : name(id);
+  return (id: string) =>
+    id === PLAYER_ID || RIVAL_IDS.has(id)
+      ? t("career.standings.kg", {
+          name: name(id),
+          kg: Math.round(sailorKgNow(state, id)),
+        })
+      : name(id);
 }
 
-type Row = { id: string; place: number; detail: (Node | string)[]; points: number };
+type Row = {
+  id: string;
+  place: number;
+  detail: (Node | string)[];
+  points: number;
+};
 
 function table(rows: Row[], name: (id: string) => string, id: string) {
-  return h("table", { class: "ranking", id },
-    ...rows.map(r => h("tr", { class: r.id === PLAYER_ID ? "me" : RIVAL_IDS.has(r.id) ? "rival" : "", "data-id": r.id },
-      h("td", { class: "pl" }, t("results.place", { place: r.place })),
-      h("td", {}, name(r.id)),
-      h("td", { class: "sc" }, ...r.detail),
-      h("td", { class: "pt" }, String(r.points)))));
+  return h(
+    "table",
+    { class: "ranking", id },
+    ...rows.map((r) =>
+      h(
+        "tr",
+        {
+          class: r.id === PLAYER_ID ? "me" : RIVAL_IDS.has(r.id) ? "rival" : "",
+          "data-id": r.id,
+        },
+        h("td", { class: "pl" }, t("results.place", { place: r.place })),
+        h("td", {}, name(r.id)),
+        h("td", { class: "sc" }, ...r.detail),
+        h("td", { class: "pt" }, String(r.points)),
+      ),
+    ),
+  );
 }
 
 /** Race scores of a Regatta ranking, the Discard struck through. */
 function raceScores(s: RegattaStanding): (Node | string)[] {
-  return s.scores.flatMap((v, i) => [i ? " · " : "", i === s.discarded ? h("s", {}, String(v)) : String(v)]);
+  return s.scores.flatMap((v, i) => [
+    i ? " · " : "",
+    i === s.discarded ? h("s", {}, String(v)) : String(v),
+  ]);
 }
 
-const seasonRow = (s: SeasonStanding): Row =>
-  ({ id: s.id, place: s.place, detail: [s.regattaPlaces.join(" · ")], points: s.points });
+const seasonRow = (s: SeasonStanding): Row => ({
+  id: s.id,
+  place: s.place,
+  detail: [s.regattaPlaces.join(" · ")],
+  points: s.points,
+});
 
-function rivalLines(lines: RivalComparison[], name: (id: string) => string, id: string) {
-  return h("ul", { class: "rival-lines", id }, ...lines.map(c => h("li", { class: c.rivalAhead ? "ahead" : "behind" }, rivalLine(c, name(c.rivalId)))));
+function rivalLines(
+  lines: RivalComparison[],
+  name: (id: string) => string,
+  id: string,
+) {
+  return h(
+    "ul",
+    { class: "rival-lines", id },
+    ...lines.map((c) =>
+      h(
+        "li",
+        { class: c.rivalAhead ? "ahead" : "behind" },
+        rivalLine(c, name(c.rivalId)),
+      ),
+    ),
+  );
 }
 
 /** After a Regatta: its ranking, the Season ranking so far and a line for each Rival. */
-export function standingsSheet(state: CareerState, report: RegattaReport): (HTMLElement | string)[] {
-  const name = namer(state), rowName = rowNamer(state, name);
+export function standingsSheet(
+  state: CareerState,
+  report: RegattaReport,
+): (HTMLElement | string)[] {
+  const name = namer(state),
+    rowName = rowNamer(state, name);
   const regatta = seasonCalendar(state.classId)[report.regattaIndex];
   return [
-    h("div", { class: "brand" }, t("career.standings.title", { number: report.regattaIndex + 1, venue: venueName(regatta) })),
+    h(
+      "div",
+      { class: "brand" },
+      t("career.standings.title", {
+        number: report.regattaIndex + 1,
+        venue: venueName(regatta),
+      }),
+    ),
     h("h3", {}, t("career.standings.regatta")),
-    table(report.regatta.map(s => ({ id: s.id, place: s.place, detail: raceScores(s), points: s.points })), rowName, "career-regatta-table"),
+    table(
+      report.regatta.map((s) => ({
+        id: s.id,
+        place: s.place,
+        detail: raceScores(s),
+        points: s.points,
+      })),
+      rowName,
+      "career-regatta-table",
+    ),
     rivalLines(report.regattaRivals, name, "career-regatta-rivals"),
     h("h3", {}, t("career.standings.season")),
     table(report.season.map(seasonRow), rowName, "career-season-table"),
@@ -61,19 +131,46 @@ export function standingsSheet(state: CareerState, report: RegattaReport): (HTML
 }
 
 /** After the Season's last Regatta: the final place, the Regatta places, the ranking and the Rivals. */
-export function summarySheet(state: CareerState, summary: SeasonSummary): (HTMLElement | string)[] {
-  const name = namer(state), rowName = rowNamer(state, name);
+export function summarySheet(
+  state: CareerState,
+  summary: SeasonSummary,
+): (HTMLElement | string)[] {
+  const name = namer(state),
+    rowName = rowNamer(state, name);
   const { player } = summary;
   return [
-    h("div", { class: "brand" }, t("career.summary.title", { season: state.season })),
-    h("p", { class: "lede", id: "career-summary-result" }, t("career.summary.result", { place: player.place, points: player.points })),
-    h("p", { class: "muted", id: "career-summary-places" },
-      `${t("career.summary.places")}: ${player.regattaPlaces.map(place => t("results.place", { place })).join(" · ")}`),
+    h(
+      "div",
+      { class: "brand" },
+      t("career.summary.title", { season: state.season }),
+    ),
+    h(
+      "p",
+      { class: "lede", id: "career-summary-result" },
+      t("career.summary.result", {
+        place: player.place,
+        points: player.points,
+      }),
+    ),
+    h(
+      "p",
+      { class: "muted", id: "career-summary-places" },
+      `${t("career.summary.places")}: ${player.regattaPlaces.map((place) => t("results.place", { place })).join(" · ")}`,
+    ),
     h("h3", {}, t("career.standings.season")),
     table(summary.standings.map(seasonRow), rowName, "career-summary-table"),
     h("h3", {}, t("career.summary.rivals")),
     rivalLines(summary.rivals, name, "career-summary-rivals"),
     ...(state.classId === "optimist" && outgrownOptimist(playerKgNow(state))
-      ? [h("p", { class: "muted", id: "career-summary-outgrown" }, t("career.summary.outgrown", { kg: Math.round(playerKgNow(state)) }))] : []),
+      ? [
+          h(
+            "p",
+            { class: "muted", id: "career-summary-outgrown" },
+            t("career.summary.outgrown", {
+              kg: Math.round(playerKgNow(state)),
+            }),
+          ),
+        ]
+      : []),
   ];
 }
