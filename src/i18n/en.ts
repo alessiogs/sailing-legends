@@ -351,6 +351,7 @@ export const english: Catalog = {
   "touch.pause": "Pause",
   "touch.camera": "Camera",
   "touch.autoTrim": "Auto-trim",
+  "touch.autoHike": "Auto-hike",
   "touch.spinnaker": "Spi",
   "touch.switchSide": "Switch sides",
   "touch.restart": "Restart",

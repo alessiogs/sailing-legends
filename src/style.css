@@ -119,7 +119,8 @@ strong { font-weight: 650; font-variant-numeric: tabular-nums; }
 .trim-cur { position: absolute; left: 4px; right: 4px; height: 28px; margin-top: -14px; border-radius: 8px; background: var(--boat); }
 .trim-cur::after { content: ""; position: absolute; left: 50%; top: 50%; width: 16px; height: 3px; margin: -1.5px 0 0 -8px; border-radius: 2px; background: #081622; }
 
-#hike-zone { right: auto; left: 8px; bottom: 14px; }
+#hike-zone { right: auto; left: 8px; bottom: 66px; }
+#touch-auto-hike { position: absolute; left: 7px; bottom: 14px; pointer-events: auto; }
 #deck-right { position: absolute; right: 7px; bottom: 14px; display: flex; flex-direction: column; align-items: center; gap: 6px; }
 #context-buttons { display: flex; flex-direction: column; gap: 6px; }
 .slider { bottom: 66px; }
@@ -252,7 +253,7 @@ html, body { touch-action: none; -webkit-user-select: none; user-select: none; -
   #context-buttons { flex-direction: row-reverse; }
   .slider, #hud:has(#context-buttons.two) .slider, #hud:has(#context-buttons.two.crew) .slider { bottom: 14px; }
   .tiller { left: 8px; transform: none; }
-  #hike-zone { left: calc(min(34vw, 420px) + 16px); }
+  #hike-zone, #touch-auto-hike { left: calc(min(34vw, 420px) + 16px); }
 }
 /* A small landscape screen (a phone): the status pills and the panel share one narrow column, clear of the tiller and the buttons. */
 @media (orientation: landscape) and (max-height: 559px) {
