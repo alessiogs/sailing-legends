@@ -1,6 +1,6 @@
 /**
  * Career simulator: a stand-in AI player sails whole Seasons through the real Career rules and prints how it fares.
- * Run with `npm run career-sim` (flags: `--skills=0.45,0.6,0.75 --seasons=6 --seed=1 --plan=optimist,optimist,optimist,420`; the plan lists each Season's class: optimist, 420, ilca4/6/7, 29er, 49er). Not a test.
+ * Run with `npm run career-sim` (flags: `--skills=0.45,0.6,0.75 --seasons=6 --seed=1 --age=10 --plan=optimist,optimist,optimist,420`; the plan lists each Season's class: optimist, 420, ilca4/6/7, 29er, 49er). Not a test.
  *
  * The stand-in at skill `s` is a Racing AI Helm with all four attributes = `s` steering the player's boat; in the
  * 420 the Partner (Giulia) trims as the Crew. Seasons 1-3 are the Optimist, then the 420 as Helm with Giulia. The fleet,
@@ -89,6 +89,7 @@ function planChoice(state: CareerState, entry: string): SeasonChoice {
   };
 }
 const seed = Number(arg("seed", "1"));
+const startingAge = Number(arg("age", "10"));
 if (
   skills.some((s) => !(s >= 0 && s <= 1)) ||
   !Number.isInteger(seasons) ||
@@ -146,11 +147,13 @@ const f2 = (v: number) => v.toFixed(2);
 const pad = (s: string, n: number) => s.padEnd(n);
 
 for (const skill of skills) {
-  console.log(`\nStand-in skill ${skill} (seed ${seed}, start age 10)`);
+  console.log(
+    `\nStand-in skill ${skill} (seed ${seed}, start age ${startingAge})`,
+  );
   console.log(
     `${pad("S", 2)} ${pad("class", 8)} ${pad("regattas (place/fleet by level)", 44)} ${pad("season", 6)} ${pad("rivals luca/giulia/marco", 25)} chem`,
   );
-  let state = startCareer({ seed });
+  let state = startCareer({ seed, startingAge });
   for (let n = 1; n <= seasons; n++) {
     const calendar = seasonCalendar(state.classId);
     const rivalRatings = RIVALS.map((r) =>
