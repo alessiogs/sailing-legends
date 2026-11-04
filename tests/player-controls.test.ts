@@ -93,6 +93,26 @@ describe("player controls", () => {
     expect(pc.jibSheet).toBe(p.sim.telemetry.jib!.optimal);
   });
 
+  it("on a race's first frame, before any telemetry, the Crew's Assists leave the sheet and weight as they are", () => {
+    const session = new RaceSession({
+      seed: 7,
+      fleet: makeFleet({ boatClass: I420, choice: CREW }),
+    });
+    const input: PlayerInput = {
+      role: "crew",
+      rudder: 0,
+      sheet: 0.3,
+      crewOut: 0.8,
+      helmOut: 0,
+    };
+    const controls = new PlayerControls(input, {
+      autoTrim: true,
+      autoHike: true,
+    });
+    controls.apply(1 / 60, session);
+    expect([input.sheet, input.crewOut]).toEqual([0.3, 0.8]);
+  });
+
   it("hands back the sheet where the sail is trimmed when Auto-trim is switched off", () => {
     const helm = setup(HELM);
     helm.controls.autoTrimOff(helm.session);
