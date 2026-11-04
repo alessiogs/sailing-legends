@@ -39,6 +39,7 @@ const POOL_TEXT =
   "]";
 
 const NO_PARTNER = {
+  rig: null,
   build: "average",
   partnerId: null,
   choice: { role: "helm", control: "playerCareer" },
@@ -46,11 +47,12 @@ const NO_PARTNER = {
   seasonsTogether: {},
 };
 const STATE: CareerState = {
-  version: 3,
+  version: 4,
   seed: 12345,
   startingAge: 10,
   season: 2,
   classId: "optimist",
+  rig: null,
   build: "heavy",
   regattaIndex: 1,
   results: [
@@ -83,7 +85,7 @@ const STATE: CareerState = {
 };
 /** The same fields as text, written out by hand. */
 const STATE_TEXT =
-  '{"version":3,"seed":12345,"startingAge":10,"season":2,"classId":"optimist","build":"heavy","regattaIndex":1,"results":[' +
+  '{"version":4,"seed":12345,"startingAge":10,"season":2,"classId":"optimist","rig":null,"build":"heavy","regattaIndex":1,"results":[' +
   '[[{"id":"me","status":"finished","place":2},{"id":"luca","status":"finished","place":1}],' +
   '[{"id":"me","status":"dnf"},{"id":"luca","status":"finished","place":1}],' +
   '[{"id":"me","status":"ocs"},{"id":"luca","status":"finished","place":1}]],' +
@@ -93,11 +95,12 @@ const STATE_TEXT =
 /** A fresh Career's text, for the cases that vary one field. */
 const field = (name: string, value: string) => {
   const fields: Record<string, string> = {
-    version: "3",
+    version: "4",
     seed: "12345",
     startingAge: "10",
     season: "1",
     classId: '"optimist"',
+    rig: "null",
     build: '"average"',
     regattaIndex: "0",
     results: "[[]]",
@@ -238,11 +241,12 @@ describe("career save codec", () => {
     expect(decodeCareer(text)).toEqual({
       ok: true,
       state: {
-        version: 3,
+        version: 4,
         seed: 12345,
         startingAge: 10,
         season: 1,
         classId: "420",
+        rig: null,
         build: "average",
         regattaIndex: 0,
         results: [[]],
@@ -255,14 +259,44 @@ describe("career save codec", () => {
     });
   });
   it("loads a version 2 save (made before builds) with the average build", () => {
-    const v2 = STATE_TEXT.replace('"version":3', '"version":2').replace(
-      '"build":"heavy",',
-      "",
-    );
+    const v2 = STATE_TEXT.replace('"version":4', '"version":2')
+      .replace('"build":"heavy",', "")
+      .replace('"rig":null,', "");
     expect(decodeCareer(v2)).toEqual({
       ok: true,
       state: { ...STATE, build: "average" },
     });
+  });
+  it("loads a version 3 save (made before the ILCA's rig) unchanged, with no rig", () => {
+    const v3 = STATE_TEXT.replace('"version":4', '"version":3').replace(
+      '"rig":null,',
+      "",
+    );
+    expect(decodeCareer(v3)).toEqual({ ok: true, state: STATE });
+  });
+  it("reads an ILCA Career with its rig, a 29er Career with its Partner, and refuses a rig in the wrong class", () => {
+    const ilca = (rig: string) =>
+      decodeCareer(
+        field("classId", '"ilca"').replace('"rig":null', `"rig":${rig}`),
+      );
+    const seven = ilca("7");
+    expect(seven.ok && [seven.state.classId, seven.state.rig]).toEqual([
+      "ilca",
+      7,
+    ]);
+    for (const rig of ["null", "5", '"6"'])
+      expect(ilca(rig)).toEqual({ ok: false });
+    expect(decodeCareer(field("rig", "6"))).toEqual({ ok: false });
+    const skiff = decodeCareer(
+      field("classId", '"29er"')
+        .replace('"partnerId":null', '"partnerId":"ada"')
+        .replace('"chemistry":null', '"chemistry":50'),
+    );
+    expect(skiff.ok && [skiff.state.rig, skiff.state.partnerId]).toEqual([
+      null,
+      "ada",
+    ]);
+    expect(decodeCareer(field("classId", '"29er"'))).toEqual({ ok: false });
   });
   it("is unreadable for a version it does not know, older than the first or newer than this game", () => {
     expect(decodeCareer(field("version", "0"))).toEqual({ ok: false });
@@ -294,6 +328,7 @@ describe("career save codec", () => {
           startingAge: 9,
           season: 1,
           classId: "optimist",
+          rig: null,
           regattaIndex: 0,
           results: [[]],
           pool: POOL,
@@ -309,6 +344,7 @@ describe("career save codec", () => {
           startingAge: 11,
           season: 1,
           classId: "optimist",
+          rig: null,
           regattaIndex: 0,
           results: [[]],
           pool: POOL,
@@ -374,7 +410,7 @@ describe("career save codec", () => {
         ]),
       );
       expect(done.ok && done.state.regattaIndex).toBe(6);
-      expect(done.ok && done.state.version).toBe(3);
+      expect(done.ok && done.state.version).toBe(4);
     });
   });
 });

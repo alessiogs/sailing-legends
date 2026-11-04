@@ -2,7 +2,13 @@
  * The Career's saved state and its codec: pure functions between the state and versioned JSON text. No text for the
  * player here (ADR 0001): a save that cannot be read is data (`{ ok: false }`) and the menu words it.
  */
-import { isClassId, type ClassId } from "../sailing/BoatClass";
+import {
+  CLASSES,
+  isClassId,
+  isTwoPerson,
+  type ClassId,
+  type IlcaRig,
+} from "../sailing/BoatClass";
 import { seasonCalendar } from "./Calendar";
 import { MAX_STARTING_AGE, MIN_STARTING_AGE } from "./Ages";
 import { isBuild, type Build } from "../sailors/BodyWeight";
@@ -22,6 +28,8 @@ export type CareerState = {
   season: number;
   /** The class sailed this Season; it picks the Season's calendar. */
   classId: ClassId;
+  /** The ILCA's rig (4, 6 or 7) when the class is the ILCA, `null` in every other class. */
+  rig: IlcaRig | null;
   /** The player's Build (light, average, heavy), chosen when the Career starts: it sets their body weight at every age. */
   build: Build;
   /** The Regatta in progress, as an index into the calendar. */
@@ -43,7 +51,7 @@ export type CareerState = {
   seasonsTogether: Record<string, number>;
 };
 
-export const CAREER_VERSION = 3;
+export const CAREER_VERSION = 4;
 
 export type CareerLoad = { ok: true; state: CareerState } | { ok: false };
 
@@ -96,6 +104,12 @@ const migrateCalendar: CareerMigration = (saved) => {
 /** Version 3 added the player's Build: an older Career gets the average one. */
 const addBuild: CareerMigration = (saved) => ({ ...saved, build: "average" });
 
+/** Version 4 added the ILCA's rig: no older save has the ILCA, so every class keeps its place and the rig is `null`. */
+const addRig: CareerMigration = (saved) => ({
+  ...saved,
+  rig: saved.classId === "ilca" ? 6 : null,
+});
+
 /**
  * Migrations by the version they start from. A change to the shape raises `CAREER_VERSION` and adds the step from the
  * old version here.
@@ -103,6 +117,7 @@ const addBuild: CareerMigration = (saved) => ({ ...saved, build: "average" });
 export const CAREER_MIGRATIONS: Readonly<Record<number, CareerMigration>> = {
   1: migrateCalendar,
   2: addBuild,
+  3: addRig,
 };
 
 const STATUSES: readonly string[] = ["finished", "ocs", "dsq", "dnf"];
@@ -236,6 +251,7 @@ export function decodeCareer(
       startingAge,
       season,
       classId,
+      rig,
       build,
       regattaIndex,
       results,
@@ -250,11 +266,13 @@ export function decodeCareer(
       return { ok: false };
     if (typeof classId !== "string" || !isClassId(classId) || !isBuild(build))
       return { ok: false };
+    if (classId === "ilca" ? rig !== 4 && rig !== 6 && rig !== 7 : rig !== null)
+      return { ok: false };
     if (!isInt(regattaIndex, 0) || !isResults(results, classId, regattaIndex))
       return { ok: false };
     if (!isPool(pool) || !isChoice(choice) || !isHistory(seasonsTogether, pool))
       return { ok: false };
-    const paired = classId === "420";
+    const paired = isTwoPerson(CLASSES[classId]);
     if (!paired && (partnerId !== null || chemistry !== null))
       return { ok: false };
     if (
@@ -274,6 +292,7 @@ export function decodeCareer(
         startingAge,
         season,
         classId,
+        rig: rig as IlcaRig | null,
         build,
         regattaIndex,
         results,

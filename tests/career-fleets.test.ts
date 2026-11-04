@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 import { nextRaceSetup, startCareer } from "../src/career/Career";
 import type { CareerState } from "../src/career/CareerSave";
 import { seasonCalendar } from "../src/career/Calendar";
+import { sailorPath } from "../src/career/Classes";
 import { sailorRating } from "../src/career/Pool";
 import { CREW, HELM } from "../src/race/PlayerChoice";
 import { RaceSession } from "../src/race/RaceSession";
@@ -153,17 +154,20 @@ describe("fleets in the 420", () => {
       ...s.fleet.opponents.flatMap((b) => [b.helm.id, b.crew!.id]),
     ];
     expect(new Set(ids).size).toBe(ids.length);
-    const helms = s.fleet.opponents.map((b) => b.helm.id);
-    expect(helms.includes("luca") && helms.includes("marco")).toBe(true);
   });
 
-  it("keep all three Rivals among the Helms when the Partner is not one of them", () => {
+  it("hold exactly the Rivals whose own class path is the 420 (the Partner aside)", () => {
     const state = state420();
     const generated = state.pool[5];
     expect(RIVALS.some((r) => r.id === generated.id)).toBe(false);
     const s = nextRaceSetup(state, { choice: HELM, partner: generated })!;
     expect(s.fleet.partner?.id).toBe(generated.id);
     const helms = s.fleet.opponents.map((b) => b.helm.id);
-    for (const r of RIVALS) expect(helms.includes(r.id)).toBe(true);
+    for (const r of state.pool.filter((p) =>
+      RIVALS.some((x) => x.id === p.id),
+    )) {
+      const path = sailorPath(state.seed, state.season, r.id, r.startingAge);
+      expect(helms.includes(r.id)).toBe(path.classId === "420");
+    }
   });
 });

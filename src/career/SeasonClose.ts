@@ -2,13 +2,15 @@
  * Closing a Season: a pure function from state to state. No text (ADR 0001). `closeSeason` is the ageing and growth
  * part; `startNextSeason` applies the end-of-Season choice (stay, or move to the 420 with a Partner) to its result.
  */
-import type { PlayerChoice } from "../race/PlayerChoice";
+import { HELM, type PlayerChoice } from "../race/PlayerChoice";
+import type { IlcaRig } from "../sailing/BoatClass";
 import { ageInSeason } from "./Ages";
 import type { CareerState } from "./CareerSave";
 import { startingChemistry } from "./Chemistry";
 import { growSailor, growthSeed } from "./Growth";
 import { PLAYER_ID } from "./PlayerId";
 import { bodyWeightKg, buildFactorOf } from "../sailors/BodyWeight";
+import { classOffers, samePath, type PairClassId } from "./Classes";
 import { pairWeightHint, playerKgNow, type PairHint } from "./Weight";
 
 /** The sailors the player raced with this Season: every boat they sailed against, and their Partner. */
@@ -45,10 +47,14 @@ export function closeSeason(state: CareerState): CareerState {
   };
 }
 
-/** The end-of-Season choice: stay in the Optimist, or sail the 420 with a Partner (a pool sailor's `id`), Role and Control mode. */
+/**
+ * The end-of-Season choice: any class the player's age allows (`classOffers`), sideways and back included. The ILCA by
+ * its rig; a two-person class (420, 29er, 49er) with a Partner (a pool sailor's `id`), Role and Control mode.
+ */
 export type SeasonChoice =
   | { classId: "optimist" }
-  | { classId: "420"; partnerId: string; choice: PlayerChoice };
+  | { classId: "ilca"; rig: IlcaRig }
+  | { classId: PairClassId; partnerId: string; choice: PlayerChoice };
 
 /**
  * The sailors the player may pick as Partner: those raced against this Season, and the current Partner. Call it on the
@@ -71,7 +77,10 @@ export type PartnerOffer = {
 };
 
 /** The Partners to choose from, with the Chemistry each would start with next Season. Call it on the state of the Season just sailed. */
-export function partnerOffers(state: CareerState): PartnerOffer[] {
+export function partnerOffers(
+  state: CareerState,
+  classId: PairClassId = "420",
+): PartnerOffer[] {
   const closed = closeSeason(state);
   return partnerCandidates(state).map((id) => {
     const kept = state.chemistry !== null && state.partnerId === id;
@@ -88,24 +97,37 @@ export function partnerOffers(state: CareerState): PartnerOffer[] {
         : startingChemistry(partner, closed.seasonsTogether[id] ?? 0),
       kg,
       pairKg,
-      hint: pairWeightHint(pairKg),
+      hint: pairWeightHint(pairKg, classId),
     };
   });
 }
 
 /**
- * Closes the Season and applies the choice. Moving to the 420 (or changing Partner in it) starts the Pair's Chemistry
- * from the formula with the Seasons raced together; keeping the Partner keeps their Chemistry. Throws a RangeError for
- * a Partner who is not a candidate, or for going back to the Optimist from the 420. The state given is not changed.
+ * Closes the Season and applies the choice. Moving to a two-person class (or changing Partner in it) starts the Pair's
+ * Chemistry from the formula with the Seasons raced together; keeping the Partner keeps their Chemistry, whatever the
+ * class, because Chemistry belongs to the Pair. A single-handed class has no Partner. Throws a RangeError for a class
+ * the player's age does not allow, or a Partner who is not a candidate. The state given is not changed.
  */
 export function startNextSeason(
   state: CareerState,
   next: SeasonChoice,
 ): CareerState {
-  if (next.classId === "optimist") {
-    if (state.classId !== "optimist")
-      throw new RangeError("The Optimist cannot be sailed again after the 420");
-    return closeSeason(state);
+  const path = {
+    classId: next.classId,
+    rig: next.classId === "ilca" ? next.rig : null,
+  };
+  if (!classOffers(state).some((o) => samePath(o.path, path)))
+    throw new RangeError(
+      `${next.classId} cannot be sailed at this age, or has no such rig`,
+    );
+  if (!("partnerId" in next)) {
+    return {
+      ...closeSeason(state),
+      ...path,
+      partnerId: null,
+      choice: HELM,
+      chemistry: null,
+    };
   }
   if (!partnerCandidates(state).includes(next.partnerId))
     throw new RangeError(
@@ -113,13 +135,10 @@ export function startNextSeason(
     );
   const closed = closeSeason(state);
   const partner = closed.pool.find((s) => s.id === next.partnerId)!;
-  const kept =
-    state.classId === "420" &&
-    state.partnerId === next.partnerId &&
-    state.chemistry !== null;
+  const kept = state.partnerId === next.partnerId && state.chemistry !== null;
   return {
     ...closed,
-    classId: "420",
+    ...path,
     partnerId: partner.id,
     choice: next.choice,
     chemistry: kept

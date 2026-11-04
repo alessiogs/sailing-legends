@@ -517,9 +517,23 @@ export const italian = {
   "career.next.title": ({ season }: { season: number }) =>
     `Stagione ${season}: come prosegui?`,
   "career.next.help":
-    "Resti in Optimist o passi al 420, in due con un compagno che hai incontrato in regata?",
-  "career.next.stay": "Resta in Optimist",
-  "career.next.move": "Passa al 420",
+    "Scegli la classe per la prossima stagione, tra quelle che la tua età consente. In due, scegli un compagno che hai incontrato in regata.",
+  "career.next.classes": "Classe",
+  "career.next.current": "In corso",
+  "career.next.single": "In singolo",
+  "career.next.rig": ({
+    from,
+    to,
+    kg,
+    hint,
+  }: {
+    from: number;
+    to: number;
+    kg: number;
+    hint: string;
+  }) => `Peso ideale ${from}-${to} kg · tu ${kg} kg · ${hint}`,
+  "career.next.pairClass": ({ from, to }: { from: number; to: number }) =>
+    `In due · equipaggio ideale ${from}-${to} kg`,
   "career.next.partner":
     "Scegli il tuo compagno tra i velisti che hai incontrato. L'intesa cresce con le stagioni passate a regatare insieme.",
   "career.next.chemistry": ({
