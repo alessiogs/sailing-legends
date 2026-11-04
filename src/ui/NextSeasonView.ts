@@ -1,10 +1,21 @@
 /**
- * The end-of-Season choice: stay in the Optimist or move to the 420, and in the 420 pick the Partner among the sailors
- * raced against, with the Role and Control mode. Built with `h()`; the choice itself is `startNextSeason`'s.
+ * The end-of-Season choice: the classes the player's age allows, each with its weight hint (the ILCA by rig); in a
+ * two-person class, the Partner among the sailors raced against, with the Role and Control mode. Built with `h()`; the
+ * choice itself is `startNextSeason`'s.
  */
 import { t } from "../i18n";
 import type { CareerState } from "../career/CareerSave";
+import {
+  boatClassOf,
+  classOffers,
+  isPairClass,
+  pathOf,
+  samePath,
+  type ClassPath,
+  type PairClassId,
+} from "../career/Classes";
 import { partnerOffers, type SeasonChoice } from "../career/SeasonClose";
+import { PAIR_IDEAL_KG, RIG_IDEAL_KG } from "../career/Weight";
 import { CREW, FULL_BOAT, HELM, type PlayerChoice } from "../race/PlayerChoice";
 import { h } from "./dom";
 
@@ -32,24 +43,20 @@ export function nextSeasonSheet(
   actions: NextSeasonActions,
   rerender: (content: (HTMLElement | string)[]) => void,
 ): (HTMLElement | string)[] {
-  const in420 = state.classId === "420";
-  const offers = partnerOffers(state);
+  const classes = classOffers(state);
   const nameOf = (id: string) =>
     state.pool.find((s) => s.id === id)?.name ?? id;
-  let picking = in420;
-  let partnerId =
-    (in420 &&
-    state.partnerId !== null &&
-    offers.some((o) => o.id === state.partnerId)
-      ? state.partnerId
-      : offers[0]?.id) ?? "";
-  let role: (typeof ROLES)[number]["id"] = in420
-    ? state.choice.role === "crew"
-      ? "crew"
-      : state.choice.control === "fullBoat"
-        ? "fullBoat"
-        : "helm"
-    : "helm";
+  const current = pathOf(state);
+  let picked: ClassPath = current;
+  let partnerId = "";
+  let role: (typeof ROLES)[number]["id"] =
+    state.partnerId === null
+      ? "helm"
+      : state.choice.role === "crew"
+        ? "crew"
+        : state.choice.control === "fullBoat"
+          ? "fullBoat"
+          : "helm";
 
   const draw = () => rerender(sheet());
   const button = (
@@ -63,32 +70,50 @@ export function nextSeasonSheet(
     return b;
   };
 
-  const sheet = (): (HTMLElement | string)[] => {
-    const head = h(
-      "div",
-      { class: "brand" },
-      t("career.next.title", { season: state.season + 1 }),
-    );
-    if (!picking) {
-      return [
-        head,
-        h("p", { class: "lede" }, t("career.next.help")),
-        h(
-          "div",
-          { class: "row-btns" },
-          button("ghost", t("career.back"), "career-next-back", () =>
-            actions.back(),
-          ),
-          button("ghost", t("career.next.stay"), "career-stay", () =>
-            actions.choose({ classId: "optimist" }),
-          ),
-          button("primary", t("career.next.move"), "career-move", () => {
-            picking = true;
-            draw();
-          }),
-        ),
-      ];
-    }
+  const classButtons = () =>
+    classes.map((o) => {
+      const cls = boatClassOf(o.path);
+      const detail =
+        o.path.rig !== null
+          ? t("career.next.rig", {
+              from: RIG_IDEAL_KG[o.path.rig].min,
+              to: RIG_IDEAL_KG[o.path.rig].max,
+              kg: Math.round(o.kg),
+              hint: t(`career.next.hint.${o.hint!}`),
+            })
+          : isPairClass(o.path.classId)
+            ? t("career.next.pairClass", {
+                from: PAIR_IDEAL_KG[o.path.classId].min,
+                to: PAIR_IDEAL_KG[o.path.classId].max,
+              })
+            : t("career.next.single");
+      const b = h(
+        "button",
+        {
+          "data-v": `${o.path.classId}${o.path.rig ?? ""}`,
+          class: `partner${samePath(o.path, picked) ? " on" : ""}`,
+        },
+        h("b", {}, cls.name),
+        h("small", { class: `hint ${o.hint ?? ""}` }, detail),
+        ...(samePath(o.path, current)
+          ? [h("small", {}, t("career.next.current"))]
+          : []),
+      );
+      b.addEventListener("click", () => {
+        picked = o.path;
+        draw();
+      });
+      return b;
+    });
+
+  const partnerSection = (classId: PairClassId) => {
+    const offers = partnerOffers(state, classId);
+    if (!offers.some((o) => o.id === partnerId))
+      partnerId =
+        (state.partnerId !== null &&
+        offers.some((o) => o.id === state.partnerId)
+          ? state.partnerId
+          : offers[0]?.id) ?? "";
     const partners = offers.map((o) => {
       const b = h(
         "button",
@@ -135,23 +160,43 @@ export function nextSeasonSheet(
       return b;
     });
     return [
-      head,
       h("p", { class: "lede" }, t("career.next.partner")),
       h("div", { class: "partners", id: "career-partners" }, ...partners),
       h("h3", {}, t("menu.label.role")),
       h("div", { class: "seg", id: "career-role" }, ...roles),
+    ];
+  };
+
+  const sheet = (): (HTMLElement | string)[] => {
+    const pair = isPairClass(picked.classId) ? picked.classId : null;
+    const choice = (): SeasonChoice =>
+      pair
+        ? {
+            classId: pair,
+            partnerId,
+            choice: ROLES.find((r) => r.id === role)!.choice,
+          }
+        : picked.rig !== null
+          ? { classId: "ilca", rig: picked.rig }
+          : { classId: "optimist" };
+    return [
+      h(
+        "div",
+        { class: "brand" },
+        t("career.next.title", { season: state.season + 1 }),
+      ),
+      h("p", { class: "lede" }, t("career.next.help")),
+      h("h3", {}, t("career.next.classes")),
+      h("div", { class: "partners", id: "career-classes" }, ...classButtons()),
+      ...(pair ? partnerSection(pair) : []),
       h(
         "div",
         { class: "row-btns" },
         button("ghost", t("career.back"), "career-next-back", () =>
-          in420 ? actions.back() : ((picking = false), draw()),
+          actions.back(),
         ),
         button("primary", t("career.next.start"), "career-start-season", () =>
-          actions.choose({
-            classId: "420",
-            partnerId,
-            choice: ROLES.find((r) => r.id === role)!.choice,
-          }),
+          actions.choose(choice()),
         ),
       ),
     ];

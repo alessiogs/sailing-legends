@@ -383,9 +383,14 @@ export const english: Catalog = {
   "career.summary.next": "Next Season",
   "career.next.title": ({ season }) => `Season ${season}: what next?`,
   "career.next.help":
-    "Stay in the Optimist, or move to the 420 with a Partner you have raced against?",
-  "career.next.stay": "Stay in the Optimist",
-  "career.next.move": "Move to the 420",
+    "Pick next Season's class from those your age allows. In a two-person class, pick a Partner you have raced against.",
+  "career.next.classes": "Class",
+  "career.next.current": "Current",
+  "career.next.single": "Single-handed",
+  "career.next.rig": ({ from, to, kg, hint }) =>
+    `Ideal weight ${from}-${to} kg · you ${kg} kg · ${hint}`,
+  "career.next.pairClass": ({ from, to }) =>
+    `Two-person · ideal Pair ${from}-${to} kg`,
   "career.next.partner":
     "Pick your Partner among the sailors you raced against. Chemistry grows with the Seasons raced together.",
   "career.next.chemistry": ({ chemistry, kg }) =>

@@ -103,7 +103,12 @@ export function misfit(path: ClassPath, age: number, kg: number): number {
 }
 
 /** One class the player may sail next Season; the ILCA's `hint` is the rig's against their weight (Pair classes get theirs per Partner). */
-export type ClassOffer = { path: ClassPath; hint: PairHint | null };
+export type ClassOffer = {
+  path: ClassPath;
+  hint: PairHint | null;
+  /** The player's body weight next Season. */
+  kg: number;
+};
 
 /**
  * The classes the player may choose for next Season, whichever class they sailed: those whose age window fits the age
@@ -118,6 +123,7 @@ export function classOffers(state: CareerState): ClassOffer[] {
   ).map((path) => ({
     path,
     hint: path.rig === null ? null : rigWeightHint(kg, path.rig),
+    kg,
   }));
 }
 
