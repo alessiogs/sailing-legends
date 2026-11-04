@@ -105,7 +105,8 @@ export function partnerOffers(
 /**
  * Closes the Season and applies the choice. Moving to a two-person class (or changing Partner in it) starts the Pair's
  * Chemistry from the formula with the Seasons raced together; keeping the Partner keeps their Chemistry, whatever the
- * class, because Chemistry belongs to the Pair. A single-handed class has no Partner. Throws a RangeError for a class
+ * class, because Chemistry belongs to the Pair. A single-handed class has no Partner, so a Season there ends the Pair's
+ * Chemistry: returning to the same Partner later starts again from the formula (the Seasons raced together still count). Throws a RangeError for a class
  * the player's age does not allow, or a Partner who is not a candidate. The state given is not changed.
  */
 export function startNextSeason(
