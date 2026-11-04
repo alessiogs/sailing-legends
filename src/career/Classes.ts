@@ -127,10 +127,16 @@ export function classOffers(state: CareerState): ClassOffer[] {
   }));
 }
 
+/** The chance, each Season, that a Rival who still fits their class moves anyway. */
+const RIVAL_MOVE_CHANCE = 0.1;
+
 /**
- * The class path a pool sailor (a Rival) sails in a Season, by their age and body weight. Children and light sailors
- * stay in the Optimist; then the heavy go to the ILCA 7 or the 49er, the light to the ILCA 4 or the 420, the rest
- * across the 420, their ILCA rig, the 29er and the 49er. The draw is seeded, so it is the same every time.
+ * The class path a pool sailor (a Rival) sails in a Season, by their age and body weight. Children sail the Optimist;
+ * from then on a Rival keeps the class of the Season before while age and weight still fit it, moving only when they
+ * no longer do or on a small seeded chance, and never back into a class they have left behind. A new class is drawn
+ * from those their age (the player's own age windows, `ageFits`) and weight allow: the heavy go to the ILCA 7 or the
+ * 49er, the light to the ILCA 4 or the 420, the rest across the 420, their ILCA rig, the 29er and the 49er. The draws
+ * are seeded, so it is the same every time.
  */
 export function sailorPath(
   seed: number,
@@ -138,26 +144,41 @@ export function sailorPath(
   id: string,
   startingAge: number,
 ): ClassPath {
-  const age = ageInSeason(startingAge, season);
-  const kg = bodyWeightKg(age, buildFactorOf(id));
-  if (age <= 10) return OPTIMIST;
   let h = 0;
   for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
-  const roll = rng(mixSeed(seed, season, 0xc1a55, h))();
-  // Light children stay in the Optimist until its Age limit, though some move to the 420 early.
-  if (age <= CLASSES.optimist.ageLimit! && kg <= OPTIMIST_MAX_KG)
-    return roll < 0.6 ? OPTIMIST : I420;
-  const ilca = ilcaPath(suggestedRig(kg));
-  const options: ClassPath[] =
-    kg >= 75
-      ? [ilca, ...(age >= 17 ? [I49ER] : [])]
-      : kg < 56
-        ? [ilca, ...(age <= 17 ? [I420] : [])]
-        : [
-            ...(age <= 17 ? [I420] : []),
-            ilca,
-            ...(age >= 13 && age <= 19 ? [I29ER] : []),
-            ...(age >= 18 && kg >= 65 ? [I49ER] : []),
-          ];
-  return options[Math.floor(roll * options.length)];
+  let path: ClassPath = OPTIMIST;
+  for (let s = 1; s <= season; s++) {
+    const age = ageInSeason(startingAge, s);
+    const kg = bodyWeightKg(age, buildFactorOf(id));
+    if (age <= 10) {
+      path = OPTIMIST;
+      continue;
+    }
+    const draw = rng(mixSeed(seed, s, 0xc1a55, h));
+    const roll = draw();
+    const move = draw();
+    const fits =
+      path.classId === "ilca"
+        ? ageFits("ilca", age)
+        : misfit(path, age, kg) === 0;
+    if (fits && move >= RIVAL_MOVE_CHANCE) {
+      if (path.classId === "ilca") path = ilcaPath(suggestedRig(kg));
+      continue;
+    }
+    const ilca = ilcaPath(suggestedRig(kg));
+    const is420 = ageFits("420", age) && age <= 17;
+    const options: ClassPath[] =
+      kg >= 75
+        ? [ilca, ...(ageFits("49er", age) ? [I49ER] : [])]
+        : kg < 56
+          ? [ilca, ...(is420 ? [I420] : [])]
+          : [
+              ...(is420 ? [I420] : []),
+              ilca,
+              ...(ageFits("29er", age) ? [I29ER] : []),
+              ...(ageFits("49er", age) && kg >= 65 ? [I49ER] : []),
+            ];
+    path = options[Math.floor(roll * options.length)];
+  }
+  return path;
 }
