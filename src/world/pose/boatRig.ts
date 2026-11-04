@@ -33,9 +33,23 @@ export function section420(t: number): Section {
   };
 }
 
+/** The ILCA's section at `t` (0 stern to 1 bow): a long open dinghy with a wide flat deck and a pointed bow. */
+export function sectionIlca(t: number): Section {
+  const taper =
+    t > 0.55 ? Math.sqrt(Math.max(0, 1 - Math.pow((t - 0.55) / 0.45, 2))) : 1;
+  const base = 0.66 - 0.06 * Math.pow(1 - t, 3);
+  return {
+    z: -2.115 + t * 4.23,
+    wg: Math.max(0.012, base * taper),
+    yg: 0.3 + 0.1 * t * t,
+    yk: -0.1 + 0.22 * Math.pow(t, 3) + 0.03 * Math.pow(1 - t, 2),
+  };
+}
+
 const HULL = {
   optimist: { section: optimistSection, z0: -1.155, length: 2.31 },
   "420": { section: section420, z0: -2.1, length: 4.2 },
+  ilca: { section: sectionIlca, z0: -2.115, length: 4.23 },
 } as const;
 
 /** The hull section at place `z` along the boat (clamped to the hull). */
@@ -78,6 +92,15 @@ export const RIG: Record<ClassId, RigDims> = {
     extension: 0.9,
     hounds: { x: 0, y: 5.0, z: 0.45 },
     mastZ: 0.45,
+  },
+  // Tiller box at (0, 0.2, 0.5) in the rudder frame, 1.0 long; the sleeve mast stands well forward.
+  ilca: {
+    rudderPivot: { x: 0, y: 0.25, z: -2.12 },
+    tillerTip: { x: 0, y: 0.2, z: 1.0 },
+    rudderDeg: 28,
+    extension: 0.9,
+    hounds: null,
+    mastZ: 0.95,
   },
 };
 

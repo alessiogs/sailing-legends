@@ -108,8 +108,8 @@ function gridSpot(index: number, scale: number): StartSpot {
 export function makeFleet(opts: FleetOptions = {}): Fleet {
   const cls = opts.boatClass ?? OPTIMIST;
   const two = isTwoPerson(cls);
-  // Two-person boats are bigger, and so is their course: spread them further apart.
-  const scale = two ? 1.4 : 1;
+  // Two-person boats are bigger, and so is their course: spread them further apart (so are boats with a course of their own).
+  const scale = two ? 1.4 : cls.course ? 1.25 : 1;
   let rivals: readonly SailorProfile[] = opts.rivals ?? RIVALS;
   const given = opts.opponents;
   const withPlayer = opts.withPlayer !== false;
@@ -163,7 +163,8 @@ export function makeFleet(opts: FleetOptions = {}): Fleet {
   );
   // A bigger fleet needs a longer line: the usual half-length (24 m, 34 m in two-person classes) per five boats.
   const lineHalf = big
-    ? (two ? 34 : 24) * Math.max(1, boats / LINE_BOATS)
+    ? (two ? 34 : (cls.course?.lineHalf ?? 24)) *
+      Math.max(1, boats / LINE_BOATS)
     : undefined;
   return {
     boatClass: cls,

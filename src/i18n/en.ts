@@ -20,6 +20,11 @@ export const english: Catalog = {
   "menu.lede.twoPerson":
     "420 racing, in a Pair with jib, spinnaker and trapeze",
   "menu.lede.single": "Optimist racing",
+  "menu.lede.ilca":
+    "ILCA racing, single-handed, in the rig that suits your weight",
+  "menu.label.rig": "RIG",
+  "menu.rigHint": ({ kg, from, to }) =>
+    `Ideal weight about ${kg} kg (${from}–${to} kg)`,
   "menu.versionChip": ({ boatClass }) => `PROTOTYPE 0.6 · ${boatClass}`,
   "menu.roleHelp.helm":
     "Helm and mainsail. Your Partner, as Crew, trims the jib and spinnaker, goes out on the trapeze and decides when to hoist the spinnaker.",

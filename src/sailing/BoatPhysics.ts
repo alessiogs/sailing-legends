@@ -135,6 +135,8 @@ const ROLL_WINDOW = 1.2,
   ROLL_ACCEL = 0.1;
 /** A hike this far up inside the window is a perfect roll (a hard hike rises about 0.84 in it); no rise at all is the worst. */
 const ROLL_FULL_RISE = 0.6;
+/** Drive an ILCA loses in a breeze per unit of weight below its rig's ideal (a sailor 30% light loses 36%). */
+const RIG_DEPOWER = 1.2;
 /** Unbalanced side force (N) below which the boat still counts as held flat, so a Helm hiking exactly at the ideal doesn't flicker. */
 const OVERPOWER_DEADBAND = 5;
 
@@ -618,6 +620,15 @@ export class BoatSim {
       1 +
       0.5 * (this.rightingScale - 1) * breeze * clamp(need / maxRighting, 0, 1);
 
+    // An ILCA sailed under its rig's ideal weight can't hold the sail in a breeze: it is eased and flogs, so drive falls (from ~8 kn
+    // to full at 14 kn). Heavier sailors lose nothing here: they only add mass.
+    if (cls.rig !== undefined)
+      drive *=
+        1 -
+        RIG_DEPOWER *
+          Math.max(0, 1 - this.rightingScale) *
+          clamp((tKn - 8) / 6, 0, 1);
+
     // Righting: Crew weight (if any) plus the Helm hiking as much as needed.
     const crewOnWindward = s.crewSide === -leeward;
     const crewF = cls.crewRighting
@@ -673,7 +684,7 @@ export class BoatSim {
     const au = Math.abs(u);
     // Fore-aft weight: forward upwind and in light air, aft on a reach or run in a breeze (planing). Once the weight is aft and the
     // boat is flat, the bow lifts (and a planing class gets onto the plane) and wave drag falls.
-    const breezy = clamp(tKn - 12, 0, 1); // 0 at 12 kn, 1 at 13 kn: nothing at 11 kn
+    const breezy = clamp(tKn - (cls.planing.onsetKn ?? 12), 0, 1); // 0 at 12 kn, 1 at 13 kn: nothing at 11 kn (unless the class starts earlier)
     const downwind =
       clamp((absTwa - 75 * DEG) / (15 * DEG), 0, 1) *
       (cls.planing.planes ? clamp((172 * DEG - absTwa) / (10 * DEG), 0, 1) : 1);

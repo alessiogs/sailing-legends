@@ -11,6 +11,18 @@ export const italian = {
   // Main menu.
   "menu.lede.twoPerson": "Prova 420, in due con fiocco, spinnaker e trapezio",
   "menu.lede.single": "Prova Optimist",
+  "menu.lede.ilca":
+    "Prova ILCA, in singolo: iscritto con l'armo adatto al tuo peso",
+  "menu.label.rig": "RIG",
+  "menu.rigHint": ({
+    kg,
+    from,
+    to,
+  }: {
+    kg: number;
+    from: number;
+    to: number;
+  }) => `Peso ideale circa ${kg} kg (${from}–${to} kg)`,
   "menu.versionChip": ({ boatClass }: { boatClass: string }) =>
     `PROTOTIPO 0.6 · ${boatClass}`,
   "menu.roleHelp.helm":

@@ -22,7 +22,12 @@ import {
 } from "../../src/race/PlayerChoice";
 import { makeFleet } from "../../src/race/Fleet";
 import { FIXED_DT, RaceSession } from "../../src/race/RaceSession";
-import { I420, OPTIMIST, type BoatClass } from "../../src/sailing/BoatClass";
+import {
+  I420,
+  ILCA_6,
+  OPTIMIST,
+  type BoatClass,
+} from "../../src/sailing/BoatClass";
 
 /** How the player boat is sailed: its Role and Control mode. */
 type PlayerSetup = "helm" | "crew" | "full";
@@ -78,6 +83,13 @@ export const GOLDEN_RACES: GoldenRace[] = [
     seed: 5,
     windKn: 16,
     player: "full",
+  },
+  {
+    name: "ILCA 6 seed 11 11 kn, AI only",
+    cls: ILCA_6,
+    seed: 11,
+    windKn: 11,
+    player: null,
   },
 ];
 

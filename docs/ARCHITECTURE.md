@@ -9,8 +9,8 @@ src/
   core/      math.ts (angles, RNG, segment tests), Input.ts (keyboard/gamepad/drag, tiller vs boat-direction
              steering, what the keys move per Role; DOM-free: `dragGauge`, `dragSheet`, `press` are called by the UI), ControlSettings.ts (the Commands menu settings and their
              defaults; DOM-free), FramePacer.ts (frame skipping for the render loop: 10 fps off the water, 60 fps cap on phones; pure), Sound.ts (WebAudio synthesis, no assets; the water rush is louder while planing)
-  sailing/   BoatClass.ts (class data: Optimist, I420, keyed by the closed `ClassId` union; `isTwoPerson` =
-             sailed by a Pair, which has `crewRighting`),
+  sailing/   BoatClass.ts (class data: Optimist, I420 and the ILCA's three rigs `ILCA_4/6/7` (`ILCA_RIGS`; `CLASSES.ilca` is the 6), keyed by the closed `ClassId` union;
+             `isTwoPerson` = sailed by a Pair, which has `crewRighting`; a class may carry its own `course` size),
              BoatPhysics.ts (the model), Wind.ts (shifts + puffs), BoatStates.ts (Crew weight in/hiking/trapeze
              and spinnaker down/moving/up from the boat state: the one home of their thresholds)
   race/      Course.ts (marks, the start line that is also the finish line, and legs, each with a `LegId`),
@@ -66,7 +66,7 @@ src/
              Weather.ts (the wind and seed of each Race of a Regatta), Seeds.ts (`mixSeed`)
   world/     Ocean.ts (Gerstner waves in GLSL), Waves.ts (same waves on CPU), BowSpray.ts (a few drops thrown from the bow of a planing boat, made only for a boat within the sailor LOD distance), BoatViewBase.ts (what both boat
              visuals share: wave riding, bow lift while planing, heel, boom swing, rudder, burgee; each class gives its `BoatMotion` and
-             draws its own sails and sailors; sailors beyond 30 m of the camera are drawn simply), BoatView.ts (Optimist: the
+             draws its own sails and sailors; sailors beyond 30 m of the camera are drawn simply), BoatIlcaView.ts (ILCA: open hull with a flat deck, sleeve-mast single sail scaled by the rig, hiking sailor), BoatView.ts (Optimist: the
              sailor posed from `sailorPose`, tiller extension, drawn hull roll while the sailor crosses), Boat420View.ts (the Helm and
              Crew posed the same way; tiller extension, trapeze wire with its handle), SailorFigure.ts (`SailorFigure`: the
              articulated figure of instanced cylinders and balls, 13-14 meshes near and 3 far, with `limbMesh`/`setLimb` for rigging), pose/
@@ -158,6 +158,7 @@ tests/       Vitest tests (npm test): smoke.test.ts (every AI-only race finishes
              race-feedback.test.ts (which sounds, messages and hints the race gives, and when)
              planing.test.ts (420 planing and Optimist bow-up gates and targets),
              boat-class.test.ts (class ids: a misspelt id is a type error; every class keyed by its own id)
+             ilca.test.ts (ILCA rigs: 11 kn target speeds through BoatSim, and the rig that suits each sailor weight)
              start-planning.test.ts (the AI's holding spot, line point, RNG draws and start decisions)
              racing-ai-parts.test.ts (the AI's avoidance, beat tactics and tack state machine on their own)
              collisions.test.ts (hull capsules, closest points, hulls pushed apart and out of marks)

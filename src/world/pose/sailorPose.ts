@@ -123,6 +123,23 @@ type Spot = {
 function spotOf(i: PoseInput, h: number, hoist: number): Spot {
   const H = i.height;
   const half = PELVIS_HALF * H;
+  if (i.classId === "ilca") {
+    // Hiking hard: sitting on the windward deck in light air, then out over the gunwale, feet under the toe strap.
+    const hh = clamp(i.helmOut ?? h, 0, 1);
+    const z = -0.3;
+    const g = sectionAt("ilca", z);
+    return {
+      pelvis: {
+        x: lerp(g.wg - 0.3, g.wg + 0.02, smooth(hh)),
+        y: lerp(g.yg + 0.9 * half, g.yg + 0.5 * half, hh),
+        z,
+      },
+      lean: 0.2 + hh * 0.85,
+      seated: false,
+      foot: { x: 0.12, y: 0.02, z: z + 0.65 },
+      forward: 0,
+    };
+  }
   if (i.classId === "optimist" && i.helmOut !== undefined) {
     // Never crouched in the middle: the innermost place is the windward side deck, leaning in; out is over the gunwale.
     const hh = clamp(i.helmOut, 0, 1);
