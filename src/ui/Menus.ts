@@ -1,6 +1,7 @@
 import { DEFAULT_CONTROLS } from "../core/ControlSettings";
 import type { Input } from "../core/Input";
 import { defaultAutoHike } from "../game/PlayerControls";
+import { RIG_IDEAL_KG } from "../career/Weight";
 import type {
   CareerResults,
   GameController,
@@ -35,13 +36,6 @@ const ROLE_OPTIONS = {
 type RoleOption = keyof typeof ROLE_OPTIONS;
 const roleOption = (c: PlayerChoice): RoleOption =>
   c.role === "crew" ? "crew" : c.control === "fullBoat" ? "fullBoat" : "helm";
-
-/** The sailor weights (kg) each ILCA rig suits: its competitive range (ideal weight in `ILCA_RIGS`). */
-const RIG_RANGE_KG: Record<IlcaRig, readonly [number, number]> = {
-  4: [50, 65],
-  6: [60, 78],
-  7: [73, 90],
-};
 
 /**
  * The page's menus: the main menu (boat class, wind, Role, Partner, Auto-trim, and the Career entries), the Commands
@@ -422,8 +416,8 @@ export class Menus implements Screens {
     $("rig-help").textContent = ilca
       ? t("menu.rigHint", {
           kg: boatClass.sailorKg.helm,
-          from: RIG_RANGE_KG[boatClass.rig!][0],
-          to: RIG_RANGE_KG[boatClass.rig!][1],
+          from: RIG_IDEAL_KG[boatClass.rig!].min,
+          to: RIG_IDEAL_KG[boatClass.rig!].max,
         })
       : "";
     $("lede-class").textContent = two

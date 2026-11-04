@@ -19,7 +19,7 @@ import {
 } from "../src/race/Fleet";
 import { CREW, FULL_BOAT, HELM } from "../src/race/PlayerChoice";
 import { RaceSession } from "../src/race/RaceSession";
-import { I420, OPTIMIST } from "../src/sailing/BoatClass";
+import { I420, I49ER, OPTIMIST } from "../src/sailing/BoatClass";
 import { RIVALS } from "../src/sailors/Sailors";
 
 /** Each boat as `id helm/crew`, with sailors by id. */
@@ -195,6 +195,8 @@ describe("big fleets (Career)", () => {
     expect(big(4).lineHalf).toBe(24);
     expect(Math.abs(big(11).lineHalf! - 57.6) < 1e-9).toBe(true);
     expect(Math.abs(big(11, I420).lineHalf! - 81.6) < 1e-9).toBe(true);
+    // A skiff's own course.lineHalf scales too (the 49er's is 40).
+    expect(Math.abs(big(11, I49ER).lineHalf! - 96) < 1e-9).toBe(true);
     const c = new RaceSession({ fleet: big(11) }).race.course;
     expect(
       Math.abs(

@@ -257,7 +257,12 @@ export class GameController {
     this.sound.init();
     this.assists.autoTrim = this.screens.autoTrimChosen();
     this.assists.autoHike =
-      this.screens.autoHikeChosen() ?? defaultAutoHike(this.choice);
+      this.screens.autoHikeChosen() ??
+      defaultAutoHike(
+        isTwoPerson(this.boatClass)
+          ? this.choice
+          : { role: "helm", control: "playerCareer" },
+      );
     this.newRace();
     this.setMode("racing");
   }
