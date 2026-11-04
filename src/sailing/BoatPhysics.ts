@@ -588,6 +588,8 @@ export class BoatSim {
       (Math.abs(awa) < 170 * DEG || Math.abs(awa) < 2 * DEG)
     ) {
       s.boomSide = leeward;
+      // A skiff's jib is self-tacking: it crosses with the boom, so only the Crew's weight (and the gennaker) need the side switch.
+      if (this.cls.spinnaker?.gennaker) s.jibSide = leeward;
       this.rollT = 0;
       this.rollSum = 0;
       this.rollRise = 0;
