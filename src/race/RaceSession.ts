@@ -154,7 +154,11 @@ export class RaceSession {
     return this.acc / FIXED_DT;
   }
 
+  /** Physics steps taken so far: 0 until the first, before which the boats have no sail or weight telemetry. */
+  steps = 0;
+
   step(dt: number) {
+    this.steps++;
     this.wind.update(dt);
     this.ais.forEach((ai, i) => {
       const c = ai.update(dt, this.wind);

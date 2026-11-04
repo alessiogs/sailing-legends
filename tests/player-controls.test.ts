@@ -113,6 +113,22 @@ describe("player controls", () => {
     expect([input.sheet, input.crewOut]).toEqual([0.3, 0.8]);
   });
 
+  it("the session counts its physics steps, so the HUD can wait for the first one (no telemetry before it)", () => {
+    const session = new RaceSession({
+      seed: 7,
+      fleet: makeFleet({ boatClass: I420, choice: CREW }),
+    });
+    expect([session.steps, session.player!.sim.telemetry.jib]).toEqual([
+      0,
+      undefined,
+    ]);
+    session.advance(0.01); // a frame shorter than one step
+    expect(session.steps).toBe(0);
+    session.advance(0.01);
+    expect(session.steps).toBe(1);
+    expect(session.player!.sim.telemetry.jib).toBeDefined();
+  });
+
   it("hands back the sheet where the sail is trimmed when Auto-trim is switched off", () => {
     const helm = setup(HELM);
     helm.controls.autoTrimOff(helm.session);
