@@ -427,7 +427,11 @@ export class Menus implements Screens {
         })
       : "";
     $("lede-class").textContent = two
-      ? t(boatClass.id === "29er" ? "menu.lede.skiff" : "menu.lede.twoPerson")
+      ? t(
+          boatClass.spinnaker?.gennaker
+            ? "menu.lede.skiff"
+            : "menu.lede.twoPerson",
+        )
       : ilca
         ? t("menu.lede.ilca")
         : t("menu.lede.single");

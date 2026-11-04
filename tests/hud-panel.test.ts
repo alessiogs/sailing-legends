@@ -14,6 +14,7 @@ import { makeFleet } from "../src/race/Fleet";
 import { RaceSession } from "../src/race/RaceSession";
 import {
   I29ER,
+  I49ER,
   I420,
   isTwoPerson,
   OPTIMIST,
@@ -96,6 +97,13 @@ describe("HUD hike gauge", () => {
     expect(o.panel(0, false, false).hike!.value).toBe(0.25);
     expect(o.panel(0, false, false).hike!.ends).toEqual(["DENTRO", "FUORI"]);
     expect(setup(CREW).panel(0, false, false).hike).toBe(undefined);
+  });
+  it("runs from sitting in to the trapeze in the 49er", () => {
+    const f = setup(HELM, I49ER);
+    f.s.helmOut = 0.75;
+    const hike = f.panel(0, false, false).hike!;
+    expect(hike.ends).toEqual(["DENTRO", "TRAPEZIO"]);
+    expect(hike.value).toBe(0.75);
   });
 });
 

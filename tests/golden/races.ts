@@ -25,6 +25,7 @@ import { FIXED_DT, RaceSession } from "../../src/race/RaceSession";
 import {
   I29ER,
   I420,
+  I49ER,
   ILCA_6,
   OPTIMIST,
   type BoatClass,
@@ -95,6 +96,13 @@ export const GOLDEN_RACES: GoldenRace[] = [
   {
     name: "29er seed 11 11 kn, AI only",
     cls: I29ER,
+    seed: 11,
+    windKn: 11,
+    player: null,
+  },
+  {
+    name: "49er seed 11 11 kn, AI only",
+    cls: I49ER,
     seed: 11,
     windKn: 11,
     player: null,

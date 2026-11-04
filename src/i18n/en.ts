@@ -19,7 +19,8 @@ export const english: Catalog = {
   // Main menu.
   "menu.lede.twoPerson":
     "420 racing, in a Pair with jib, spinnaker and trapeze",
-  "menu.lede.skiff": "29er racing, in a Pair with jib, gennaker and trapeze",
+  "menu.lede.skiff": "Skiff racing, in a Pair with jib, gennaker and trapeze",
+  "hud.slider.hikeTrapeze": "TRAPEZE",
   "hud.sail.gennaker": "GENNAKER",
   "hud.partnerLine.helmGennaker": ({ name, spi }) =>
     `${name} on the helm and mainsheet · gennaker: ${spi}`,
