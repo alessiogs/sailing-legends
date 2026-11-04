@@ -1,5 +1,6 @@
 import { ArcRotateCamera, Vector3, type Scene } from "@babylonjs/core";
 import { lerpAngle } from "../core/math";
+import { CLASSES, type BoatClass } from "../sailing/BoatClass";
 import type { BoatState } from "../sailing/BoatPhysics";
 import { CHASE_BETA, chasePullBack, chaseView } from "./chaseView";
 
@@ -9,7 +10,7 @@ export type CameraMode = "chase" | "free" | "top";
 /**
  * The orbit camera around the player's boat and its three views. It always follows the boat; the chase view
  * also swings round behind the bow, the top view turns north-up, the free view leaves the angle to the mouse.
- * `twoPerson` (the boat class chosen in the menu is sailed by a Pair) sets the distances and the aim height.
+ * The boat class's `view` sets the distances and the aim height.
  */
 export class CameraRig {
   readonly camera: ArcRotateCamera;
@@ -24,7 +25,7 @@ export class CameraRig {
     const camera = (this.camera = new ArcRotateCamera(
       "cam",
       -Math.PI / 2,
-      chaseView(false, 1).beta,
+      chaseView(CLASSES.optimist, 1).beta,
       12,
       Vector3.Zero(),
       scene,
@@ -53,51 +54,49 @@ export class CameraRig {
       : 1;
   }
 
-  private chase(twoPerson: boolean) {
+  private chase(cls: BoatClass) {
     this.aspect = this.screenAspect();
-    const { radius, beta } = chaseView(twoPerson, this.aspect);
+    const { radius, beta } = chaseView(cls, this.aspect);
     this.camera.beta = beta;
     this.camera.radius = radius;
   }
 
   /** A new race: the camera jumps behind the boat at the chase distance (the view itself is kept). */
-  placeBehind(s: BoatState, twoPerson: boolean) {
+  placeBehind(s: BoatState, cls: BoatClass) {
     const { camera } = this;
     camera.target.set(s.x, 0.8, s.z);
     camera.alpha = behind(s);
-    this.chase(twoPerson);
+    this.chase(cls);
   }
 
   /** Switches to the next view (chase → free → top → chase) and returns it. */
-  nextMode(twoPerson: boolean): CameraMode {
+  nextMode(cls: BoatClass): CameraMode {
     const { camera } = this;
     this._mode =
       this._mode === "chase" ? "free" : this._mode === "free" ? "top" : "chase";
-    if (this._mode === "chase") this.chase(twoPerson);
+    if (this._mode === "chase") this.chase(cls);
     if (this._mode === "top") {
       camera.beta = 0.12;
-      camera.radius =
-        (twoPerson ? 70 : 48) * chasePullBack(this.screenAspect());
+      camera.radius = cls.view.top * chasePullBack(this.screenAspect());
     }
     return this._mode;
   }
 
   /** Follows the boat for one frame: eases toward it, or jumps if it is far (e.g. after a reset). */
-  follow(dt: number, s: BoatState, twoPerson: boolean) {
+  follow(dt: number, s: BoatState, cls: BoatClass) {
     const { camera } = this;
     // The screen turned (a phone rotated, a window resized): the distance follows its shape, a zoom kept.
     const aspect = this.screenAspect();
     if (Math.abs(aspect - this.aspect) > 0.05) {
       camera.radius *= chasePullBack(aspect) / chasePullBack(this.aspect);
-      if (this._mode === "chase")
-        camera.beta = chaseView(twoPerson, aspect).beta;
+      if (this._mode === "chase") camera.beta = chaseView(cls, aspect).beta;
       this.aspect = aspect;
     }
     const far = Math.hypot(s.x - camera.target.x, s.z - camera.target.z) > 25;
     const k = far ? 1 : Math.min(1, dt * 3);
     camera.target.x += (s.x - camera.target.x) * k;
     camera.target.z += (s.z - camera.target.z) * k;
-    camera.target.y = twoPerson ? 1.6 : 0.9;
+    camera.target.y = cls.view.aim;
     if (this._mode === "chase") {
       camera.alpha = far
         ? behind(s)

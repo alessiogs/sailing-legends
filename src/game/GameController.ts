@@ -240,10 +240,7 @@ export class GameController {
       isTwoPerson(this.activeClass),
       this.activeChoice.role === "crew",
     );
-    this.cameraRig.placeBehind(
-      session.player!.sim.state,
-      isTwoPerson(this.activeClass),
-    );
+    this.cameraRig.placeBehind(session.player!.sim.state, this.activeClass);
     hud.show(true);
     hud.toast(t("toast.startSequence"), "big");
   }
@@ -494,9 +491,7 @@ export class GameController {
         hud.toast(t("toast.switchSide"));
       if (a === "camera") {
         hud.toast(
-          t(
-            `toast.camera.${this.cameraRig.nextMode(isTwoPerson(this.activeClass))}`,
-          ),
+          t(`toast.camera.${this.cameraRig.nextMode(this.activeClass)}`),
         );
       }
     }
@@ -555,7 +550,7 @@ export class GameController {
       p.leg < 0,
       !!leg && leg.kind === "finish",
     );
-    this.cameraRig.follow(dt, p.sim.state, isTwoPerson(this.activeClass));
+    this.cameraRig.follow(dt, p.sim.state, this.activeClass);
     this.ocean!.update(this.time, camera, session.wind);
     hud.update(dt, session.race, p, session.wind, this.panel(session));
     showTouchAutoHike(this.assists.autoHike);
