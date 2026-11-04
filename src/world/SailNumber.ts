@@ -22,8 +22,8 @@ export const DECAL: Record<
   optimist: { vSpan: 0.8, width: 1.9, height: 1.65 },
   "420": { vSpan: 0.5, width: 1.9, height: 2.6 },
   ilca: { vSpan: 0.55, width: 2.2, height: 2.7 },
-  // Until the 29er has a view of its own it is drawn with the 420's.
-  "29er": { vSpan: 0.5, width: 1.9, height: 2.6 },
+  "29er": { vSpan: 0.5, width: 2.2, height: 2.6 },
+  "49er": { vSpan: 0.4, width: 2.6, height: 3.0 },
 };
 
 const textures = new SceneCache<Scene, StandardMaterial>();
@@ -73,6 +73,30 @@ function symbol420(
   ctx.textBaseline = "middle";
   ctx.font = `italic 900 ${Math.round(r * 1.5)}px sans-serif`;
   ctx.fillText("420", cx, cy);
+  ctx.fillRect(cx - r * 1.1, cy - r * 0.95, r * 2.2, r * 0.12);
+  ctx.fillRect(cx - r * 1.1, cy + r * 0.83, r * 2.2, r * 0.12);
+}
+
+/** A skiff's mark: its number in bold between two bars, with a small gennaker (a swept triangle) beside it. */
+function symbolSkiff(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  r: number,
+  ink: string,
+  label: string,
+) {
+  ctx.fillStyle = ink;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.font = `italic 900 ${Math.round(r * 1.5)}px sans-serif`;
+  ctx.fillText(label, cx - r * 0.25, cy);
+  ctx.beginPath();
+  ctx.moveTo(cx + r * 0.75, cy - r * 0.8);
+  ctx.lineTo(cx + r * 1.15, cy + r * 0.6);
+  ctx.lineTo(cx + r * 0.55, cy + r * 0.6);
+  ctx.closePath();
+  ctx.fill();
   ctx.fillRect(cx - r * 1.1, cy - r * 0.95, r * 2.2, r * 0.12);
   ctx.fillRect(cx - r * 1.1, cy + r * 0.83, r * 2.2, r * 0.12);
 }
@@ -145,6 +169,8 @@ export function sailNumberMaterial(
       const at = [SIZE / 2, y(symbolAt), symbolR] as const;
       if (classId === "optimist") optimistSymbol(ctx, ...at, ink);
       else if (classId === "ilca") symbolIlca(ctx, ...at, ink, rig);
+      else if (classId === "29er" || classId === "49er")
+        symbolSkiff(ctx, ...at, ink, classId.slice(0, 2));
       else symbol420(ctx, ...at, ink);
       // "ITA" small above the figures.
       const [nation, figures] = number.split(" ");
