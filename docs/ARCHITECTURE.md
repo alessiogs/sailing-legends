@@ -9,7 +9,7 @@ src/
   core/      math.ts (angles, RNG, segment tests), Input.ts (keyboard/gamepad/drag, tiller vs boat-direction
              steering, what the keys move per Role; DOM-free: `dragGauge`, `dragSheet`, `press` are called by the UI), ControlSettings.ts (the Commands menu settings and their
              defaults; DOM-free), FramePacer.ts (frame skipping for the render loop: 10 fps off the water, 60 fps cap on phones; pure), Sound.ts (WebAudio synthesis, no assets; the water rush is louder while planing)
-  sailing/   BoatClass.ts (class data: Optimist, I420 and the ILCA's three rigs `ILCA_4/6/7` (`ILCA_RIGS`; `CLASSES.ilca` is the 6), keyed by the closed `ClassId` union;
+  sailing/   BoatClass.ts (class data: Optimist, I420, `I29ER` (a gennaker, `spinnaker.gennaker`) and the ILCA's three rigs `ILCA_4/6/7` (`ILCA_RIGS`; `CLASSES.ilca` is the 6), keyed by the closed `ClassId` union;
              `isTwoPerson` = sailed by a Pair, which has `crewRighting`; a class may carry its own `course` size),
              BoatPhysics.ts (the model), Wind.ts (shifts + puffs), BoatStates.ts (Crew weight in/hiking/trapeze
              and spinnaker down/moving/up from the boat state: the one home of their thresholds)
@@ -27,6 +27,7 @@ src/
   ai/        RacingAI.ts (the Helm: composes the parts below; mark rounding, trim error, penalty turns, rudder),
              BeatTactics.ts (steering toward a point, beating upwind: the persistent tack `onStbd`, hysteresis,
              the tack timer shared with the start and the tack state machine; implements `CourseSteering`),
+             RunTactics.ts (a skiff's run, the beat mirrored about the wind: VMG angle, the persistent gybe, layline, a committed gybe),
              TackStateMachine.ts (`sail | tack | recover`: committed tacks, gybe round when too slow, the rule-13
              wait near other boats, recovery from irons), Avoidance.ts (`giveWay`: keep clear of right-of-way
              boats under rules 10/11/12; `boatWithin`),
@@ -159,6 +160,8 @@ tests/       Vitest tests (npm test): smoke.test.ts (every AI-only race finishes
              planing.test.ts (420 planing and Optimist bow-up gates and targets),
              boat-class.test.ts (class ids: a misspelt id is a type error; every class keyed by its own id)
              ilca.test.ts (ILCA rigs: 11 kn target speeds through BoatSim, and the rig that suits each sailor weight)
+             29er.test.ts (the 29er's polar with the gennaker through BoatSim: targets, VMG angle, planing),
+             skiff-ai.test.ts (AI 29ers gybe on the run, sail 130–160° TWA, and better technique runs faster)
              start-planning.test.ts (the AI's holding spot, line point, RNG draws and start decisions)
              racing-ai-parts.test.ts (the AI's avoidance, beat tactics and tack state machine on their own)
              collisions.test.ts (hull capsules, closest points, hulls pushed apart and out of marks)

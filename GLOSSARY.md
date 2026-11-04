@@ -179,6 +179,16 @@ The ILCA's sail size, 4, 6 or 7: it sets the sail area and the sailor weight the
 sailed in one rig. Not the sails and spars of other boats.
 _it_: Rig (ILCA 4, 6, 7)
 
+**Gennaker**:
+The asymmetric downwind sail of a skiff, flown from a bowsprit with no pole. A variant of the spinnaker in the physics (same keys,
+Auto-trim and states): it works from a broad reach to about 150° off the wind and is weak dead downwind, so a skiff sails the
+run at an angle and gybes.
+_it_: Gennaker
+
+**Skiff**:
+A fast two-person planing dinghy with a gennaker (the 29er, later the 49er); the Crew on the trapeze, the Helm hiking.
+_it_: Skiff
+
 **Sail number**:
 The class symbol and number ("ITA 4821") on a boat's mainsail, made up from the Helm's id and the class.
 _it_: Numero velico

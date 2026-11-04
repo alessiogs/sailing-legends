@@ -26,8 +26,10 @@ export function wantSpinnaker(race: Race, r: Racer): boolean {
   const s = r.sim.state,
     t = r.sim.telemetry;
   const toMark = distanceTo(legTarget(leg), s.x, s.z);
-  if (toMark < 26) return false;
-  return Math.abs(t.twa) > 105 * DEG;
+  // A skiff flies its gennaker from a reach and drops it earlier (its course and its speed are bigger).
+  const gennaker = r.sim.cls.spinnaker?.gennaker === true;
+  if (toMark < (gennaker ? 40 : 26)) return false;
+  return Math.abs(t.twa) > (gennaker ? 100 : 105) * DEG;
 }
 
 /**

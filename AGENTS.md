@@ -89,8 +89,8 @@ use neither Babylon nor browser APIs. They also run in Node.
 
 ## Behaviour guards
 
-- **Golden races:** `tests/golden.test.ts` sails ten fixed-seed races: AI-only races in both classes at 7, 11
-  and 16 kn, an AI-only ILCA 6 race at 11 kn, plus 420 races with the player as Helm, as Crew and in Full Boat Control. It compares them with
+- **Golden races:** `tests/golden.test.ts` sails eleven fixed-seed races: AI-only races in both classes at 7, 11
+  and 16 kn, an AI-only ILCA 6 race and an AI-only 29er race at 11 kn, plus 420 races with the player as Helm, as Crew and in Full Boat Control. It compares them with
   `tests/golden/races.json`. A diff means behaviour changed, so in a refactor fix the code, never the snapshot.
 - **Physics** (`BoatPhysics.ts`): target speeds at 11 kn:
   - Optimist: about 2.3 kn upwind, 3.9 reaching, 3.5 running.
@@ -102,6 +102,12 @@ use neither Babylon nor browser APIs. They also run in Node.
     downwind VMG is about 0.8-0.9 kn under it. A steep wave-drag wall at about 2 m/s pins the upwind speed; the ILCA planes
     from 9.5 kn (`planing.onsetKn`). A sailor lighter than the rig's ideal loses drive in a breeze, so light sailors are
     quickest in the 4 and heavy ones in the 7.
+  - 29er (gennaker, `npm run polar`): at 7 / 11 / 16 kn close-hauled (45°) about 4.1 / 6.2 / 6.7 kn, reaching (best of 90–120°) 6.5 /
+    11.1 / 14.8 kn, best downwind VMG with the gennaker 5.3 @ 150° / 8.4 @ 145° / 11.7 @ 140°. The spec's table is 4.7 / 5.8 / 6.5 up,
+    7 / 10.5 / 14 reaching, 6 / 9 / 12 VMG: light air (7 kn) runs 0.5–0.8 kn under it (a steep wave-drag wall caps the hull at
+    about 3 m/s; planing from 6.2 kn frees it only partly), 11 kn upwind and reaching 0.4–0.6 over. The gennaker is a spinnaker with
+    `gennaker: true`: it works from an apparent wind angle of 45° and keeps a quarter of its power dead astern; the best VMG angle
+    stays in 135–155°. Raising the sails or lowering hull drag to close the 7 kn gap pushed 11 kn up past the table.
   - At 16 kn the 420 planes (weight aft, flat, reach to broad reach, from 12–13 kn): about 8–9 kn reaching, 9–10 with the
     spinnaker. The Optimist gains 3–5% downwind from 12 kn with its bow up. Upwind and 11 kn do not change.
 
@@ -114,6 +120,9 @@ use neither Babylon nor browser APIs. They also run in Node.
   - Going backwards, the rudder is reversed.
   - Distances scale with the boat's length (`k`).
   - Rule 13: don't tack within 7k of another boat, but wait at most 6 s.
+  - Skiffs (gennaker classes) run at the VMG angle (`RunTactics`, the beat mirrored about the wind): a persistent gybe `onStbd`,
+    hysteresis, a committed gybe, a gybe on the layline, straight at the mark inside 14k. Its draws are on their own stream
+    (`seed ^ 0x6e11`) and no other class uses it. The gennaker goes up past a 100° TWA and down 40 m from the mark.
   - The start plan draws its two random numbers first. Changing that order changes every golden race.
 - **Rules:**
   - Judged only on hull contact, one penalty per incident.

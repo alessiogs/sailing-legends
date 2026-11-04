@@ -15,6 +15,7 @@ import type { SailorProfile } from "../sailors/Sailors";
 import { boatWithin, giveWay } from "./Avoidance";
 import { hikeError, hikeLag, hikeScale, rollQuality } from "./hiking";
 import { BeatTactics } from "./BeatTactics";
+import { RunTactics } from "./RunTactics";
 import { StartPlanning } from "./StartPlanning";
 import { TackStateMachine } from "./TackStateMachine";
 
@@ -29,6 +30,8 @@ export class RacingAI {
   /** Steering toward a point and the tack timer; start planning borrows it as its `CourseSteering`. */
   private readonly beat: BeatTactics;
   private readonly tackMachine: TackStateMachine;
+  /** A skiff sails the run at an angle and gybes (the beat's tactics mirrored); other classes run straight at the mark. */
+  private readonly run: RunTactics | null;
   private trimBias = 0;
   private trimTimer = 0;
   private penaltyDir = 0;
@@ -66,6 +69,16 @@ export class RacingAI {
     const p = rng(seed ^ 0x5eed);
     this.phase = [p(), p(), p(), p()].map((v) => v * 2 * Math.PI);
     this.hikeRand = rng(seed ^ 0x41ce);
+    // Its draws come from a stream of their own, so no other class's draws (the start plan first) move.
+    this.run = racer.sim.cls.spinnaker?.gennaker
+      ? new RunTactics(
+          profile,
+          () => this.time,
+          rng(seed ^ 0x6e11),
+          12 * this.k,
+          14 * this.k,
+        )
+      : null;
   }
 
   /** The Helm's weight: the ideal for the wind, seen late (more so the lower the technique) and with a wandering error; and a roll quality per tack or gybe. */
@@ -170,8 +183,24 @@ export class RacingAI {
           target = this.orbitPoint(m, this.exitMark.dir, s.x, s.z);
         else this.exitMark = null;
       }
-      desired = this.beat.headingToward(target, fromDir, s.x, s.z, s.heading);
-      this.debug = this.beat.label;
+      const down = !leg.upwind
+        ? this.run?.headingToward(
+            target,
+            fromDir,
+            s.x,
+            s.z,
+            s.heading,
+            w.speed * KNOTS,
+          )
+        : null;
+      if (down !== null && down !== undefined) {
+        desired = down;
+        this.debug = this.run!.label;
+      } else {
+        this.run?.leaveRun();
+        desired = this.beat.headingToward(target, fromDir, s.x, s.z, s.heading);
+        this.debug = this.beat.label;
+      }
     }
 
     // Keep clear of boats that have right of way (a disciplined sailor looks further ahead and leaves more room).
@@ -205,6 +234,7 @@ export class RacingAI {
     if (r.penalty && r.finishTime === null) {
       if (this.penaltyDir === 0) this.penaltyDir = tel.twa >= 0 ? -1 : 1;
       this.tackMachine.breakOff();
+      this.run?.leaveRun();
       this.controls.sheet = tel.optimalSheet;
       this.controls.rudder =
         tel.speed < -0.05 ? -this.penaltyDir : this.penaltyDir;
