@@ -427,7 +427,7 @@ export class Menus implements Screens {
         })
       : "";
     $("lede-class").textContent = two
-      ? t("menu.lede.twoPerson")
+      ? t(boatClass.id === "29er" ? "menu.lede.skiff" : "menu.lede.twoPerson")
       : ilca
         ? t("menu.lede.ilca")
         : t("menu.lede.single");

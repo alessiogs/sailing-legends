@@ -10,6 +10,56 @@ const plural = plurals("it");
 export const italian = {
   // Main menu.
   "menu.lede.twoPerson": "Prova 420, in due con fiocco, spinnaker e trapezio",
+  "menu.lede.skiff": "Prova 29er, in due con fiocco, gennaker e trapezio",
+  "hud.sail.gennaker": "GENNAKER",
+  "hud.partnerLine.helmGennaker": ({
+    name,
+    spi,
+  }: {
+    name: string;
+    spi: string;
+  }) => `${name} al timone e alla randa · gennaker: ${spi}`,
+  "hud.partnerLine.crewGennaker": ({
+    name,
+    weight,
+    spi,
+  }: {
+    name: string;
+    weight: string;
+    spi: string;
+  }) => `${name}: ${weight} · gennaker ${spi}`,
+  "hud.partnerLine.crewOnCallGennaker": ({
+    name,
+    weight,
+    spi,
+  }: {
+    name: string;
+    weight: string;
+    spi: string;
+  }) => `${name}: ${weight} · gennaker ${spi} · Spazio = issa/ammaina`,
+  "hud.partnerLine.crewOnCallGennaker.touch": ({
+    name,
+    weight,
+    spi,
+  }: {
+    name: string;
+    weight: string;
+    spi: string;
+  }) => `${name}: ${weight} · gennaker ${spi} · tocca Spi per issare/ammainare`,
+  "call.gennakerHoist": ({ name }: { name: string }) =>
+    `${name}: «Issa il gennaker!» → Spazio`,
+  "call.gennakerHoist.touch": ({ name }: { name: string }) =>
+    `${name}: «Issa il gennaker!» → tocca Spi`,
+  "call.gennakerDrop": ({ name }: { name: string }) =>
+    `${name}: «Ammaina il gennaker!» → Spazio`,
+  "call.gennakerDrop.touch": ({ name }: { name: string }) =>
+    `${name}: «Ammaina il gennaker!» → tocca Spi`,
+  "toast.gennaker.hoist": "Issa il gennaker!",
+  "toast.gennaker.drop": "Ammaina il gennaker!",
+  "toast.gennaker.partnerDecides": ({ name }: { name: string }) =>
+    `Il gennaker lo decide ${name} (in "Barca completa" lo chiami tu)`,
+  "toast.gennaker.crewDecides": `Il gennaker lo decide il prodiere (in "Barca completa" lo chiami tu)`,
+  "trim.gennakerCollapsed": "Il gennaker è crollato: troppo all'orza",
   "menu.lede.single": "Prova Optimist",
   "menu.lede.ilca":
     "Prova ILCA, in singolo: iscritto con l'armo adatto al tuo peso",
@@ -129,9 +179,9 @@ export const italian = {
   "controls.action.pause": "Pausa",
   "controls.action.restart": "Ricomincia",
   "controls.action.crewWeight": "Peso dentro / fuori (fino al trapezio)",
-  "controls.action.crewSheet": "Cazza / lasca fiocco o spi",
+  "controls.action.crewSheet": "Cazza / lasca fiocco, spi o gennaker",
   "controls.action.switchSide": "Cambio lato dopo virata o strambata",
-  "controls.action.spinnaker": `Issa / ammaina lo spi (anche "Barca completa")`,
+  "controls.action.spinnaker": `Issa / ammaina spi o gennaker (anche "Barca completa")`,
   "controls.action.menus": "Audio · Comandi · Menu",
   "controls.reset": "Ripristina predefiniti",
   "controls.done": "Fatto",

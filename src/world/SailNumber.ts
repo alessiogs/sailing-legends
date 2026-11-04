@@ -22,6 +22,8 @@ export const DECAL: Record<
   optimist: { vSpan: 0.8, width: 1.9, height: 1.65 },
   "420": { vSpan: 0.5, width: 1.9, height: 2.6 },
   ilca: { vSpan: 0.55, width: 2.2, height: 2.7 },
+  // Until the 29er has a view of its own it is drawn with the 420's.
+  "29er": { vSpan: 0.5, width: 1.9, height: 2.6 },
 };
 
 const textures = new SceneCache<Scene, StandardMaterial>();
