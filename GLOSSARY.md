@@ -11,7 +11,7 @@ _it_: Timoniere
 _Avoid_: Skipper, driver
 
 **Crew**:
-The sailor in a two-person boat who trims the jib and spinnaker and moves their weight to hold the boat flat.
+The sailor in a two-person boat who trims the jib, spinnaker or gennaker and moves their weight to hold the boat flat.
 _it_: Prodiere
 _Avoid_: Crew for the two sailors together (see Pair)
 
@@ -70,7 +70,7 @@ _it_: Regolazione vela automatica
 _Avoid_: Auto-sail, auto-sheet
 
 **Auto-hike**:
-The Assist that sets the player's own weight (the Helm's, or the Crew's) as the boat needs it. On by default for the Helm
+The Assist that sets the player's own weight (the Helm's or the Crew's, the 49er Helm's trapeze included) as the boat needs it. On by default for the Helm
 and Full Boat Control, off for the Crew; toggled in a race with G.
 _it_: Peso automatico
 
@@ -84,6 +84,17 @@ _it_: Carriera
 One year of a Career: a sequence of Regattas, after which every sailor is a year older.
 _it_: Stagione
 _Avoid_: Year, campaign
+
+**Class**:
+The boat a Season is sailed in: the Optimist, the 420, one ILCA rig, the 29er or the 49er. A Season is in one class;
+its standings are the class's own.
+_it_: Classe
+_Avoid_: Boat (for the class), division
+
+**Class move**:
+Choosing another class for the next Season, sideways or back, if the sailor's age allows it. A Pair's Crew Chemistry
+goes with the Pair.
+_it_: Cambio di classe
 
 **Regatta**:
 A set of Races at one venue, scored together into one ranking.
@@ -110,7 +121,8 @@ A sailor's worst Race score in a Regatta, left out of their total; only Regattas
 _it_: Scarto
 
 **Age limit**:
-The oldest age at which a sailor may race a class; after it they must change class (Optimist: 15).
+The oldest age at which a sailor may race a class; after it they must change class (Optimist: 15, the only class
+with one so far; not enforced until 1.0).
 _it_: Limite di età
 
 ## Race
@@ -166,8 +178,28 @@ _it_: Strambata
 _Avoid_: Jibe
 
 **Mainsail**, **Jib**, **Spinnaker**:
-The boat's sails; the jib and spinnaker exist only on two-person classes.
+The boat's sails; the jib, spinnaker and gennaker (see Gennaker) exist only on two-person classes.
 _it_: Randa, Fiocco, Spinnaker (spi)
+
+**ILCA**:
+The single-handed dinghy (once the Laser), sailed by a Helm alone: one hull, one sail on a sleeve mast, hiked hard. Its
+sail comes in three **Rigs**.
+_it_: ILCA (Laser)
+
+**Rig**:
+The ILCA's sail size, 4, 6 or 7: it sets the sail area and the sailor weight the boat suits (about 53, 68 and 82 kg). A race is
+sailed in one rig. The three rigs are one class (see Class).
+_it_: Rig (ILCA 4, 6, 7)
+
+**Gennaker**:
+The asymmetric downwind sail of a skiff, flown from a bowsprit with no pole. A variant of the spinnaker in the physics (same keys,
+Auto-trim and states): it works from a broad reach to about 150° off the wind and is weak dead downwind, so a skiff sails the
+run at an angle and gybes.
+_it_: Gennaker
+
+**Skiff**:
+A fast two-person planing dinghy with a gennaker (the 29er and the 49er). In the 29er the Crew is on the trapeze and the Helm hikes; in the 49er both are on the trapeze, from racks (wings), and the Helm's weight control spans in / hiking / trapeze like the Crew's.
+_it_: Skiff
 
 **Sail number**:
 The class symbol and number ("ITA 4821") on a boat's mainsail, made up from the Helm's id and the class.
@@ -178,7 +210,8 @@ The rope that sets a sail's angle; sheeting in pulls the sail toward the centrel
 _it_: Scotta (cazzare / lascare)
 
 **Trapeze**:
-The wire that lets the crew stand outside the boat to hold it flat.
+The wire that lets a sailor stand outside the boat to hold it flat: the Crew's in the 420 and 29er, and both sailors' in
+the 49er (where the Helm's hike control spans in / hiking / trapeze).
 _it_: Trapezio
 
 **Hiking**:
@@ -187,7 +220,8 @@ _it_: Uscire in cinghia
 
 **Hike**:
 The player's control of their own weight out over the side (Q out, Z in); the verb for what **Hiking** is. The Helm's
-hike is `helmOut`, the Crew's is `crewOut`. In the 420 the Helm's lowest step is sitting to leeward.
+hike is `helmOut`, the Crew's is `crewOut`. In the 420 the Helm's lowest step is sitting to leeward; the ILCA's Helm
+hikes with no inner seat to limit them.
 _it_: Peso fuori / dentro
 
 **Roll tack**:
@@ -196,8 +230,9 @@ crossing. It loses less speed, and in very light air gives a small burst; the ef
 _it_: Virata con rollio
 
 **Planing**:
-The 420 lifting onto its own bow wave and running well above hull speed: from about 12-13 kn of wind on a reach to broad
-reach, flat, with the weight aft. The HUD shows a Planing tag. The Optimist only gets a small bow-up gain downwind.
+A boat lifting onto its own bow wave and running well above hull speed: the 420 from about 12-13 kn of wind on a reach to
+broad reach, flat, with the weight aft; the ILCA from about 9-10 kn, and the skiffs earliest. The HUD shows a Planing tag.
+The Optimist only gets a small bow-up gain downwind.
 _it_: Planata
 
 **Build**:

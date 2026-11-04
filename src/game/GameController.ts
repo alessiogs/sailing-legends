@@ -33,6 +33,8 @@ import type { Hud } from "../ui/Hud";
 import { buildPanel } from "../ui/hudPanel";
 import { showTouchAutoHike } from "../ui/TouchButtons";
 import { Boat420View } from "../world/Boat420View";
+import { BoatSkiffView } from "../world/BoatSkiffView";
+import { BoatIlcaView } from "../world/BoatIlcaView";
 import { boatLook } from "../world/boatMaterials";
 import { BoatView } from "../world/BoatView";
 import type { BoatViewBase } from "../world/BoatViewBase";
@@ -224,9 +226,13 @@ export class GameController {
       const crew = crews.get(r.id)!;
       this.boats.set(
         r.id,
-        isTwoPerson(r.sim.cls)
-          ? new Boat420View(scene, r.id, look, crew)
-          : new BoatView(scene, r.id, look, crew),
+        r.sim.cls.spinnaker?.gennaker
+          ? new BoatSkiffView(scene, r.id, look, crew, r.sim.cls)
+          : isTwoPerson(r.sim.cls)
+            ? new Boat420View(scene, r.id, look, crew)
+            : r.sim.cls.id === "ilca"
+              ? new BoatIlcaView(scene, r.id, look, crew, r.sim.cls)
+              : new BoatView(scene, r.id, look, crew),
       );
     }
     input.reset();

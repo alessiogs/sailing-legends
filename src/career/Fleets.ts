@@ -11,7 +11,7 @@ import {
   type OpponentSeats,
 } from "../race/Fleet";
 import { HELM, type PlayerChoice } from "../race/PlayerChoice";
-import { CLASSES, isTwoPerson } from "../sailing/BoatClass";
+import { isTwoPerson } from "../sailing/BoatClass";
 import {
   BUILD_FACTOR,
   bodyWeightKg,
@@ -22,6 +22,7 @@ import { seasonCalendar, type RegattaLevel } from "./Calendar";
 import type { CareerState } from "./CareerSave";
 import { ageInSeason, DEFAULT_STARTING_AGE as DEFAULT_AGE } from "./Ages";
 import { sailorRating } from "./Pool";
+import { boatClassOf, misfit, pathOf, samePath, sailorPath } from "./Classes";
 import { levelRating } from "./Strength";
 import { mixSeed } from "./Seeds";
 
@@ -50,13 +51,20 @@ export function regattaFleet(
   options: FleetOptions = {},
 ): Fleet {
   const regatta = seasonCalendar(state.classId)[state.regattaIndex];
-  const cls = CLASSES[state.classId];
+  const path = pathOf(state);
+  const cls = boatClassOf(path);
   const two = isTwoPerson(cls);
   const rand = rng(mixSeed(state.seed, state.season, state.regattaIndex, 1));
 
-  const rivals = state.pool.filter(isRival);
+  const allRivals = state.pool.filter(isRival);
+  // Each Rival sails the class their age and weight call for this Season; only those in this class are in the fleet.
+  const rivals = allRivals.filter((r) =>
+    samePath(sailorPath(state.seed, state.season, r.id, r.startingAge), path),
+  );
   const partner = two
-    ? (options.partner ?? rivals.find((r) => r.id === "giulia") ?? rivals[0])
+    ? (options.partner ??
+      allRivals.find((r) => r.id === "giulia") ??
+      allRivals[0])
     : null;
   const boats = FLEET_SIZE[regatta.level] - 1;
 
@@ -67,10 +75,18 @@ export function regattaFleet(
   );
   const ranked = state.pool
     .filter((s) => !isRival(s) && s.id !== partner?.id)
-    .map((s) => ({
-      s,
-      key: Math.abs(sailorRating(s) - target) + (rand() - 0.5) * JITTER,
-    }))
+    .map((s) => {
+      const age = ageInSeason(s.startingAge, state.season);
+      const kg = bodyWeightKg(age, buildFactorOf(s.id));
+      return {
+        s,
+        // closest to the level's rating, with the sailors of fitting age and weight first
+        key:
+          Math.abs(sailorRating(s) - target) +
+          (rand() - 0.5) * JITTER +
+          misfit(path, age, kg),
+      };
+    })
     .sort((a, b) => a.key - b.key || (a.s.id < b.s.id ? -1 : 1))
     .map((x) => x.s);
 

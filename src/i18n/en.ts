@@ -19,7 +19,35 @@ export const english: Catalog = {
   // Main menu.
   "menu.lede.twoPerson":
     "420 racing, in a Pair with jib, spinnaker and trapeze",
+  "menu.lede.skiff": "Skiff racing, in a Pair with jib, gennaker and trapeze",
+  "hud.slider.hikeTrapeze": "TRAPEZE",
+  "hud.sail.gennaker": "GENNAKER",
+  "hud.partnerLine.helmGennaker": ({ name, spi }) =>
+    `${name} on the helm and mainsheet · gennaker: ${spi}`,
+  "hud.partnerLine.crewGennaker": ({ name, weight, spi }) =>
+    `${name}: ${weight} · gennaker ${spi}`,
+  "hud.partnerLine.crewOnCallGennaker": ({ name, weight, spi }) =>
+    `${name}: ${weight} · gennaker ${spi} · Space = hoist/drop`,
+  "hud.partnerLine.crewOnCallGennaker.touch": ({ name, weight, spi }) =>
+    `${name}: ${weight} · gennaker ${spi} · tap Spi to hoist/drop`,
+  "call.gennakerHoist": ({ name }) => `${name}: “Hoist the gennaker!” → Space`,
+  "call.gennakerHoist.touch": ({ name }) =>
+    `${name}: “Hoist the gennaker!” → tap Spi`,
+  "call.gennakerDrop": ({ name }) => `${name}: “Drop the gennaker!” → Space`,
+  "call.gennakerDrop.touch": ({ name }) =>
+    `${name}: “Drop the gennaker!” → tap Spi`,
+  "toast.gennaker.hoist": "Hoist the gennaker!",
+  "toast.gennaker.drop": "Drop the gennaker!",
+  "toast.gennaker.partnerDecides": ({ name }) =>
+    `${name} decides on the gennaker (in "Full Boat Control" you call it)`,
+  "toast.gennaker.crewDecides": `The Crew decides on the gennaker (in "Full Boat Control" you call it)`,
+  "trim.gennakerCollapsed": "The gennaker has collapsed: sailing too high",
   "menu.lede.single": "Optimist racing",
+  "menu.lede.ilca":
+    "ILCA racing, single-handed, in the rig that suits your weight",
+  "menu.label.rig": "RIG",
+  "menu.rigHint": ({ kg, from, to }) =>
+    `Ideal weight about ${kg} kg (${from}–${to} kg)`,
   "menu.versionChip": ({ boatClass }) => `PROTOTYPE 0.6 · ${boatClass}`,
   "menu.roleHelp.helm":
     "Helm and mainsail. Your Partner, as Crew, trims the jib and spinnaker, goes out on the trapeze and decides when to hoist the spinnaker.",
@@ -117,9 +145,9 @@ export const english: Catalog = {
   "controls.action.pause": "Pause",
   "controls.action.restart": "Restart",
   "controls.action.crewWeight": "Weight in / out (up to the trapeze)",
-  "controls.action.crewSheet": "Sheet in / ease jib or spinnaker",
+  "controls.action.crewSheet": "Sheet in / ease jib, spinnaker or gennaker",
   "controls.action.switchSide": "Switch sides after a tack or gybe",
-  "controls.action.spinnaker": `Hoist / drop the spinnaker (also in "Full Boat Control")`,
+  "controls.action.spinnaker": `Hoist / drop the spinnaker or gennaker (also in "Full Boat Control")`,
   "controls.action.menus": "Audio · Controls · Menu",
   "controls.reset": "Reset to defaults",
   "controls.done": "Done",
@@ -355,9 +383,14 @@ export const english: Catalog = {
   "career.summary.next": "Next Season",
   "career.next.title": ({ season }) => `Season ${season}: what next?`,
   "career.next.help":
-    "Stay in the Optimist, or move to the 420 with a Partner you have raced against?",
-  "career.next.stay": "Stay in the Optimist",
-  "career.next.move": "Move to the 420",
+    "Pick next Season's class from those your age allows. In a two-person class, pick a Partner you have raced against.",
+  "career.next.classes": "Class",
+  "career.next.current": "Current",
+  "career.next.single": "Single-handed",
+  "career.next.rig": ({ from, to, kg, hint }) =>
+    `Ideal weight ${from}-${to} kg · you ${kg} kg · ${hint}`,
+  "career.next.pairClass": ({ from, to }) =>
+    `Two-person · ideal Pair ${from}-${to} kg`,
   "career.next.partner":
     "Pick your Partner among the sailors you raced against. Chemistry grows with the Seasons raced together.",
   "career.next.chemistry": ({ chemistry, kg }) =>

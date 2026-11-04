@@ -10,7 +10,70 @@ const plural = plurals("it");
 export const italian = {
   // Main menu.
   "menu.lede.twoPerson": "Prova 420, in due con fiocco, spinnaker e trapezio",
+  "menu.lede.skiff": "Prova skiff, in due con fiocco, gennaker e trapezio",
+  "hud.slider.hikeTrapeze": "TRAPEZIO",
+  "hud.sail.gennaker": "GENNAKER",
+  "hud.partnerLine.helmGennaker": ({
+    name,
+    spi,
+  }: {
+    name: string;
+    spi: string;
+  }) => `${name} al timone e alla randa · gennaker: ${spi}`,
+  "hud.partnerLine.crewGennaker": ({
+    name,
+    weight,
+    spi,
+  }: {
+    name: string;
+    weight: string;
+    spi: string;
+  }) => `${name}: ${weight} · gennaker ${spi}`,
+  "hud.partnerLine.crewOnCallGennaker": ({
+    name,
+    weight,
+    spi,
+  }: {
+    name: string;
+    weight: string;
+    spi: string;
+  }) => `${name}: ${weight} · gennaker ${spi} · Spazio = issa/ammaina`,
+  "hud.partnerLine.crewOnCallGennaker.touch": ({
+    name,
+    weight,
+    spi,
+  }: {
+    name: string;
+    weight: string;
+    spi: string;
+  }) => `${name}: ${weight} · gennaker ${spi} · tocca Spi per issare/ammainare`,
+  "call.gennakerHoist": ({ name }: { name: string }) =>
+    `${name}: «Issa il gennaker!» → Spazio`,
+  "call.gennakerHoist.touch": ({ name }: { name: string }) =>
+    `${name}: «Issa il gennaker!» → tocca Spi`,
+  "call.gennakerDrop": ({ name }: { name: string }) =>
+    `${name}: «Ammaina il gennaker!» → Spazio`,
+  "call.gennakerDrop.touch": ({ name }: { name: string }) =>
+    `${name}: «Ammaina il gennaker!» → tocca Spi`,
+  "toast.gennaker.hoist": "Issa il gennaker!",
+  "toast.gennaker.drop": "Ammaina il gennaker!",
+  "toast.gennaker.partnerDecides": ({ name }: { name: string }) =>
+    `Il gennaker lo decide ${name} (in "Barca completa" lo chiami tu)`,
+  "toast.gennaker.crewDecides": `Il gennaker lo decide il prodiere (in "Barca completa" lo chiami tu)`,
+  "trim.gennakerCollapsed": "Il gennaker è crollato: troppo all'orza",
   "menu.lede.single": "Prova Optimist",
+  "menu.lede.ilca":
+    "Prova ILCA, in singolo: iscritto con l'armo adatto al tuo peso",
+  "menu.label.rig": "RIG",
+  "menu.rigHint": ({
+    kg,
+    from,
+    to,
+  }: {
+    kg: number;
+    from: number;
+    to: number;
+  }) => `Peso ideale circa ${kg} kg (${from}–${to} kg)`,
   "menu.versionChip": ({ boatClass }: { boatClass: string }) =>
     `PROTOTIPO 0.6 · ${boatClass}`,
   "menu.roleHelp.helm":
@@ -117,9 +180,9 @@ export const italian = {
   "controls.action.pause": "Pausa",
   "controls.action.restart": "Ricomincia",
   "controls.action.crewWeight": "Peso dentro / fuori (fino al trapezio)",
-  "controls.action.crewSheet": "Cazza / lasca fiocco o spi",
+  "controls.action.crewSheet": "Cazza / lasca fiocco, spi o gennaker",
   "controls.action.switchSide": "Cambio lato dopo virata o strambata",
-  "controls.action.spinnaker": `Issa / ammaina lo spi (anche "Barca completa")`,
+  "controls.action.spinnaker": `Issa / ammaina spi o gennaker (anche "Barca completa")`,
   "controls.action.menus": "Audio · Comandi · Menu",
   "controls.reset": "Ripristina predefiniti",
   "controls.done": "Fatto",
@@ -454,9 +517,23 @@ export const italian = {
   "career.next.title": ({ season }: { season: number }) =>
     `Stagione ${season}: come prosegui?`,
   "career.next.help":
-    "Resti in Optimist o passi al 420, in due con un compagno che hai incontrato in regata?",
-  "career.next.stay": "Resta in Optimist",
-  "career.next.move": "Passa al 420",
+    "Scegli la classe per la prossima stagione, tra quelle che la tua età consente. In due, scegli un compagno che hai incontrato in regata.",
+  "career.next.classes": "Classe",
+  "career.next.current": "In corso",
+  "career.next.single": "In singolo",
+  "career.next.rig": ({
+    from,
+    to,
+    kg,
+    hint,
+  }: {
+    from: number;
+    to: number;
+    kg: number;
+    hint: string;
+  }) => `Peso ideale ${from}-${to} kg · tu ${kg} kg · ${hint}`,
+  "career.next.pairClass": ({ from, to }: { from: number; to: number }) =>
+    `In due · equipaggio ideale ${from}-${to} kg`,
   "career.next.partner":
     "Scegli il tuo compagno tra i velisti che hai incontrato. L'intesa cresce con le stagioni passate a regatare insieme.",
   "career.next.chemistry": ({

@@ -135,6 +135,8 @@ const ROLL_WINDOW = 1.2,
   ROLL_ACCEL = 0.1;
 /** A hike this far up inside the window is a perfect roll (a hard hike rises about 0.84 in it); no rise at all is the worst. */
 const ROLL_FULL_RISE = 0.6;
+/** Drive an ILCA loses in a breeze per unit of weight below its rig's ideal (a sailor 30% light loses 36%). */
+const RIG_DEPOWER = 1.2;
 /** Unbalanced side force (N) below which the boat still counts as held flat, so a Helm hiking exactly at the ideal doesn't flicker. */
 const OVERPOWER_DEADBAND = 5;
 
@@ -232,9 +234,14 @@ export function sailForce(
   };
 }
 
-/** The spinnaker only flies with the wind well aft; closer to the wind it collapses and just drags. */
-function spiEffect(awa: number) {
+/**
+ * The spinnaker only flies with the wind well aft; closer to the wind it collapses and just drags. A gennaker flies earlier (from
+ * a broad reach of the apparent wind) and keeps only a quarter of its power with the wind dead astern.
+ */
+function spiEffect(awa: number, gennaker = false) {
   const a = Math.abs(awa) / DEG;
+  if (gennaker)
+    return clamp((a - 45) / 25, 0, 1) * (1 - 0.75 * clamp((a - 95) / 85, 0, 1));
   return clamp((a - 55) / 30, 0, 1);
 }
 
@@ -284,8 +291,9 @@ export function optimalSheetFor(
   aws: number,
   cap: number,
   isSpi = false,
+  gennaker = false,
 ): number {
-  const effect = isSpi ? spiEffect(awa) : 1;
+  const effect = isSpi ? spiEffect(awa, gennaker) : 1;
   if (effect === 0) return 0;
   const side = awa >= 0 ? -1 : 1;
   const absAwa = Math.abs(awa);
@@ -349,7 +357,8 @@ function mainCap(cls: BoatClass) {
   if (!cls.crewRighting) return cls.hikeForce;
   const total = cls.main.area + (cls.jib?.area ?? 0);
   return (
-    (cls.hikeForce + cls.crewRighting.trapezeForce) * (cls.main.area / total)
+    (helmCeiling(cls, cls.hikeForce) + cls.crewRighting.trapezeForce) *
+    (cls.main.area / total)
   );
 }
 
@@ -365,10 +374,22 @@ export function crewForce(cls: BoatClass, out: number, scale = 1): number {
   return f * scale;
 }
 
-/** Righting force (N) of the Helm at weight position `out`, given the force `hike` of hiking fully out (scaled to their weight). */
+/** The most the Helm can right with (N): the hiking force `hike`, or the trapeze's multiple of it in a class whose Helm trapezes. */
+export function helmCeiling(cls: BoatClass, hike: number): number {
+  return hike * (cls.helmRighting.trapeze ?? 1);
+}
+
+/**
+ * Righting force (N) of the Helm at weight position `out`, given the force `hike` of hiking fully out (scaled to their weight).
+ * In a class whose Helm trapezes `out` 0.5 is hiking and 1 the trapeze, as for the Crew.
+ */
 export function helmForce(cls: BoatClass, out: number, hike: number): number {
   const h = cls.helmRighting;
   const o = clamp(out, h.leewardMin, 1);
+  if (h.trapeze !== undefined)
+    return o <= 0.5
+      ? hike * (h.inFrac + (1 - h.inFrac) * (o / 0.5))
+      : hike * (1 + (h.trapeze - 1) * ((o - 0.5) / 0.5));
   if (o >= 0) return hike * (h.inFrac + (1 - h.inFrac) * o);
   return hike * h.inFrac * (1 + (2 * o) / -h.leewardMin);
 }
@@ -381,6 +402,10 @@ export function helmOutFor(
 ): number {
   const h = cls.helmRighting;
   const f = force / hike;
+  if (h.trapeze !== undefined)
+    return f >= 1
+      ? Math.min(1, 0.5 + (0.5 * (f - 1)) / (h.trapeze - 1))
+      : clamp((0.5 * (f - h.inFrac)) / (1 - h.inFrac), 0, 0.5);
   if (f >= h.inFrac) return clamp((f - h.inFrac) / (1 - h.inFrac), 0, 1);
   if (h.leewardMin >= 0 || h.inFrac <= 0) return 0;
   return clamp(((f / h.inFrac - 1) * -h.leewardMin) / 2, h.leewardMin, 0);
@@ -594,9 +619,12 @@ export class BoatSim {
         s.spiSide,
         s.spiHoist,
       );
-      const e = spiEffect(awa) * (s.spiSide === leeward ? 1 : 0.2);
+      const gen = cls.spinnaker.gennaker === true;
+      const e = spiEffect(awa, gen) * (s.spiSide === leeward ? 1 : 0.2);
       const q = 0.5 * AIR * aws * aws * cls.spinnaker.area * s.spiHoist;
-      drive += spi.drive * e - (1 - e) * 0.25 * q;
+      // A gennaker running off the wind doesn't collapse: it only loses power, with no drag penalty.
+      const collapse = gen && Math.abs(awa) > 90 * DEG ? 0 : 1 - e;
+      drive += spi.drive * e - collapse * 0.25 * q;
       side += spi.side * (0.5 + 0.5 * e);
     }
     // Hull, rig and sailor windage always push downwind.
@@ -612,11 +640,20 @@ export class BoatSim {
     const rawSide = side;
     const need = Math.abs(side);
     const maxRighting =
-      this.helmHike +
+      helmCeiling(cls, this.helmHike) +
       (cls.crewRighting ? cls.crewRighting.trapezeForce * this.crewScale : 0);
     drive *=
       1 +
       0.5 * (this.rightingScale - 1) * breeze * clamp(need / maxRighting, 0, 1);
+
+    // An ILCA sailed under its rig's ideal weight can't hold the sail in a breeze: it is eased and flogs, so drive falls (from ~8 kn
+    // to full at 14 kn). Heavier sailors lose nothing here: they only add mass.
+    if (cls.rig !== undefined)
+      drive *=
+        1 -
+        RIG_DEPOWER *
+          Math.max(0, 1 - this.rightingScale) *
+          clamp((tKn - 8) / 6, 0, 1);
 
     // Righting: Crew weight (if any) plus the Helm hiking as much as needed.
     const crewOnWindward = s.crewSide === -leeward;
@@ -626,7 +663,7 @@ export class BoatSim {
     const hr = cls.helmRighting;
     const inF = hr.inFrac * this.helmHike;
     const rawWanted = need - crewF;
-    const wanted = clamp(rawWanted, 0, this.helmHike); // the Helm hiking exactly as needed
+    const wanted = clamp(rawWanted, 0, helmCeiling(cls, this.helmHike)); // the Helm hiking exactly as needed
     // Where the Helm would sit for that: to leeward on a broad reach or run in light air when almost nothing is needed (420), only
     // as far across as the heel that adds allows; else as far out as needed. Never to leeward while planing or in a breeze.
     const toLeeward =
@@ -673,7 +710,7 @@ export class BoatSim {
     const au = Math.abs(u);
     // Fore-aft weight: forward upwind and in light air, aft on a reach or run in a breeze (planing). Once the weight is aft and the
     // boat is flat, the bow lifts (and a planing class gets onto the plane) and wave drag falls.
-    const breezy = clamp(tKn - 12, 0, 1); // 0 at 12 kn, 1 at 13 kn: nothing at 11 kn
+    const breezy = clamp(tKn - (cls.planing.onsetKn ?? 12), 0, 1); // 0 at 12 kn, 1 at 13 kn: nothing at 11 kn (unless the class starts earlier)
     const downwind =
       clamp((absTwa - 75 * DEG) / (15 * DEG), 0, 1) *
       (cls.planing.planes ? clamp((172 * DEG - absTwa) / (10 * DEG), 0, 1) : 1);
@@ -776,7 +813,8 @@ export class BoatSim {
     if (cls.jib && jib) {
       const total = cls.main.area + cls.jib.area;
       const cap =
-        (cls.hikeForce + (cls.crewRighting?.trapezeForce ?? 0)) *
+        (helmCeiling(cls, cls.hikeForce) +
+          (cls.crewRighting?.trapezeForce ?? 0)) *
         this.rightingScale *
         (cls.jib.area / total);
       const opt = optimalSheetFor(cls.jib, awa, aws, cap);
@@ -790,8 +828,12 @@ export class BoatSim {
       };
     }
     if (cls.spinnaker) {
-      const opt = optimalSheetFor(cls.spinnaker, awa, aws, 1e9, true);
-      const collapsed = s.spiHoist > 0.5 && spiEffect(awa) < 0.5;
+      const gen = cls.spinnaker.gennaker === true;
+      const opt = optimalSheetFor(cls.spinnaker, awa, aws, 1e9, true, gen);
+      const collapsed =
+        s.spiHoist > 0.5 &&
+        spiEffect(awa, gen) < 0.5 &&
+        (!gen || Math.abs(awa) < 90 * DEG);
       t.spi = {
         hoist: s.spiHoist,
         angle: spi ? spi.angle : 0,
@@ -805,7 +847,11 @@ export class BoatSim {
     if (cls.crewRighting) {
       // Ideal: the Helm hikes at ~80%, the Crew provides the rest.
       t.crew = {
-        ideal: crewOutFor(cls, need - this.helmHike * 0.8, this.crewScale),
+        ideal: crewOutFor(
+          cls,
+          need - helmCeiling(cls, this.helmHike) * 0.8,
+          this.crewScale,
+        ),
         onWindward: crewOnWindward,
         balance,
       };

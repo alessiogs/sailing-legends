@@ -73,6 +73,8 @@ export function buildPanel({
   const s = p.sim.state,
     tel = p.sim.telemetry;
   const name = session.partner?.name ?? "";
+  // A skiff flies a gennaker where the 420 flies a spinnaker: the same sail in the physics, worded apart.
+  const gen = p.sim.cls.spinnaker?.gennaker === true;
   const chem =
     two && session.partner
       ? { name, value: crewChemistry(session.partner) }
@@ -90,8 +92,8 @@ export function buildPanel({
       wantSpinnaker(session.race, p) !== !!session.playerControls.spi
     )
       call = session.playerControls.spi
-        ? t("call.spiDrop", { name })
-        : t("call.spiHoist", { name });
+        ? t(gen ? "call.gennakerDrop" : "call.spiDrop", { name })
+        : t(gen ? "call.gennakerHoist" : "call.spiHoist", { name });
     else if (tel.crew!.balance > 60) call = t("call.hikeOut", { name });
     else if (s.crewOut - ideal > 0.25 && tel.crew!.balance < -20)
       call = t("call.comeIn", { name });
@@ -106,7 +108,9 @@ export function buildPanel({
         ends: [t("hud.gauge.in"), t("hud.gauge.out")],
       },
       sail: {
-        label: spiUp ? t("hud.sail.spinnaker") : t("hud.sail.jib"),
+        label: spiUp
+          ? t(gen ? "hud.sail.gennaker" : "hud.sail.spinnaker")
+          : t("hud.sail.jib"),
         sheet,
         optimal: sailTel.optimal,
         state: sailTel.trimState,
@@ -115,11 +119,17 @@ export function buildPanel({
           tel.jib!.backed && !spiUp
             ? t("trim.jibBacked")
             : spiUp && tel.spi!.collapsed
-              ? t("trim.spiCollapsed")
+              ? t(gen ? "trim.gennakerCollapsed" : "trim.spiCollapsed")
               : undefined,
       },
       call,
-      partnerLine: t("hud.partnerLine.helm", { name, spi }),
+      partnerLine: t(
+        gen ? "hud.partnerLine.helmGennaker" : "hud.partnerLine.helm",
+        {
+          name,
+          spi,
+        },
+      ),
       chem,
       ...(tel.planing ? { planing: true as const } : {}),
     };
@@ -143,8 +153,12 @@ export function buildPanel({
     const spi = spinnakerText(spinnakerState(s.spiHoist));
     partnerLine = t(
       control === "fullBoat"
-        ? "hud.partnerLine.crewOnCall"
-        : "hud.partnerLine.crew",
+        ? gen
+          ? "hud.partnerLine.crewOnCallGennaker"
+          : "hud.partnerLine.crewOnCall"
+        : gen
+          ? "hud.partnerLine.crewGennaker"
+          : "hud.partnerLine.crew",
       { name, weight, spi },
     );
   }
@@ -173,7 +187,12 @@ export function buildPanel({
       ideal: along(tel.helm!.ideal),
       ends: [
         t(low < 0 ? "hud.slider.hikeLeeward" : "hud.slider.hikeIn"),
-        t("hud.slider.hikeOut"),
+        // In a class whose Helm trapezes (the 49er) the gauge runs on past hiking (the middle) to the trapeze.
+        t(
+          p.sim.cls.helmRighting.trapeze !== undefined
+            ? "hud.slider.hikeTrapeze"
+            : "hud.slider.hikeOut",
+        ),
       ],
     };
   }

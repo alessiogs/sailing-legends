@@ -9,8 +9,8 @@ src/
   core/      math.ts (angles, RNG, segment tests), Input.ts (keyboard/gamepad/drag, tiller vs boat-direction
              steering, what the keys move per Role; DOM-free: `dragGauge`, `dragSheet`, `press` are called by the UI), ControlSettings.ts (the Commands menu settings and their
              defaults; DOM-free), FramePacer.ts (frame skipping for the render loop: 10 fps off the water, 60 fps cap on phones; pure), Sound.ts (WebAudio synthesis, no assets; the water rush is louder while planing)
-  sailing/   BoatClass.ts (class data: Optimist, I420, keyed by the closed `ClassId` union; `isTwoPerson` =
-             sailed by a Pair, which has `crewRighting`),
+  sailing/   BoatClass.ts (class data: Optimist, I420, `I29ER` (a gennaker, `spinnaker.gennaker`) and the ILCA's three rigs `ILCA_4/6/7` (`ILCA_RIGS`; `CLASSES.ilca` is the 6), keyed by the closed `ClassId` union;
+             `isTwoPerson` = sailed by a Pair, which has `crewRighting`; a class may carry its own `course` size),
              BoatPhysics.ts (the model), Wind.ts (shifts + puffs), BoatStates.ts (Crew weight in/hiking/trapeze
              and spinnaker down/moving/up from the boat state: the one home of their thresholds)
   race/      Course.ts (marks, the start line that is also the finish line, and legs, each with a `LegId`),
@@ -27,6 +27,7 @@ src/
   ai/        RacingAI.ts (the Helm: composes the parts below; mark rounding, trim error, penalty turns, rudder),
              BeatTactics.ts (steering toward a point, beating upwind: the persistent tack `onStbd`, hysteresis,
              the tack timer shared with the start and the tack state machine; implements `CourseSteering`),
+             RunTactics.ts (a skiff's run, the beat mirrored about the wind: VMG angle, the persistent gybe, layline, a committed gybe),
              TackStateMachine.ts (`sail | tack | recover`: committed tacks, gybe round when too slow, the rule-13
              wait near other boats, recovery from irons), Avoidance.ts (`giveWay`: keep clear of right-of-way
              boats under rules 10/11/12; `boatWithin`),
@@ -35,7 +36,8 @@ src/
              angles.ts (`CLOSE_HAULED`, shared by the AI parts),
              hiking.ts (how well an AI sailor hikes and rolls by technique: `rollQuality`, the hiking error; its own RNG stream),
              CrewAI.ts (the Crew: jib/spi trim, weight, side switch, spinnaker; `crewOnWrongSide` is the one
-             wrong-side check, shared by the Crew AI, the browser autopilot and the HUD). Both read sailor profiles
+             wrong-side check, shared by the Crew AI, the browser autopilot and the HUD; the Crew trims the gennaker like the
+             spinnaker). Both read sailor profiles
   sailors/   Sailors.ts (sailor profiles, the Rival roster, the opponents' Crews, the extra Helm, the autopilot
              Helm, the Crew Chemistry formula; sailors are matched by `id`, never by name),
              BodyWeight.ts (`bodyWeightKg` from age and Build, `Build`, `buildFactorOf` an AI sailor's Build from their id)
@@ -45,15 +47,17 @@ src/
              version, `{ ok: false }` for anything unreadable; `loadCareer`/`saveCareer` on the `sl-career` key; the state
              holds starting age, Season, class, Regatta index, the Races sailed so far, the pool, and the Partner, Role,
              Control mode, Chemistry and its history)
-             Calendar.ts (`Regatta` and the 0.5 Season calendar constants per class: 4 Regattas x 3 Races, Discard from
-             the third, entry rule `open`)
+             Calendar.ts (`Regatta` and the Season calendar, the same Sardinian one for every class (`seasonCalendar`):
+             4 Regattas x 3 Races, Discard from the third, entry rule `open`)
              SeasonClose.ts (`closeSeason`: next Season, index and results reset, the pool grown, the Seasons raced
-             together counted; `startNextSeason`: the end-of-Season choice, stay or the 420 with a Partner, Role and
-             Control mode; `partnerOffers`), Chemistry.ts (starting Chemistry, the change per 420 Regatta with its caps,
+             together counted; `startNextSeason`: the end-of-Season choice, any class the age allows (the ILCA with its rig, a Pair class with a
+             Partner, Role and Control mode); `partnerOffers`)
+             Classes.ts (`ClassPath` = class + ILCA rig, `classOffers` by age with the rig's weight hint, `sailorPath`: the
+             class path a Rival sails each Season by age and body weight, `misfit`; Weight.ts has the rig and Pair hints), Chemistry.ts (starting Chemistry, the change per 420 Regatta with its caps,
              `partnerProfile`), PlayerId.ts, Growth.ts (`growSailor`: seeded age curve shaped by personality)
              Standings.ts (`regattaReport`: Regatta and Season rankings after a Regatta, `seasonSummary`, and
              `compareWithRivals`: ids, places and point gaps for the Rival lines; the Discard comes from the calendar)
-             Ages.ts (`ageInSeason`, `canRace` against a class's Age limit, the starting-age range)
+             Ages.ts (`ageInSeason`, `canRace` against a class's Age limit (none for the ILCA, 29er, 49er), the starting-age range)
              Career.ts (`startCareer`: a pure operation giving Season 1; `nextRaceSetup`: the next Race's fleet,
              wind and seed)
              Pool.ts (the sailor pool: the Rivals plus 27 generated sailors with Italian names, drawn once from the
@@ -62,11 +66,12 @@ src/
              Strength.ts (`levelRating`: each level's strength by age, kids weaker, adult at 16; `rivalStartRating`)
              RecordRace.ts (`raceEntries`: a race's outcome as Career entries, racer ids mapped to sailor ids;
              `recordRace`: adds a Race and moves to the next Regatta; `isSeasonOver`)
-             Weight.ts (the Pair's weight hint light / ideal / heavy around 110-130 kg, `outgrownOptimist` above 50 kg, the player's kg; data only),
+             Weight.ts (the light / ideal / heavy hints: the Pair's weight per two-person class (`PAIR_IDEAL_KG`: 420 110-130 kg, 29er
+             120-130, 49er 150-170) and the sailor's weight per ILCA rig (`RIG_IDEAL_KG`), `suggestedRig`, `outgrownOptimist` above 50 kg, the player's kg; data only),
              Weather.ts (the wind and seed of each Race of a Regatta), Seeds.ts (`mixSeed`)
   world/     Ocean.ts (Gerstner waves in GLSL), Waves.ts (same waves on CPU), BowSpray.ts (a few drops thrown from the bow of a planing boat, made only for a boat within the sailor LOD distance), BoatViewBase.ts (what both boat
              visuals share: wave riding, bow lift while planing, heel, boom swing, rudder, burgee; each class gives its `BoatMotion` and
-             draws its own sails and sailors; sailors beyond 30 m of the camera are drawn simply), BoatView.ts (Optimist: the
+             draws its own sails and sailors; sailors beyond 30 m of the camera are drawn simply), BoatSkiffView.ts (29er and 49er: flat hull, racks on the 49er, main, self-tacking jib, retractable bowsprit, one gennaker mesh whose clew follows the sheet and crosses in a gybe, class mark, trapeze wires for the Crew and, in the 49er, the Helm; the tiller extension and handles are drawn only near the camera, so a far skiff costs no more meshes than a far 420), BoatIlcaView.ts (ILCA: open hull with a flat deck, sleeve-mast single sail scaled by the rig, hiking sailor), BoatView.ts (Optimist: the
              sailor posed from `sailorPose`, tiller extension, drawn hull roll while the sailor crosses), Boat420View.ts (the Helm and
              Crew posed the same way; tiller extension, trapeze wire with its handle), SailorFigure.ts (`SailorFigure`: the
              articulated figure of instanced cylinders and balls, 13-14 meshes near and 3 far, with `limbMesh`/`setLimb` for rigging), pose/
@@ -82,7 +87,7 @@ src/
   i18n/      index.ts (`t(key, params)`: typed lookup in the active catalog; `setLanguage`), it.ts (Italian catalog,
              the reference: it defines the keys), en.ts (English catalog, typed against it), language.ts (`Language`,
              `chooseLanguage`: saved choice, else the browser's language, else Italian), plural.ts (plural forms from Intl.PluralRules). All player-facing text lives in a catalog
-  ui/        touchDrag.ts (pointer drag of the horizontal tiller/weight bar and the vertical sheet slider into Input),
+  ui/        panelFit.ts (keeps the Standings/map panel clear of the controls under it: trims its parts in order, then hides it), touchDrag.ts (pointer drag of the horizontal tiller/weight bar and the vertical sheet slider into Input),
              TouchButtons.ts (the tap buttons, found by `data-action` in index.html: pause, camera, Auto-trim,
              spinnaker, side switch; the last three are the context buttons, shown when the boat has them),
              Hud.ts (the "Sail number" HUD: top strip, compass pill and speed, messages as one pill, status pills, the
@@ -100,7 +105,7 @@ src/
              screens, and the Career entries and next-Race buttons. Implements the controller's `Screens`; `attach(game)`
              wires the buttons), CareerScreen.ts (the Career overlay: starting age, unreadable-save prompt, Season
              calendar, Regatta standings, Season summary; built with `h()`, so `index.html` holds no text for it),
-             NextSeasonView.ts (the stay/move choice and Partner pick), StandingsView.ts (the standings and summary sheets; rankings with Rivals highlighted), rivalText.ts
+             NextSeasonView.ts (the class list with weight hints, and the Partner pick in a Pair class), StandingsView.ts (the standings and summary sheets; rankings with Rivals highlighted), rivalText.ts
              (words a Rival comparison: "Luca beat you by 2 points")
   game/      GameController.ts (owns the game state: race session, class, Role and Control mode, Partner, wind,
              Assists; the menu / racing / paused / results / controls / career modes; the Career in progress: new, continue, start a Race,
@@ -117,10 +122,11 @@ src/
              `savePrefs`: controls, mute and the optional language under `sl-prefs`; a stored non-object loads the defaults; keep the stored format so saved preferences load),
              testHook.ts (the typed `window.__game` test hook, `GameTestHook` (also a message pill and the panel), and `window.__fps`)
   main.ts    startup wiring: language, scene, camera rig, preferences, `Menus`, render loop, installs the test hook
-tests/       Vitest tests (npm test): smoke.test.ts (every AI-only race finishes, every penalty served),
+  vite-env.d.ts  Vite's client type declarations (no code)
+tests/       Vitest tests (npm test): smoke.test.ts (every AI-only race finishes, in every class, every penalty served),
              career-smoke.test.ts (a Career Regatta of Races through `RaceSession` into `career`),
              career-record.test.ts (entries of a race, recording a Race, Regatta rollover, Season end)
-             golden.test.ts + golden/ (races.ts sails and records the golden races, races.json is the snapshot),
+             golden.test.ts + golden/ (races.ts sails and records the twelve golden races, races.json is the snapshot),
              rules.test.ts (rule 10/11/12/13 verdicts and penalty turns, two boats placed by hand)
              input-drag.test.ts (the drag source of Input: tiller, weight, sheet, taps)
              i18n-touch.test.ts (`.touch` message variants on touch screens)
@@ -132,6 +138,7 @@ tests/       Vitest tests (npm test): smoke.test.ts (every AI-only race finishes
              race-names.test.ts (leg and boat names of every session setup read as before)
              career-scoring.test.ts (low point, OCS/DSQ, Discard, tie-breaks incl. after the Discard, Season ranking)
              career-save.test.ts (save round trip, migrations, unreadable saves never throw, the storage adapter)
+             career-classes.test.ts (class offer by age, rig and Pair hints, Chemistry across classes, Rival class paths, fleets filled),
              career-calendar.test.ts (the 0.5 calendars), career-ages.test.ts (ages, `canRace` at 14/15/16), sailor-pose.test.ts (crossing, height by age, looks and sail number)
              career-season-close.test.ts (closing a Season: ages, reset, Rival growth by personality, pinned over 3 Seasons)
              career-standings.test.ts (Regatta/Season standings, the Discard, Rival comparison, Season summary),
@@ -158,6 +165,10 @@ tests/       Vitest tests (npm test): smoke.test.ts (every AI-only race finishes
              race-feedback.test.ts (which sounds, messages and hints the race gives, and when)
              planing.test.ts (420 planing and Optimist bow-up gates and targets),
              boat-class.test.ts (class ids: a misspelt id is a type error; every class keyed by its own id)
+             ilca.test.ts (ILCA rigs: 11 kn target speeds through BoatSim, and the rig that suits each sailor weight)
+             29er.test.ts (the 29er's polar with the gennaker through BoatSim: targets, VMG angle, planing),
+             49er.test.ts (the 49er: Helm trapeze righting, Auto-hike flat, planing at 11 kn, targets and VMG angle),
+             skiff-ai.test.ts (AI 29ers gybe on the run, sail 130–160° TWA, and better technique runs faster)
              start-planning.test.ts (the AI's holding spot, line point, RNG draws and start decisions)
              racing-ai-parts.test.ts (the AI's avoidance, beat tactics and tack state machine on their own)
              collisions.test.ts (hull capsules, closest points, hulls pushed apart and out of marks)
@@ -167,7 +178,7 @@ tests/       Vitest tests (npm test): smoke.test.ts (every AI-only race finishes
              sail-shape.test.ts (the shared sail grid draws the Optimist and 420 sails exactly as before)
              optimal-sheet.test.ts (the fast optimal-sheet search gives exactly the sheet that sampling every step gives)
 scripts/     polar.ts (npm run polar), career-sim.ts (npm run career-sim: a stand-in AI player sails whole Career Seasons and
-             prints places, Rival ratings and Chemistry; flags --skills= --seasons= --seed=; about 9 min for the defaults), golden-update.ts (npm run golden:update), hud-overlap.cjs (the HUD no-overlap check in
+             prints places, Rival ratings and Chemistry; flags --skills= --seasons= --seed= --age= --plan= (the class of each Season); about 9 min for the defaults), golden-update.ts (npm run golden:update), hud-overlap.cjs (the HUD no-overlap check in
              headless Chromium, run by hand: docs/agents/sandbox-build.md)
 ```
 

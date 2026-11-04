@@ -174,7 +174,7 @@ describe("the end-of-Season choice", () => {
     expect(next.season).toBe(2);
     expect(next.results).toEqual([[]]);
   });
-  it("refuses a Partner not raced against, and the Optimist after the 420", () => {
+  it("refuses a Partner not raced against, and goes back to the Optimist from the 420 while the age allows", () => {
     expect(() =>
       startNextSeason(sailed(), {
         classId: "420",
@@ -187,7 +187,10 @@ describe("the end-of-Season choice", () => {
       partnerId: "luca",
       choice: helm,
     });
-    expect(() => startNextSeason(in420, { classId: "optimist" })).toThrow();
+    const back = startNextSeason(in420, { classId: "optimist" });
+    expect(back.classId).toBe("optimist");
+    expect(back.partnerId).toBeNull();
+    expect(back.chemistry).toBeNull();
   });
   it("keeps the Chemistry of a Partner kept, and restarts it from the formula for a new one", () => {
     const in420 = {

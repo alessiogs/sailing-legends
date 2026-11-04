@@ -18,7 +18,8 @@ describe("bodyWeightKg", () => {
   it("interpolates between the points and is flat outside them", () => {
     expect(bodyWeightKg(12.5, 1)).toBeCloseTo(47, 5);
     expect(bodyWeightKg(5, 1)).toBe(30);
-    expect(bodyWeightKg(30, 1)).toBe(60);
+    expect(bodyWeightKg(18, 1)).toBe(66);
+    expect(bodyWeightKg(30, 1)).toBe(72); // adults keep filling out to 20, for the ILCA 7 and the 49er
   });
   it("scales with the build factor", () => {
     expect(bodyWeightKg(16, 1.15)).toBeCloseTo(69, 5);

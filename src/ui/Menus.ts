@@ -10,7 +10,13 @@ import type {
 import { LANGUAGES, t, type Language, type MessageKey } from "../i18n";
 import type { Racer } from "../race/Race";
 import { CREW, FULL_BOAT, HELM, type PlayerChoice } from "../race/PlayerChoice";
-import { CLASSES, isClassId, isTwoPerson } from "../sailing/BoatClass";
+import {
+  CLASSES,
+  ILCA_RIGS,
+  isClassId,
+  isTwoPerson,
+  type IlcaRig,
+} from "../sailing/BoatClass";
 import { crewChemistry, RIVALS, rivalById } from "../sailors/Sailors";
 import { CareerScreen, type CareerView } from "./CareerScreen";
 import { h } from "./dom";
@@ -29,6 +35,13 @@ const ROLE_OPTIONS = {
 type RoleOption = keyof typeof ROLE_OPTIONS;
 const roleOption = (c: PlayerChoice): RoleOption =>
   c.role === "crew" ? "crew" : c.control === "fullBoat" ? "fullBoat" : "helm";
+
+/** The sailor weights (kg) each ILCA rig suits: its competitive range (ideal weight in `ILCA_RIGS`). */
+const RIG_RANGE_KG: Record<IlcaRig, readonly [number, number]> = {
+  4: [50, 65],
+  6: [60, 78],
+  7: [73, 90],
+};
 
 /**
  * The page's menus: the main menu (boat class, wind, Role, Partner, Auto-trim, and the Career entries), the Commands
@@ -136,6 +149,8 @@ export class Menus implements Screens {
 
   /** True once the player has set Auto-hike themselves (the box or G); until then a Role click sets its default. */
   private autoHikeSet = false;
+  /** The ILCA rig the rig picker is on (used when the ILCA button is pressed). */
+  private rig: IlcaRig = 6;
 
   autoHikeChosen() {
     return this.autoHikeSet ? this.el.autoHike.checked : null;
@@ -362,7 +377,19 @@ export class Menus implements Screens {
     for (const b of buttons("#class-opt button")) {
       b.addEventListener("click", () => {
         const id = b.dataset.v;
-        game.boatClass = isClassId(id) ? CLASSES[id] : CLASSES.optimist;
+        game.boatClass =
+          id === "ilca"
+            ? ILCA_RIGS[this.rig]
+            : isClassId(id)
+              ? CLASSES[id]
+              : CLASSES.optimist;
+        this.syncBoatMenu();
+      });
+    }
+    for (const b of buttons("#rig-opt button")) {
+      b.addEventListener("click", () => {
+        this.rig = Number(b.dataset.v) as IlcaRig;
+        game.boatClass = ILCA_RIGS[this.rig];
         this.syncBoatMenu();
       });
     }
@@ -388,9 +415,26 @@ export class Menus implements Screens {
     for (const o of buttons("#role-opt button"))
       o.classList.toggle("on", o.dataset.v === roleOption(choice));
     $("pair-block").classList.toggle("hidden", !two);
+    const ilca = boatClass.id === "ilca";
+    for (const o of buttons("#rig-opt button"))
+      o.classList.toggle("on", Number(o.dataset.v) === boatClass.rig);
+    $("rig-block").classList.toggle("hidden", !ilca);
+    $("rig-help").textContent = ilca
+      ? t("menu.rigHint", {
+          kg: boatClass.sailorKg.helm,
+          from: RIG_RANGE_KG[boatClass.rig!][0],
+          to: RIG_RANGE_KG[boatClass.rig!][1],
+        })
+      : "";
     $("lede-class").textContent = two
-      ? t("menu.lede.twoPerson")
-      : t("menu.lede.single");
+      ? t(
+          boatClass.spinnaker?.gennaker
+            ? "menu.lede.skiff"
+            : "menu.lede.twoPerson",
+        )
+      : ilca
+        ? t("menu.lede.ilca")
+        : t("menu.lede.single");
     $("version-chip").textContent = t("menu.versionChip", {
       boatClass: boatClass.name.toUpperCase(),
     });

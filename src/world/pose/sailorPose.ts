@@ -123,6 +123,23 @@ type Spot = {
 function spotOf(i: PoseInput, h: number, hoist: number): Spot {
   const H = i.height;
   const half = PELVIS_HALF * H;
+  if (i.classId === "ilca") {
+    // Hiking hard: sitting on the windward deck in light air, then out over the gunwale, feet under the toe strap.
+    const hh = clamp(i.helmOut ?? h, 0, 1);
+    const z = -0.3;
+    const g = sectionAt("ilca", z);
+    return {
+      pelvis: {
+        x: lerp(g.wg - 0.3, g.wg + 0.02, smooth(hh)),
+        y: lerp(g.yg + 0.9 * half, g.yg + 0.5 * half, hh),
+        z,
+      },
+      lean: 0.2 + hh * 0.85,
+      seated: false,
+      foot: { x: 0.12, y: 0.02, z: z + 0.65 },
+      forward: 0,
+    };
+  }
   if (i.classId === "optimist" && i.helmOut !== undefined) {
     // Never crouched in the middle: the innermost place is the windward side deck, leaning in; out is over the gunwale.
     const hh = clamp(i.helmOut, 0, 1);
@@ -165,9 +182,10 @@ function spotOf(i: PoseInput, h: number, hoist: number): Spot {
       forward: 0,
     };
   }
-  if (i.role === "helm") {
+  const trapezeHelm = i.role === "helm" && i.classId === "49er";
+  if (i.role === "helm" && !trapezeHelm) {
     const z = -1.25;
-    const g = sectionAt("420", z);
+    const g = sectionAt(i.classId, z);
     if (i.helmOut !== undefined && i.helmOut < 0) {
       // To leeward, sitting upright across the boat (broad reach and run).
       const t = smooth(-i.helmOut / 0.4);
@@ -193,13 +211,16 @@ function spotOf(i: PoseInput, h: number, hoist: number): Spot {
       forward: 0,
     };
   }
-  const out = clamp(i.crewOut, 0, 1);
+  // The Crew (the 49er's Helm too) sits out, hikes or hangs from the trapeze: `out` 0 in .. 0.5 hiking .. 1 trapeze.
+  const out = clamp(trapezeHelm ? (i.helmOut ?? h * 0.5) : i.crewOut, 0, 1);
   const lean = out < 0.5 ? 0.1 + out * 1.3 : 0.75 + (out - 0.5) * 1.0;
   const hikeB = smooth(out / 0.5);
   const wire = smooth((out - 0.55) / 0.25);
-  const fwd = Math.sin(Math.PI * clamp(hoist, 0, 1)); // the trip to the mast lifts the crew in
-  const z = 0.05 + 0.6 * fwd;
-  const g = sectionAt("420", 0.05);
+  const fwd = trapezeHelm ? 0 : Math.sin(Math.PI * clamp(hoist, 0, 1)); // the trip to the mast lifts the crew in
+  const z0 = trapezeHelm ? -0.6 : 0.05; // the 49er's Helm stands aft of the Crew
+  const z = z0 + 0.6 * fwd;
+  const g = sectionAt(i.classId, z0);
+  const wing = RIG[i.classId].wing;
   // Sitting out: on the side deck.
   const sit: V3 = {
     x: g.wg - 0.13 + 0.12 * hikeB,
@@ -209,7 +230,10 @@ function spotOf(i: PoseInput, h: number, hoist: number): Spot {
   const cockpitFoot: V3 = { x: 0.3, y: 0.0, z: z + 0.45 };
   // On the wire: feet on the gunwale, the body a straight line out from them.
   const legLen = 2 * THIGH * H * 0.97;
-  const footOut: V3 = { x: g.wg - 0.04, y: g.yg + 0.08, z };
+  const footOut: V3 =
+    wing === undefined
+      ? { x: g.wg - 0.04, y: g.yg + 0.08, z }
+      : { x: wing - 0.1, y: g.yg + 0.04, z };
   const hang: V3 = {
     x: footOut.x + Math.sin(lean) * legLen,
     y: footOut.y + Math.cos(lean) * legLen,
@@ -219,7 +243,7 @@ function spotOf(i: PoseInput, h: number, hoist: number): Spot {
   let foot = mix(cockpitFoot, footOut, wire);
   if (fwd > 0) {
     // Forward to the mast: crouched on the foredeck beside it.
-    const deck = sectionAt("420", z);
+    const deck = sectionAt(i.classId, z);
     pelvis = mix(pelvis, { x: 0.3, y: deck.yg + 0.01 + 0.2 * H, z }, fwd);
     foot = mix(foot, { x: 0.2, y: deck.yg + 0.06, z: z + 0.1 }, fwd);
   }
@@ -374,9 +398,27 @@ export function sailorPose(
   const outer = (sg: number) => (sg > 0 ? shoulderR : shoulderL);
   const targets: Pose["targets"] = {};
   let extension: ReturnType<typeof tillerExtension> | undefined;
+  // On the trapeze: the Crew of a class that has one (420, 29er, 49er) and the 49er's Helm.
+  const hounds = RIG[input.classId].hounds;
   const onWire =
-    input.classId === "420" && input.role === "crew" && input.crewOut > 0.6;
+    hounds !== null &&
+    (input.role === "crew"
+      ? input.crewOut > 0.6
+      : input.classId === "49er" && (input.helmOut ?? 0) > 0.6);
   let harness: V3 = pelvis;
+  if (onWire) {
+    harness = { x: pelvis.x, y: pelvis.y + 0.05 * H, z: pelvis.z };
+    // The handle hangs on the wire a little above the harness (the Helm's hands are busy: it just hangs there).
+    const top = hounds!;
+    const wl =
+      Math.hypot(top.x - harness.x, top.y - harness.y, top.z - harness.z) || 1;
+    const t = 0.55 / wl;
+    targets.handle = {
+      x: harness.x + (top.x - harness.x) * t,
+      y: harness.y + (top.y - harness.y) * t,
+      z: harness.z + (top.z - harness.z) * t,
+    };
+  }
   let holdIn: (sg: number) => V3; // what the inboard hand holds
   let holdOut: (sg: number) => V3; // and the outboard one
   if (input.role === "helm") {
@@ -394,17 +436,6 @@ export function sailorPose(
     holdIn = () => extension!.grip;
     holdOut = (sg) => rel(sg, outer(sg), -0.1, -0.34, 0.3);
   } else if (onWire) {
-    harness = { x: pelvis.x, y: pelvis.y + 0.05 * H, z: pelvis.z };
-    // The handle hangs on the wire a little above the harness.
-    const top = RIG["420"].hounds!;
-    const wl =
-      Math.hypot(top.x - harness.x, top.y - harness.y, top.z - harness.z) || 1;
-    const t = 0.55 / wl;
-    targets.handle = {
-      x: harness.x + (top.x - harness.x) * t,
-      y: harness.y + (top.y - harness.y) * t,
-      z: harness.z + (top.z - harness.z) * t,
-    };
     targets.sheet = rel(sgB, outer(sgB), -0.1, -0.3, 0.35);
     holdIn = () => targets.handle!;
     holdOut = (sg) => rel(sg, outer(sg), -0.1, -0.3, 0.35);
@@ -418,7 +449,7 @@ export function sailorPose(
     targets.halyard = {
       x: 0,
       y: shoulderL.y - 0.1 * u,
-      z: RIG["420"].mastZ + 0.1,
+      z: RIG[input.classId].mastZ + 0.1,
     };
     holdIn = holdOut = () => targets.halyard!;
   }

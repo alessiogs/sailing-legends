@@ -13,6 +13,8 @@ import {
 import { makeFleet } from "../src/race/Fleet";
 import { RaceSession } from "../src/race/RaceSession";
 import {
+  I29ER,
+  I49ER,
   I420,
   isTwoPerson,
   OPTIMIST,
@@ -95,6 +97,13 @@ describe("HUD hike gauge", () => {
     expect(o.panel(0, false, false).hike!.value).toBe(0.25);
     expect(o.panel(0, false, false).hike!.ends).toEqual(["DENTRO", "FUORI"]);
     expect(setup(CREW).panel(0, false, false).hike).toBe(undefined);
+  });
+  it("runs from sitting in to the trapeze in the 49er", () => {
+    const f = setup(HELM, I49ER);
+    f.s.helmOut = 0.75;
+    const hike = f.panel(0, false, false).hike!;
+    expect(hike.ends).toEqual(["DENTRO", "TRAPEZIO"]);
+    expect(hike.value).toBe(0.75);
   });
 });
 
@@ -288,5 +297,20 @@ describe("HUD Partner calls to the Helm", () => {
     const f = setup(FULL_BOAT);
     f.tel.crew!.balance = 80;
     expect(f.panel().call).toBe(null);
+  });
+});
+
+describe("HUD panel in the 29er", () => {
+  it("calls the gennaker where the 420 has its spinnaker", () => {
+    const { s, panel } = setup(HELM, I29ER);
+    s.crewOut = 0.5;
+    s.spiHoist = 1;
+    expect(panel().partnerLine).toBe("Giulia: in cinghia · gennaker su");
+    const crew = setup(CREW, I29ER);
+    crew.s.spiHoist = 1;
+    expect(crew.panel().sail.label).toBe("GENNAKER");
+    const full = setup(FULL_BOAT, I29ER);
+    full.s.spiHoist = 0;
+    expect(full.panel().partnerLine).toContain("gennaker giù");
   });
 });
