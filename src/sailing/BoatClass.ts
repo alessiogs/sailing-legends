@@ -17,7 +17,7 @@ export type SailSpec = {
 };
 
 /** The closed set of class ids: a misspelt id is a compile error. A new class adds its id here. */
-export type ClassId = "optimist" | "420" | "ilca" | "29er";
+export type ClassId = "optimist" | "420" | "ilca" | "29er" | "49er";
 
 /** The ILCA's rigs: 4, 6 and 7, by the sailor's body weight (lightest to heaviest). */
 export type IlcaRig = 4 | 6 | 7;
@@ -79,7 +79,16 @@ export type BoatClass = {
    * windward, the least a Helm of this class ever does when `windwardOnly` (the Optimist Helm sits on the side deck, leaning in);
    * otherwise `leewardMin` < 0 is how far below "in" the Helm may go, sitting to leeward.
    */
-  helmRighting: { inFrac: number; windwardOnly: boolean; leewardMin: number };
+  helmRighting: {
+    inFrac: number;
+    windwardOnly: boolean;
+    leewardMin: number;
+    /**
+     * A class whose Helm also goes on the trapeze (the 49er): the righting force there, as a multiple of `hikeForce`. `helmOut`
+     * then spans 0 in .. 0.5 hiking .. 1 trapeze, like the Crew's `crewOut`.
+     */
+    trapeze?: number;
+  };
   /** Two-person classes: righting force from the Crew sitting in, hiking, and on the trapeze (N). */
   crewRighting?: { inForce: number; hikeForce: number; trapezeForce: number };
   /** Visual heel angle per Newton of unbalanced side force (deg/N). */
@@ -214,6 +223,64 @@ export const I29ER: BoatClass = {
 };
 
 /**
+ * 49er: the big two-person skiff. Both sailors work on the trapeze from racks (wings), with a main, a self-tacking jib and a
+ * very large gennaker; it is fully powered up from about 8 kn.
+ */
+export const I49ER: BoatClass = {
+  id: "49er",
+  name: "49er",
+  mass: 293,
+  sailorKg: { helm: 80, crew: 80 },
+  length: 4.9,
+  beam: 1.93,
+  main: {
+    area: 17,
+    minSheetDeg: 5,
+    maxSheetDeg: 85,
+    clMax: 1.7,
+    stallDeg: 20,
+    cd0: 0.04,
+  },
+  jib: {
+    area: 6.8,
+    minSheetDeg: 8,
+    maxSheetDeg: 55,
+    clMax: 1.8,
+    stallDeg: 19,
+    cd0: 0.04,
+  },
+  spinnaker: {
+    area: 41,
+    minSheetDeg: 25,
+    maxSheetDeg: 95,
+    clMax: 1.5,
+    stallDeg: 28,
+    cd0: 0.16,
+    hoistTime: 3,
+    dropTime: 2,
+    gennaker: true,
+  },
+  windage: 0.35,
+  hullDrag: 5,
+  hullSpeed: 3.4,
+  waveDrag: 1200,
+  planing: { waveCut: 0.992, planes: true, onsetKn: 6.2 },
+  boardGrip: 2,
+  rudderMaxDeg: 32,
+  turnLength: 2.4,
+  hikeForce: 340,
+  helmRighting: {
+    inFrac: 0.12,
+    windwardOnly: false,
+    leewardMin: 0,
+    trapeze: 3.7,
+  },
+  crewRighting: { inForce: 40, hikeForce: 300, trapezeForce: 1250 },
+  heelPerN: 0.04,
+  course: { beat: 190, run: 85, lineHalf: 40 },
+};
+
+/**
  * ILCA dinghy (Laser): one 4.23 m hull, one sail on a sleeve mast, three rigs by the sailor's weight. The Helm hikes
  * hard, with no inner seat to limit them, and the boat planes on a breezy reach. `kg` is the rig's ideal sailor weight.
  */
@@ -281,6 +348,7 @@ export const CLASSES: Record<ClassId, BoatClass> = {
   "420": I420,
   ilca: ILCA_6,
   "29er": I29ER,
+  "49er": I49ER,
 };
 
 /** True when `id` names a class, e.g. a value read back from the page. */

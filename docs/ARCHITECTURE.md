@@ -67,7 +67,7 @@ src/
              Weather.ts (the wind and seed of each Race of a Regatta), Seeds.ts (`mixSeed`)
   world/     Ocean.ts (Gerstner waves in GLSL), Waves.ts (same waves on CPU), BowSpray.ts (a few drops thrown from the bow of a planing boat, made only for a boat within the sailor LOD distance), BoatViewBase.ts (what both boat
              visuals share: wave riding, bow lift while planing, heel, boom swing, rudder, burgee; each class gives its `BoatMotion` and
-             draws its own sails and sailors; sailors beyond 30 m of the camera are drawn simply), BoatIlcaView.ts (ILCA: open hull with a flat deck, sleeve-mast single sail scaled by the rig, hiking sailor), BoatView.ts (Optimist: the
+             draws its own sails and sailors; sailors beyond 30 m of the camera are drawn simply), BoatSkiffView.ts (29er and 49er: flat hull, racks on the 49er, main, self-tacking jib, retractable bowsprit, one gennaker mesh whose clew follows the sheet and crosses in a gybe, class mark, trapeze wires for the Crew and, in the 49er, the Helm; the tiller extension and handles are drawn only near the camera, so a far skiff costs no more meshes than a far 420), BoatIlcaView.ts (ILCA: open hull with a flat deck, sleeve-mast single sail scaled by the rig, hiking sailor), BoatView.ts (Optimist: the
              sailor posed from `sailorPose`, tiller extension, drawn hull roll while the sailor crosses), Boat420View.ts (the Helm and
              Crew posed the same way; tiller extension, trapeze wire with its handle), SailorFigure.ts (`SailorFigure`: the
              articulated figure of instanced cylinders and balls, 13-14 meshes near and 3 far, with `limbMesh`/`setLimb` for rigging), pose/
@@ -161,6 +161,7 @@ tests/       Vitest tests (npm test): smoke.test.ts (every AI-only race finishes
              boat-class.test.ts (class ids: a misspelt id is a type error; every class keyed by its own id)
              ilca.test.ts (ILCA rigs: 11 kn target speeds through BoatSim, and the rig that suits each sailor weight)
              29er.test.ts (the 29er's polar with the gennaker through BoatSim: targets, VMG angle, planing),
+             49er.test.ts (the 49er: Helm trapeze righting, Auto-hike flat, planing at 11 kn, targets and VMG angle),
              skiff-ai.test.ts (AI 29ers gybe on the run, sail 130–160° TWA, and better technique runs faster)
              start-planning.test.ts (the AI's holding spot, line point, RNG draws and start decisions)
              racing-ai-parts.test.ts (the AI's avoidance, beat tactics and tack state machine on their own)

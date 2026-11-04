@@ -89,8 +89,8 @@ use neither Babylon nor browser APIs. They also run in Node.
 
 ## Behaviour guards
 
-- **Golden races:** `tests/golden.test.ts` sails eleven fixed-seed races: AI-only races in both classes at 7, 11
-  and 16 kn, an AI-only ILCA 6 race and an AI-only 29er race at 11 kn, plus 420 races with the player as Helm, as Crew and in Full Boat Control. It compares them with
+- **Golden races:** `tests/golden.test.ts` sails twelve fixed-seed races: AI-only races in both classes at 7, 11
+  and 16 kn, an AI-only ILCA 6, 29er and 49er race at 11 kn each, plus 420 races with the player as Helm, as Crew and in Full Boat Control. It compares them with
   `tests/golden/races.json`. A diff means behaviour changed, so in a refactor fix the code, never the snapshot.
 - **Physics** (`BoatPhysics.ts`): target speeds at 11 kn:
   - Optimist: about 2.3 kn upwind, 3.9 reaching, 3.5 running.
@@ -108,6 +108,11 @@ use neither Babylon nor browser APIs. They also run in Node.
     about 3 m/s; planing from 6.2 kn frees it only partly), 11 kn upwind and reaching 0.4–0.6 over. The gennaker is a spinnaker with
     `gennaker: true`: it works from an apparent wind angle of 45° and keeps a quarter of its power dead astern; the best VMG angle
     stays in 135–155°. Raising the sails or lowering hull drag to close the 7 kn gap pushed 11 kn up past the table.
+  - 49er (`npm run polar`; both sailors on the trapeze, the Helm's `helmOut` spans in / hiking / trapeze like the Crew's `crewOut`):
+    at 7 / 11 / 16 kn close-hauled (45°) about 4.9 / 7.1 / 7.8 kn, reaching (best of 90–120°) 7.5 / 13.2 / 18.0 kn, best downwind VMG
+    with the gennaker 6.3 @ 150° / 10.2 @ 150° / 14.5 @ 150°. The spec's table is 5.4 / 6.7 / 8.1 up, 8 / 13.5 / 18 reaching,
+    6.9 / 10.9 / 14.2 VMG: 7 kn runs 0.5–0.7 kn under it and 11 kn VMG 0.7 under (the wave-drag wall caps the hull; two tuning attempts
+    made, as for the 29er); the best VMG angle sits at 150° rather than the table's 142–140°. Planes from 6.2 kn (`onsetKn`).
   - At 16 kn the 420 planes (weight aft, flat, reach to broad reach, from 12–13 kn): about 8–9 kn reaching, 9–10 with the
     spinnaker. The Optimist gains 3–5% downwind from 12 kn with its bow up. Upwind and 11 kn do not change.
 

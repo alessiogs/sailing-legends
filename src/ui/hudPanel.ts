@@ -187,7 +187,12 @@ export function buildPanel({
       ideal: along(tel.helm!.ideal),
       ends: [
         t(low < 0 ? "hud.slider.hikeLeeward" : "hud.slider.hikeIn"),
-        t("hud.slider.hikeOut"),
+        // In a class whose Helm trapezes (the 49er) the gauge runs on past hiking (the middle) to the trapeze.
+        t(
+          p.sim.cls.helmRighting.trapeze !== undefined
+            ? "hud.slider.hikeTrapeze"
+            : "hud.slider.hikeOut",
+        ),
       ],
     };
   }

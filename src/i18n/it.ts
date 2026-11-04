@@ -10,7 +10,8 @@ const plural = plurals("it");
 export const italian = {
   // Main menu.
   "menu.lede.twoPerson": "Prova 420, in due con fiocco, spinnaker e trapezio",
-  "menu.lede.skiff": "Prova 29er, in due con fiocco, gennaker e trapezio",
+  "menu.lede.skiff": "Prova skiff, in due con fiocco, gennaker e trapezio",
+  "hud.slider.hikeTrapeze": "TRAPEZIO",
   "hud.sail.gennaker": "GENNAKER",
   "hud.partnerLine.helmGennaker": ({
     name,

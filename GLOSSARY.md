@@ -186,7 +186,7 @@ run at an angle and gybes.
 _it_: Gennaker
 
 **Skiff**:
-A fast two-person planing dinghy with a gennaker (the 29er, later the 49er); the Crew on the trapeze, the Helm hiking.
+A fast two-person planing dinghy with a gennaker (the 29er and the 49er). In the 29er the Crew is on the trapeze and the Helm hikes; in the 49er both are on the trapeze, from racks (wings), and the Helm's weight control spans in / hiking / trapeze like the Crew's.
 _it_: Skiff
 
 **Sail number**:

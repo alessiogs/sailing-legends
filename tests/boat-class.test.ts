@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import {
   CLASSES,
   I29ER,
+  I49ER,
   I420,
   ILCA_6,
   OPTIMIST,
@@ -25,6 +26,7 @@ describe("boat class ids", () => {
       "420": I420,
       ilca: ILCA_6,
       "29er": I29ER,
+      "49er": I49ER,
     });
     for (const [id, cls] of Object.entries(CLASSES)) expect(cls.id).toBe(id);
   });
@@ -34,6 +36,7 @@ describe("boat class ids", () => {
     expect(isClassId("420")).toBe(true);
     expect(isClassId("ilca")).toBe(true);
     expect(isClassId("29er")).toBe(true);
+    expect(isClassId("49er")).toBe(true);
     expect(isClassId(undefined)).toBe(false);
     expect(isClassId("toString")).toBe(false);
     expect(isClassId("")).toBe(false);
