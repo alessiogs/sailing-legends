@@ -131,7 +131,8 @@ export function classOffers(state: CareerState): ClassOffer[] {
 const RIVAL_MOVE_CHANCE = 0.1;
 
 /**
- * The class path a pool sailor (a Rival) sails in a Season, by their age and body weight. Children sail the Optimist;
+ * The class path a pool sailor (a Rival) sails in a Season, by their age and body weight. Children, and every Rival in
+ * the first Season, sail the Optimist;
  * from then on a Rival keeps the class of the Season before while age and weight still fit it, moving only when they
  * no longer do or on a small seeded chance, and never back into a class they have left behind. A new class is drawn
  * from those their age (the player's own age windows, `ageFits`) and weight allow: the heavy go to the ILCA 7 or the
@@ -150,7 +151,8 @@ export function sailorPath(
   for (let s = 1; s <= season; s++) {
     const age = ageInSeason(startingAge, s);
     const kg = bodyWeightKg(age, buildFactorOf(id));
-    if (age <= 10) {
+    // Every Rival starts the Career in the Optimist alongside the player; moves begin in the second Season.
+    if (age <= 10 || (s === 1 && ageFits("optimist", age))) {
       path = OPTIMIST;
       continue;
     }
