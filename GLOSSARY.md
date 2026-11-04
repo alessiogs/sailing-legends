@@ -169,6 +169,16 @@ _Avoid_: Jibe
 The boat's sails; the jib and spinnaker exist only on two-person classes.
 _it_: Randa, Fiocco, Spinnaker (spi)
 
+**ILCA**:
+The single-handed dinghy (once the Laser), sailed by a Helm alone: one hull, one sail on a sleeve mast, hiked hard. Its
+sail comes in three **Rigs**.
+_it_: ILCA (Laser)
+
+**Rig**:
+The ILCA's sail size, 4, 6 or 7: it sets the sail area and the sailor weight the boat suits (about 53, 68 and 82 kg). A race is
+sailed in one rig. Not the sails and spars of other boats.
+_it_: Rig (ILCA 4, 6, 7)
+
 **Sail number**:
 The class symbol and number ("ITA 4821") on a boat's mainsail, made up from the Helm's id and the class.
 _it_: Numero velico

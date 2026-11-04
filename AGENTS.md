@@ -89,12 +89,15 @@ use neither Babylon nor browser APIs. They also run in Node.
 
 ## Behaviour guards
 
-- **Golden races:** `tests/golden.test.ts` sails nine fixed-seed races: AI-only races in both classes at 7, 11
-  and 16 kn, plus 420 races with the player as Helm, as Crew and in Full Boat Control. It compares them with
+- **Golden races:** `tests/golden.test.ts` sails ten fixed-seed races: AI-only races in both classes at 7, 11
+  and 16 kn, an AI-only ILCA 6 race at 11 kn, plus 420 races with the player as Helm, as Crew and in Full Boat Control. It compares them with
   `tests/golden/races.json`. A diff means behaviour changed, so in a refactor fix the code, never the snapshot.
 - **Physics** (`BoatPhysics.ts`): target speeds at 11 kn:
   - Optimist: about 2.3 kn upwind, 3.9 reaching, 3.5 running.
   - 420: about 4 kn upwind, 6.5 reaching, 6–7 with the spinnaker.
+  - ILCA 4 / 6 / 7 (speed at 45° / 90° / 150° in 11 kn, ideal sailor weight 53 / 68 / 82 kg): 4.1 / 5.9 / 5.0, 4.3 / 6.2 / 5.3
+    and 4.4 / 6.5 / 5.5 kn (about 7 and 16 kn: see `docs/research/new-boats.md` and the spec's table). A sailor lighter than the
+    rig's ideal loses drive in a breeze, so light sailors are quickest in the 4, heavy ones in the 7.
   - At 16 kn the 420 planes (weight aft, flat, reach to broad reach, from 12–13 kn): about 8–9 kn reaching, 9–10 with the
     spinnaker. The Optimist gains 3–5% downwind from 12 kn with its bow up. Upwind and 11 kn do not change.
 
