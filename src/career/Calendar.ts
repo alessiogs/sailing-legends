@@ -96,6 +96,7 @@ const CALENDARS: Readonly<Record<ClassId, readonly Regatta[]>> = {
   optimist: standardCalendar("optimist"),
   "420": standardCalendar("420"),
   ilca: standardCalendar("ilca"),
+  "29er": standardCalendar("29er"),
 };
 
 /** The Regattas of a Season sailed in this class, in order. */

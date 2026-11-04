@@ -128,9 +128,12 @@ export class PlayerControls {
     if (!session.player!.sim.cls.spinnaker) return null;
     const pc = session.playerControls;
     const { choice } = session;
+    const gen = session.player!.sim.cls.spinnaker?.gennaker === true;
     if (choice.role === "crew") {
       pc.spi = !pc.spi;
-      return pc.spi ? t("toast.spi.hoist") : t("toast.spi.drop");
+      return pc.spi
+        ? t(gen ? "toast.gennaker.hoist" : "toast.spi.hoist")
+        : t(gen ? "toast.gennaker.drop" : "toast.spi.drop");
     }
     if (choice.control === "fullBoat" && session.partnerCrew) {
       session.partnerCrew.spiCommand = !session.partnerCrew.spiCommand;
@@ -139,8 +142,10 @@ export class PlayerControls {
         : t("toast.spi.callDrop");
     }
     return session.partner
-      ? t("toast.spi.partnerDecides", { name: session.partner.name })
-      : t("toast.spi.crewDecides");
+      ? t(gen ? "toast.gennaker.partnerDecides" : "toast.spi.partnerDecides", {
+          name: session.partner.name,
+        })
+      : t(gen ? "toast.gennaker.crewDecides" : "toast.spi.crewDecides");
   }
 
   /** The side-switch key: the Crew moves to the other side. Returns whether it applied (only to the Crew). */

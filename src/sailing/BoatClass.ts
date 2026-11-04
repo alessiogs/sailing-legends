@@ -17,7 +17,7 @@ export type SailSpec = {
 };
 
 /** The closed set of class ids: a misspelt id is a compile error. A new class adds its id here. */
-export type ClassId = "optimist" | "420" | "ilca";
+export type ClassId = "optimist" | "420" | "ilca" | "29er";
 
 /** The ILCA's rigs: 4, 6 and 7, by the sailor's body weight (lightest to heaviest). */
 export type IlcaRig = 4 | 6 | 7;
@@ -47,7 +47,15 @@ export type BoatClass = {
   main: SailSpec;
   /** Optional headsail and downwind sail (two-person classes). */
   jib?: SailSpec;
-  spinnaker?: SailSpec & { hoistTime: number; dropTime: number };
+  /**
+   * Downwind sail. A `gennaker` is the asymmetric kind of a skiff, flown from a bowsprit with no pole: it works from a broad
+   * reach to about 150 degrees off the wind and loses most of its power with the wind dead astern.
+   */
+  spinnaker?: SailSpec & {
+    hoistTime: number;
+    dropTime: number;
+    gennaker?: boolean;
+  };
   /** Drag area (m² x Cd) of hull, spars and sailors. */
   windage: number;
   /** Hull resistance: quadratic coefficient (N per (m/s)²) and wave-making wall. */
@@ -155,6 +163,56 @@ export const I420: BoatClass = {
   heelPerN: 0.06,
 };
 
+/** 29er: two-person skiff, main and self-tacking jib with an asymmetric gennaker; the Crew on the trapeze, the Helm hiking. */
+export const I29ER: BoatClass = {
+  id: "29er",
+  name: "29er",
+  mass: 230,
+  sailorKg: { helm: 58, crew: 67 },
+  length: 4.45,
+  beam: 1.77,
+  main: {
+    area: 11.2,
+    minSheetDeg: 5,
+    maxSheetDeg: 85,
+    clMax: 1.7,
+    stallDeg: 20,
+    cd0: 0.04,
+  },
+  jib: {
+    area: 4.4,
+    minSheetDeg: 8,
+    maxSheetDeg: 55,
+    clMax: 1.8,
+    stallDeg: 19,
+    cd0: 0.04,
+  },
+  spinnaker: {
+    area: 18,
+    minSheetDeg: 25,
+    maxSheetDeg: 95,
+    clMax: 1.5,
+    stallDeg: 28,
+    cd0: 0.16,
+    hoistTime: 3,
+    dropTime: 2,
+    gennaker: true,
+  },
+  windage: 0.3,
+  hullDrag: 6,
+  hullSpeed: 3.0,
+  waveDrag: 1200,
+  planing: { waveCut: 0.992, planes: true, onsetKn: 6.2 },
+  boardGrip: 2,
+  rudderMaxDeg: 32,
+  turnLength: 2.2,
+  hikeForce: 280,
+  helmRighting: { inFrac: 0.15, windwardOnly: false, leewardMin: -0.2 },
+  crewRighting: { inForce: 40, hikeForce: 260, trapezeForce: 1000 },
+  heelPerN: 0.05,
+  course: { beat: 160, run: 70, lineHalf: 34 },
+};
+
 /**
  * ILCA dinghy (Laser): one 4.23 m hull, one sail on a sleeve mast, three rigs by the sailor's weight. The Helm hikes
  * hard, with no inner seat to limit them, and the boat planes on a breezy reach. `kg` is the rig's ideal sailor weight.
@@ -222,6 +280,7 @@ export const CLASSES: Record<ClassId, BoatClass> = {
   optimist: OPTIMIST,
   "420": I420,
   ilca: ILCA_6,
+  "29er": I29ER,
 };
 
 /** True when `id` names a class, e.g. a value read back from the page. */

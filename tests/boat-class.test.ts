@@ -4,6 +4,7 @@
 import { describe, expect, it } from "vitest";
 import {
   CLASSES,
+  I29ER,
   I420,
   ILCA_6,
   OPTIMIST,
@@ -19,7 +20,12 @@ describe("boat class ids", () => {
   });
 
   it("keys every class by its own id", () => {
-    expect(CLASSES).toEqual({ optimist: OPTIMIST, "420": I420, ilca: ILCA_6 });
+    expect(CLASSES).toEqual({
+      optimist: OPTIMIST,
+      "420": I420,
+      ilca: ILCA_6,
+      "29er": I29ER,
+    });
     for (const [id, cls] of Object.entries(CLASSES)) expect(cls.id).toBe(id);
   });
 
@@ -27,6 +33,7 @@ describe("boat class ids", () => {
     expect(isClassId("optimist")).toBe(true);
     expect(isClassId("420")).toBe(true);
     expect(isClassId("ilca")).toBe(true);
+    expect(isClassId("29er")).toBe(true);
     expect(isClassId(undefined)).toBe(false);
     expect(isClassId("toString")).toBe(false);
     expect(isClassId("")).toBe(false);

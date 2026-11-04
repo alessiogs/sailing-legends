@@ -50,6 +50,8 @@ const HULL = {
   optimist: { section: optimistSection, z0: -1.155, length: 2.31 },
   "420": { section: section420, z0: -2.1, length: 4.2 },
   ilca: { section: sectionIlca, z0: -2.115, length: 4.23 },
+  // Until the 29er has a view of its own it is drawn as a 420.
+  "29er": { section: section420, z0: -2.1, length: 4.2 },
 } as const;
 
 /** The hull section at place `z` along the boat (clamped to the hull). */
@@ -101,6 +103,15 @@ export const RIG: Record<ClassId, RigDims> = {
     extension: 0.9,
     hounds: null,
     mastZ: 0.95,
+  },
+  // Drawn as a 420 until the 29er has a view of its own.
+  "29er": {
+    rudderPivot: { x: 0, y: 0.3, z: -2.12 },
+    tillerTip: { x: 0, y: 0.25, z: 1.1 },
+    rudderDeg: 28,
+    extension: 0.9,
+    hounds: { x: 0, y: 5.0, z: 0.45 },
+    mastZ: 0.45,
   },
 };
 

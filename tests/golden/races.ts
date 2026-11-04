@@ -23,6 +23,7 @@ import {
 import { makeFleet } from "../../src/race/Fleet";
 import { FIXED_DT, RaceSession } from "../../src/race/RaceSession";
 import {
+  I29ER,
   I420,
   ILCA_6,
   OPTIMIST,
@@ -87,6 +88,13 @@ export const GOLDEN_RACES: GoldenRace[] = [
   {
     name: "ILCA 6 seed 11 11 kn, AI only",
     cls: ILCA_6,
+    seed: 11,
+    windKn: 11,
+    player: null,
+  },
+  {
+    name: "29er seed 11 11 kn, AI only",
+    cls: I29ER,
     seed: 11,
     windKn: 11,
     player: null,
