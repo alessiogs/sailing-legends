@@ -53,3 +53,69 @@ describe("sailor pose", () => {
     expect(sailNumber("rival-marco", "420")).toMatch(/^ITA \d+$/);
   });
 });
+
+describe("skiff trapeze poses", () => {
+  const settle = (input: PoseInput) => {
+    let pose: Pose | null = null;
+    for (let k = 0; k < 10; k++) pose = sailorPose(input, pose, 1 / 60);
+    return pose!;
+  };
+
+  it("hangs the 49er's Helm and Crew from the trapeze, feet on the racks", () => {
+    const helm = settle({
+      ...base,
+      classId: "49er",
+      role: "helm",
+      helmOut: 1,
+      crewOut: 1,
+      crewSide: 1,
+    });
+    const crew = settle({
+      ...base,
+      classId: "49er",
+      role: "crew",
+      crewOut: 1,
+      crewSide: 1,
+    });
+    for (const p of [helm, crew]) {
+      expect(p.onWire).toBe(true);
+      expect(p.targets.handle).toBeDefined();
+      expect(p.harness.x).toBeGreaterThan(1.4); // out beyond the racks' edge
+      expect(p.joints.footL.x).toBeGreaterThan(1.0);
+    }
+    expect(helm.joints.pelvis.z).toBeLessThan(crew.joints.pelvis.z); // the Helm aft of the Crew
+    // The Helm still holds the tiller extension and the mainsheet.
+    expect(helm.extension).toBeDefined();
+    expect(helm.targets.tiller).toBeDefined();
+  });
+
+  it("keeps the 49er's Helm in the boat until the weight goes past hiking", () => {
+    const hiking = settle({
+      ...base,
+      classId: "49er",
+      role: "helm",
+      helmOut: 0.5,
+    });
+    expect(hiking.onWire).toBe(false);
+    const out = settle({
+      ...base,
+      classId: "49er",
+      role: "helm",
+      helmOut: 0.9,
+    });
+    expect(out.onWire).toBe(true);
+  });
+
+  it("hangs only the 29er's Crew, the Helm hikes", () => {
+    const crew = settle({ ...base, classId: "29er", role: "crew", crewOut: 1 });
+    const helm = settle({
+      ...base,
+      classId: "29er",
+      role: "helm",
+      helmOut: 1,
+      crewOut: 1,
+    });
+    expect(crew.onWire).toBe(true);
+    expect(helm.onWire).toBe(false);
+  });
+});
