@@ -41,6 +41,13 @@ export const CHORD_CUT: SailCut = {
   twist: 0.12,
   flutter: 0.035,
 };
+/** The ILCA's single sail on its sleeve mast: a flatter cut than the 420's, shape in proportion to the chord. */
+export const ILCA_CUT: SailCut = {
+  perChord: true,
+  depth: 0.1,
+  twist: 0.18,
+  flutter: 0.04,
+};
 /** The Optimist's sprit sail: fixed offsets, as the boat has always drawn it. */
 export const OPTIMIST_CUT: SailCut = {
   perChord: false,
