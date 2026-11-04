@@ -90,6 +90,14 @@ export class RacingAI {
     if (this.hikeTimer <= 0) {
       this.hikeTimer = hikeLag(technique);
       this.hikeTarget = tel.helm ? tel.helm.ideal : 0;
+    } else if (
+      this.racer.sim.cls.spinnaker?.gennaker &&
+      tel.helm &&
+      tel.helm.ideal > this.hikeTarget
+    ) {
+      // A skiff on the plane is bistable: a Helm still hiking for the weight the boat needed a moment ago, as it speeds up,
+      // is overpowered, loses the plane and settles slow. So a skiff's Helm hikes out as soon as more is needed and only eases in late.
+      this.hikeTarget = tel.helm.ideal;
     }
     this.hikeBiasTimer -= dt;
     if (this.hikeBiasTimer <= 0) {
