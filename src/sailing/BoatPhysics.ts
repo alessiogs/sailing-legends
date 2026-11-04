@@ -357,7 +357,8 @@ function mainCap(cls: BoatClass) {
   if (!cls.crewRighting) return cls.hikeForce;
   const total = cls.main.area + (cls.jib?.area ?? 0);
   return (
-    (cls.hikeForce + cls.crewRighting.trapezeForce) * (cls.main.area / total)
+    (helmCeiling(cls, cls.hikeForce) + cls.crewRighting.trapezeForce) *
+    (cls.main.area / total)
   );
 }
 
@@ -373,10 +374,22 @@ export function crewForce(cls: BoatClass, out: number, scale = 1): number {
   return f * scale;
 }
 
-/** Righting force (N) of the Helm at weight position `out`, given the force `hike` of hiking fully out (scaled to their weight). */
+/** The most the Helm can right with (N): the hiking force `hike`, or the trapeze's multiple of it in a class whose Helm trapezes. */
+export function helmCeiling(cls: BoatClass, hike: number): number {
+  return hike * (cls.helmRighting.trapeze ?? 1);
+}
+
+/**
+ * Righting force (N) of the Helm at weight position `out`, given the force `hike` of hiking fully out (scaled to their weight).
+ * In a class whose Helm trapezes `out` 0.5 is hiking and 1 the trapeze, as for the Crew.
+ */
 export function helmForce(cls: BoatClass, out: number, hike: number): number {
   const h = cls.helmRighting;
   const o = clamp(out, h.leewardMin, 1);
+  if (h.trapeze !== undefined)
+    return o <= 0.5
+      ? hike * (h.inFrac + (1 - h.inFrac) * (o / 0.5))
+      : hike * (1 + (h.trapeze - 1) * ((o - 0.5) / 0.5));
   if (o >= 0) return hike * (h.inFrac + (1 - h.inFrac) * o);
   return hike * h.inFrac * (1 + (2 * o) / -h.leewardMin);
 }
@@ -389,6 +402,10 @@ export function helmOutFor(
 ): number {
   const h = cls.helmRighting;
   const f = force / hike;
+  if (h.trapeze !== undefined)
+    return f >= 1
+      ? Math.min(1, 0.5 + (0.5 * (f - 1)) / (h.trapeze - 1))
+      : clamp((0.5 * (f - h.inFrac)) / (1 - h.inFrac), 0, 0.5);
   if (f >= h.inFrac) return clamp((f - h.inFrac) / (1 - h.inFrac), 0, 1);
   if (h.leewardMin >= 0 || h.inFrac <= 0) return 0;
   return clamp(((f / h.inFrac - 1) * -h.leewardMin) / 2, h.leewardMin, 0);
@@ -623,7 +640,7 @@ export class BoatSim {
     const rawSide = side;
     const need = Math.abs(side);
     const maxRighting =
-      this.helmHike +
+      helmCeiling(cls, this.helmHike) +
       (cls.crewRighting ? cls.crewRighting.trapezeForce * this.crewScale : 0);
     drive *=
       1 +
@@ -646,7 +663,7 @@ export class BoatSim {
     const hr = cls.helmRighting;
     const inF = hr.inFrac * this.helmHike;
     const rawWanted = need - crewF;
-    const wanted = clamp(rawWanted, 0, this.helmHike); // the Helm hiking exactly as needed
+    const wanted = clamp(rawWanted, 0, helmCeiling(cls, this.helmHike)); // the Helm hiking exactly as needed
     // Where the Helm would sit for that: to leeward on a broad reach or run in light air when almost nothing is needed (420), only
     // as far across as the heel that adds allows; else as far out as needed. Never to leeward while planing or in a breeze.
     const toLeeward =
@@ -796,7 +813,8 @@ export class BoatSim {
     if (cls.jib && jib) {
       const total = cls.main.area + cls.jib.area;
       const cap =
-        (cls.hikeForce + (cls.crewRighting?.trapezeForce ?? 0)) *
+        (helmCeiling(cls, cls.hikeForce) +
+          (cls.crewRighting?.trapezeForce ?? 0)) *
         this.rightingScale *
         (cls.jib.area / total);
       const opt = optimalSheetFor(cls.jib, awa, aws, cap);
@@ -829,7 +847,11 @@ export class BoatSim {
     if (cls.crewRighting) {
       // Ideal: the Helm hikes at ~80%, the Crew provides the rest.
       t.crew = {
-        ideal: crewOutFor(cls, need - this.helmHike * 0.8, this.crewScale),
+        ideal: crewOutFor(
+          cls,
+          need - helmCeiling(cls, this.helmHike) * 0.8,
+          this.crewScale,
+        ),
         onWindward: crewOnWindward,
         balance,
       };

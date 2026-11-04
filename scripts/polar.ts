@@ -5,6 +5,7 @@
 import { DEG, KNOTS } from "../src/core/math";
 import {
   I29ER,
+  I49ER,
   I420,
   ILCA_4,
   ILCA_6,
@@ -39,7 +40,7 @@ function knotsAt(cls: BoatClass, tws: number, twa: number): number {
   return sim.telemetry.speed * KNOTS;
 }
 
-for (const cls of [OPTIMIST, I420, ILCA_4, ILCA_6, ILCA_7, I29ER]) {
+for (const cls of [OPTIMIST, I420, ILCA_4, ILCA_6, ILCA_7, I29ER, I49ER]) {
   console.log(`\n${cls.name}`);
   for (const tws of [7, 11, 16]) {
     const cells: string[] = [];
@@ -72,7 +73,7 @@ for (const cls of [OPTIMIST, I420, ILCA_4, ILCA_6, ILCA_7, I29ER]) {
       }
     }
     console.log(`  ${String(tws).padStart(2)} kn | ${cells.join(" · ")}`);
-    if (cls.id === "ilca" || cls.id === "29er") {
+    if (cls.id === "ilca" || cls.id === "29er" || cls.id === "49er") {
       // The best downwind VMG (speed x cos of the angle off dead downwind) over 120-180 deg, as the spec's targets give it.
       let best = 0,
         at = 0;
