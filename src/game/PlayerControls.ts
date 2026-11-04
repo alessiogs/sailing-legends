@@ -86,13 +86,13 @@ export class PlayerControls {
         this.activeSail = nowSail;
         input.sheet = this.activeCrewSheet();
       }
-      if (this.assists.autoTrim)
-        input.sheet =
-          this.activeSail === "spi" ? tel.spi!.optimal : tel.jib!.optimal;
+      // Until the physics has stepped once (a race's first frame) there is no sail or weight telemetry yet.
+      const sail = this.activeSail === "spi" ? tel.spi : tel.jib;
+      if (this.assists.autoTrim && sail) input.sheet = sail.optimal;
       crewSheets[this.activeSail] = input.sheet;
       pc.jibSheet = crewSheets.jib;
       pc.spiSheet = crewSheets.spi;
-      if (this.assists.autoHike) input.crewOut = tel.crew!.ideal;
+      if (this.assists.autoHike && tel.crew) input.crewOut = tel.crew.ideal;
       pc.crewOut = input.crewOut;
       return;
     }

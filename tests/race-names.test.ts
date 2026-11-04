@@ -91,3 +91,13 @@ describe("race names", () => {
     ).toBe("2° Tu/Giulia · OCS");
   });
 });
+
+describe("the finish line", () => {
+  it("is the start line, between the committee boat and the pin", () => {
+    const c = new RaceSession().race.course;
+    const fin = c.legs[c.legs.length - 1];
+    expect(fin.kind === "finish" && fin.line === c.start).toBe(true);
+    expect(c.start).toEqual({ a: c.pin, b: c.committee });
+    expect(c.marks).toHaveLength(2);
+  });
+});

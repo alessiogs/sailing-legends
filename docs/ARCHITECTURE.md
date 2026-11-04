@@ -8,12 +8,12 @@ Every source file and test, one line each. AGENTS.md has the short version; upda
 src/
   core/      math.ts (angles, RNG, segment tests), Input.ts (keyboard/gamepad/drag, tiller vs boat-direction
              steering, what the keys move per Role; DOM-free: `dragGauge`, `dragSheet`, `press` are called by the UI), ControlSettings.ts (the Commands menu settings and their
-             defaults; DOM-free), Sound.ts (WebAudio synthesis, no assets; the water rush is louder while planing)
+             defaults; DOM-free), FramePacer.ts (frame skipping for the render loop: 10 fps off the water, 60 fps cap on phones; pure), Sound.ts (WebAudio synthesis, no assets; the water rush is louder while planing)
   sailing/   BoatClass.ts (class data: Optimist, I420, keyed by the closed `ClassId` union; `isTwoPerson` =
              sailed by a Pair, which has `crewRighting`),
              BoatPhysics.ts (the model), Wind.ts (shifts + puffs), BoatStates.ts (Crew weight in/hiking/trapeze
              and spinnaker down/moving/up from the boat state: the one home of their thresholds)
-  race/      Course.ts (marks, start/finish lines and legs, each with a `LegId`),
+  race/      Course.ts (marks, the start line that is also the finish line, and legs, each with a `LegId`),
              Race.ts (start/OCS, rounding, finish, penalties), Rules.ts (RRS 10/11/12/13/31),
              RaceSession.ts (one race from a `Fleet`: wind, course, boats, AIs, contacts; fixed 60 Hz; no rendering)
              Fleet.ts (`makeFleet`: the player's boat with the Partner, the opponents with their Crews, and every
@@ -106,6 +106,7 @@ src/
              Assists; the menu / racing / paused / results / controls / career modes; the Career in progress: new, continue, start a Race,
              record it and save after every Race; one `frame(dt)` per render; plays the
              race feedback's cues). Drives the page through `Screens`.
+             `device.ts` (`isPhone`: coarse pointer, or touch and a small screen).
              boatCrews.ts (`boatCrews`: the sailors of each boat of a fleet as ids and, in a Career, ages, for the sailor figures; Babylon-free)
              RaceFeedback.ts (countdown beeps, race events as sounds and messages, coaching hints: tack/gybe
              calls, the Partner's calls, the irons hint; returns `Cue`s for the controller to play; DOM/audio-free)
@@ -147,6 +148,7 @@ tests/       Vitest tests (npm test): smoke.test.ts (every AI-only race finishes
              standings-rows.test.ts (the standings list: a small fleet whole, a big one first three plus the player's neighbours)
              chase-view.test.ts (the chase camera is farther and higher on a portrait screen)
              preferences.test.ts (saved preferences still load; saving keeps the `sl-prefs` format; the language is optional; a stored null, number or array loads the defaults)
+             frame-pacer.test.ts (frame skipping keeps the accumulated dt),
              player-controls.test.ts (what the player's input does per Role and Control mode, Auto-trim, autopilot)
              hud-panel.test.ts (the HUD panel's lines per Role and Control mode, as the HUD shows them: hike gauge, Planing tag, the Partner's calls to the Helm)
              body-weight.test.ts (kg from age and Build), sailor-weight.test.ts (light is quicker in light air, heavy in a breeze)

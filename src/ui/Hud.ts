@@ -496,9 +496,12 @@ export class Hud {
       g.stroke();
       g.setLineDash([]);
     };
-    line(c.start.a, c.start.b, "rgba(255,255,255,.7)");
-    for (const l of c.legs)
-      if (l.kind === "finish") line(l.line.a, l.line.b, "rgba(111,211,255,.8)");
+    // The finish line is the start line: white until the finish leg, then blue.
+    line(
+      c.start.a,
+      c.start.b,
+      leg?.kind === "finish" ? "rgba(111,211,255,.8)" : "rgba(255,255,255,.7)",
+    );
     // Marks.
     for (const l of c.legs) {
       if (l.kind !== "mark") continue;

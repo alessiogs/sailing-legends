@@ -7,8 +7,9 @@ import type { CourseSteering } from "./StartPlanning";
 /**
  * The Racing AI's beat tactics: steering toward a point, beating close-hauled when it lies upwind.
  * Keeps the tack the boat is on (`onStbd`) and switches only when the other tack points closer by a
- * hysteresis margin, and not sooner than 11 s after the last tack. Owns the tack timer that start
- * planning and the tack state machine share.
+ * hysteresis margin, and not sooner than 11 s after the last tack. Near the target that margin would shrink to a
+ * lane a few metres wide (a tack every 11 s), so the lane never gets narrower than `lane` metres: close in, the boat
+ * holds its tack to the layline and tacks there. Owns the tack timer that start planning and the tack state machine share.
  */
 export class BeatTactics implements CourseSteering {
   /** Which tack the beat is on; null outside a beat (re-chosen from the heading when beating resumes). */
@@ -22,6 +23,8 @@ export class BeatTactics implements CourseSteering {
   constructor(
     private profile: SailorProfile,
     private now: () => number,
+    /** The narrowest lane (m) the beat zigzags in; 0 keeps the angular margin only. */
+    private lane = 0,
   ) {}
 
   /**
@@ -54,13 +57,19 @@ export class BeatTactics implements CourseSteering {
     const onStbd = this.onStbd;
     const errS = Math.abs(angleDiff(stbd, brg));
     const errP = Math.abs(angleDiff(port, brg));
-    const hyst = (20 + (1 - this.profile.tactics) * 12) * DEG;
+    const dist = Math.hypot(p.x - x, p.z - z);
+    const hyst = Math.max(
+      (20 + (1 - this.profile.tactics) * 12) * DEG,
+      2 * Math.atan2(this.lane, dist),
+    );
+    // On the layline the other tack fetches the target: tack there whatever the margin.
+    const LAID = 3 * DEG;
     const canTack = time - this.lastTack > 11;
     let useStbd = onStbd;
-    if (onStbd && errP + hyst < errS && canTack) {
+    if (onStbd && (errP + hyst < errS || errP < LAID) && canTack) {
       useStbd = false;
       this.lastTack = time;
-    } else if (!onStbd && errS + hyst < errP && canTack) {
+    } else if (!onStbd && (errS + hyst < errP || errS < LAID) && canTack) {
       useStbd = true;
       this.lastTack = time;
     }

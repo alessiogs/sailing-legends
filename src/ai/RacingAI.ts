@@ -9,7 +9,7 @@ import {
 } from "../core/math";
 import type { Controls } from "../sailing/BoatPhysics";
 import type { WindField } from "../sailing/Wind";
-import { distanceTo, legTarget, type Point } from "../race/Course";
+import { aimPoint, distanceTo, type Point } from "../race/Course";
 import type { Race, Racer } from "../race/Race";
 import type { SailorProfile } from "../sailors/Sailors";
 import { boatWithin, giveWay } from "./Avoidance";
@@ -60,7 +60,8 @@ export class RacingAI {
     this.k = Math.min(1.6, Math.max(1, racer.sim.cls.length / 2.31));
     // The start draws its numbers first: keep it constructed before anything else uses `rand`.
     this.startPlan = new StartPlanning(race, profile, this.k, this.rand, slot);
-    this.beat = new BeatTactics(profile, () => this.time);
+    // The beat's narrowest lane: about 24 m wide in an Optimist, scaled with the boat.
+    this.beat = new BeatTactics(profile, () => this.time, 12 * this.k);
     this.tackMachine = new TackStateMachine(this.beat, this.k);
     const p = rng(seed ^ 0x5eed);
     this.phase = [p(), p(), p(), p()].map((v) => v * 2 * Math.PI);
@@ -155,7 +156,7 @@ export class RacingAI {
       this.debug = steer.debug;
     } else {
       const leg = c.legs[r.leg];
-      let target = legTarget(leg);
+      let target = aimPoint(leg, s.x, s.z, 6 * this.k);
       if (leg.kind === "mark")
         target = this.orbitPoint(
           leg.mark,

@@ -121,7 +121,7 @@ _it_: Prova
 _Avoid_: Match, heat
 
 **Course**:
-The start line, the marks to round in order, and the finish line.
+The start line, the marks to round in order, and the finish line (the start line again: finish upwind through it).
 _it_: Percorso (bastone)
 
 **Leg**:
