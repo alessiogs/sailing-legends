@@ -77,13 +77,19 @@ export class RaceSession {
       meanDirDeg: 0,
       meanSpeedKn: opts.windKn ?? 11,
     });
-    const course = isTwoPerson(cls)
+    const course = cls.course
       ? makeWindwardLeeward(this.wind.meanDir, {
-          beat: 125,
-          lineHalf: fleet.lineHalf ?? 34,
-          run: 50,
+          beat: cls.course.beat,
+          lineHalf: fleet.lineHalf ?? cls.course.lineHalf,
+          run: cls.course.run,
         })
-      : makeWindwardLeeward(this.wind.meanDir, { lineHalf: fleet.lineHalf });
+      : isTwoPerson(cls)
+        ? makeWindwardLeeward(this.wind.meanDir, {
+            beat: 125,
+            lineHalf: fleet.lineHalf ?? 34,
+            run: 50,
+          })
+        : makeWindwardLeeward(this.wind.meanDir, { lineHalf: fleet.lineHalf });
     const boats = fleet.opponents.length + (fleet.player ? 1 : 0);
     this.race = new Race(course, opts.countdown ?? 45);
 

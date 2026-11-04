@@ -3,11 +3,17 @@
  * and prints the steady speed. Run with `npm run polar` after changing BoatClass or BoatPhysics.
  */
 import { DEG, KNOTS } from "../src/core/math";
-import { I420, OPTIMIST } from "../src/sailing/BoatClass";
+import {
+  I420,
+  ILCA_4,
+  ILCA_6,
+  ILCA_7,
+  OPTIMIST,
+} from "../src/sailing/BoatClass";
 import { BoatSim, createBoat, type Controls } from "../src/sailing/BoatPhysics";
 import { WindField } from "../src/sailing/Wind";
 
-for (const cls of [OPTIMIST, I420]) {
+for (const cls of [OPTIMIST, I420, ILCA_4, ILCA_6, ILCA_7]) {
   console.log(`\n${cls.name}`);
   for (const tws of [7, 11, 16]) {
     const cells: string[] = [];

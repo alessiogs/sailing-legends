@@ -17,11 +17,21 @@ export type SailSpec = {
 };
 
 /** The closed set of class ids: a misspelt id is a compile error. A new class adds its id here. */
-export type ClassId = "optimist" | "420";
+export type ClassId = "optimist" | "420" | "ilca";
+
+/** The ILCA's rigs: 4, 6 and 7, by the sailor's body weight (lightest to heaviest). */
+export type IlcaRig = 4 | 6 | 7;
 
 export type BoatClass = {
   id: ClassId;
   name: string;
+  /** The ILCA's rig (the sail and lower mast section); absent in every other class. */
+  rig?: IlcaRig;
+  /**
+   * The windward-leeward course for this class, in metres, so a race lasts about as long as an Optimist race (absent: the
+   * default course of the single-handed Optimist).
+   */
+  course?: { beat: number; run: number; lineHalf: number };
   /** The oldest age at which a sailor may race this class (the Age limit); absent when there is none. */
   ageLimit?: number;
   /** Boat + sailors mass incl. added mass of water, kg, with the sailors at their reference weight (`sailorKg`). */
@@ -145,6 +155,53 @@ export const I420: BoatClass = {
   heelPerN: 0.06,
 };
 
+/**
+ * ILCA dinghy (Laser): one 4.23 m hull, one sail on a sleeve mast, three rigs by the sailor's weight. The Helm hikes
+ * hard, with no inner seat to limit them, and the boat planes on a breezy reach. `kg` is the rig's ideal sailor weight.
+ */
+function ilca(rig: IlcaRig, area: number, kg: number): BoatClass {
+  return {
+    id: "ilca",
+    rig,
+    name: `ILCA ${rig}`,
+    mass: Math.round((58 + kg) * 1.15),
+    sailorKg: { helm: kg, crew: 0 },
+    length: 4.23,
+    beam: 1.37,
+    main: {
+      area,
+      minSheetDeg: 6,
+      maxSheetDeg: 88,
+      clMax: 1.65,
+      stallDeg: 20,
+      cd0: 0.06,
+    },
+    windage: 0.3,
+    hullDrag: 3,
+    hullSpeed: 2.5,
+    waveDrag: 220,
+    planing: { waveCut: 0.7, planes: true },
+    boardGrip: 6,
+    rudderMaxDeg: 32,
+    turnLength: 2,
+    hikeForce: Math.round(kg * 3.5),
+    helmRighting: { inFrac: 0.1, windwardOnly: false, leewardMin: 0 },
+    heelPerN: 0.07,
+    course: { beat: 130, run: 55, lineHalf: 30 },
+  };
+}
+
+export const ILCA_4: BoatClass = ilca(4, 4.7, 53);
+export const ILCA_6: BoatClass = ilca(6, 5.76, 68);
+export const ILCA_7: BoatClass = ilca(7, 7.06, 82);
+
+/** The ILCA classes by rig. */
+export const ILCA_RIGS: Record<IlcaRig, BoatClass> = {
+  4: ILCA_4,
+  6: ILCA_6,
+  7: ILCA_7,
+};
+
 /** The body weights (kg) of the sailors aboard one boat; `crewKg` is 0 in a single-handed class. */
 export type SailorWeights = { helmKg: number; crewKg: number };
 
@@ -158,10 +215,11 @@ export function isTwoPerson(cls: BoatClass): boolean {
   return cls.crewRighting !== undefined;
 }
 
-/** Every class, keyed by its id. */
+/** Every class, keyed by its id (the ILCA as its middle rig; `ILCA_RIGS` has all three). */
 export const CLASSES: Record<ClassId, BoatClass> = {
   optimist: OPTIMIST,
   "420": I420,
+  ilca: ILCA_6,
 };
 
 /** True when `id` names a class, e.g. a value read back from the page. */

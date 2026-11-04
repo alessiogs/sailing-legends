@@ -1,11 +1,11 @@
 /**
- * Headless smoke test of the simulation (no browser): AI-only races must finish for both classes,
+ * Headless smoke test of the simulation (no browser): AI-only races must finish for every class,
  * and every penalty given must be served. Run with `npm test`.
  */
 import { describe, expect, it } from "vitest";
 import { makeFleet } from "../src/race/Fleet";
 import { RaceSession } from "../src/race/RaceSession";
-import { I420, OPTIMIST } from "../src/sailing/BoatClass";
+import { I420, ILCA_6, OPTIMIST } from "../src/sailing/BoatClass";
 
 const DT = 1 / 60;
 /** A race still running after this many simulated seconds counts as not finishing. */
@@ -19,7 +19,7 @@ const RACES: [number, number][] = [
 ];
 
 describe("AI-only races", () => {
-  for (const cls of [OPTIMIST, I420]) {
+  for (const cls of [OPTIMIST, I420, ILCA_6]) {
     for (const [seed, windKn] of RACES) {
       it(`${cls.name} seed ${seed} ${windKn} kn: every boat finishes and serves every penalty`, () => {
         const s = new RaceSession({

@@ -135,6 +135,8 @@ const ROLL_WINDOW = 1.2,
   ROLL_ACCEL = 0.1;
 /** A hike this far up inside the window is a perfect roll (a hard hike rises about 0.84 in it); no rise at all is the worst. */
 const ROLL_FULL_RISE = 0.6;
+/** Drive an ILCA loses in a breeze per unit of weight below its rig's ideal (a sailor 30% light loses 36%). */
+const RIG_DEPOWER = 1.2;
 /** Unbalanced side force (N) below which the boat still counts as held flat, so a Helm hiking exactly at the ideal doesn't flicker. */
 const OVERPOWER_DEADBAND = 5;
 
@@ -617,6 +619,15 @@ export class BoatSim {
     drive *=
       1 +
       0.5 * (this.rightingScale - 1) * breeze * clamp(need / maxRighting, 0, 1);
+
+    // An ILCA sailed under its rig's ideal weight can't hold the sail in a breeze: it is eased and flogs, so drive falls (from ~8 kn
+    // to full at 14 kn). Heavier sailors lose nothing here: they only add mass.
+    if (cls.rig !== undefined)
+      drive *=
+        1 -
+        RIG_DEPOWER *
+          Math.max(0, 1 - this.rightingScale) *
+          clamp((tKn - 8) / 6, 0, 1);
 
     // Righting: Crew weight (if any) plus the Helm hiking as much as needed.
     const crewOnWindward = s.crewSide === -leeward;
