@@ -42,6 +42,11 @@ export type BoatClass = {
    */
   sailorKg: { helm: number; crew: number };
   length: number; // m (LOA)
+  /**
+   * How the camera and the name tags frame the boat, in metres: the chase distance, the aim height, the top view's
+   * distance and the height of the name tag above the water (all grow with the boat and its mast).
+   */
+  view: { chase: number; aim: number; top: number; tag: number };
   beam: number; // m
   /** Mainsail (every class has one). */
   main: SailSpec;
@@ -102,6 +107,7 @@ export const OPTIMIST: BoatClass = {
   mass: 88,
   sailorKg: { helm: 42, crew: 0 },
   length: 2.31,
+  view: { chase: 12, aim: 0.9, top: 48, tag: 3.6 },
   beam: 1.13,
   main: {
     area: 3.3,
@@ -131,6 +137,7 @@ export const I420: BoatClass = {
   mass: 245,
   sailorKg: { helm: 60, crew: 60 },
   length: 4.2,
+  view: { chase: 17, aim: 1.6, top: 70, tag: 7.2 },
   beam: 1.63,
   main: {
     area: 7.45,
@@ -179,6 +186,7 @@ export const I29ER: BoatClass = {
   mass: 230,
   sailorKg: { helm: 58, crew: 67 },
   length: 4.45,
+  view: { chase: 18, aim: 1.7, top: 74, tag: 7.6 },
   beam: 1.77,
   main: {
     area: 11.2,
@@ -232,6 +240,7 @@ export const I49ER: BoatClass = {
   mass: 293,
   sailorKg: { helm: 80, crew: 80 },
   length: 4.9,
+  view: { chase: 21, aim: 2, top: 82, tag: 9.4 },
   beam: 1.93,
   main: {
     area: 17,
@@ -292,6 +301,7 @@ function ilca(rig: IlcaRig, area: number, kg: number): BoatClass {
     mass: Math.round((58 + kg) * 1.15),
     sailorKg: { helm: kg, crew: 0 },
     length: 4.23,
+    view: { chase: 15, aim: 1.3, top: 58, tag: 5.6 },
     beam: 1.37,
     main: {
       area,

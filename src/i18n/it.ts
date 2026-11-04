@@ -62,9 +62,8 @@ export const italian = {
   "toast.gennaker.crewDecides": `Il gennaker lo decide il prodiere (in "Barca completa" lo chiami tu)`,
   "trim.gennakerCollapsed": "Il gennaker è crollato: troppo all'orza",
   "menu.lede.single": "Prova Optimist",
-  "menu.lede.ilca":
-    "Prova ILCA, in singolo: iscritto con l'armo adatto al tuo peso",
-  "menu.label.rig": "RIG",
+  "menu.lede.ilca": "Prova ILCA, in singolo, con l'armo adatto al tuo peso",
+  "menu.label.rig": "ARMO",
   "menu.rigHint": ({
     kg,
     from,
@@ -75,13 +74,19 @@ export const italian = {
     to: number;
   }) => `Peso ideale circa ${kg} kg (${from}–${to} kg)`,
   "menu.versionChip": ({ boatClass }: { boatClass: string }) =>
-    `PROTOTIPO 0.6 · ${boatClass}`,
+    `PROTOTIPO 0.7 · ${boatClass}`,
   "menu.roleHelp.helm":
     "Timone e randa. Il tuo prodiere regola fiocco e spi, esce al trapezio e decide quando issare lo spi.",
   "menu.roleHelp.crew":
     "Il partner timona. Tu: W/S fiocco (o spi), A/D peso dentro/fuori fino al trapezio, E cambio lato dopo virate e strambate, Spazio issa/ammaina lo spi. Ascolta le sue chiamate.",
   "menu.roleHelp.fullBoat":
     "Timone e randa, e chiami tu le manovre: Spazio = issa/ammaina lo spi. Il prodiere esegue (più in fretta se l'intesa è alta).",
+  "menu.roleHelp.helmSkiff":
+    "Timone e randa. Il tuo prodiere regola fiocco e gennaker, esce al trapezio e decide quando issare il gennaker.",
+  "menu.roleHelp.crewSkiff":
+    "Il partner timona. Tu: W/S fiocco (o gennaker), A/D peso dentro/fuori fino al trapezio, E cambio lato dopo virate e strambate, Spazio issa/ammaina il gennaker. Ascolta le sue chiamate.",
+  "menu.roleHelp.fullBoatSkiff":
+    "Timone e randa, e chiami tu le manovre: Spazio = issa/ammaina il gennaker. Il prodiere esegue (più in fretta se l'intesa è alta).",
   "menu.partnerStats": ({
     chemistry,
     technique,
@@ -167,7 +172,7 @@ export const italian = {
   "controls.table.action": "Azione",
   "controls.table.keyboard": "Tastiera",
   "controls.table.gamepad": "Gamepad",
-  "controls.table.crew420": "420 da prodiere",
+  "controls.table.crew420": "Da prodiere (420, 29er, 49er)",
   "controls.pad.leftStick": "Stick sinistro",
   // Actions, in the controls table (and the short key list of the main menu).
   "controls.action.fineTiller": "Movimento fine della barra",
@@ -512,7 +517,7 @@ export const italian = {
   "career.summary.places": "Posizioni nelle regate",
   "career.summary.rivals": "Contro i tuoi rivali",
   "career.summary.outgrown": ({ kg }: { kg: number }) =>
-    `Con ${kg} kg stai crescendo oltre il peso ideale dell'Optimist (circa 35-50 kg): il 420 ti aspetta.`,
+    `Con ${kg} kg stai crescendo oltre il peso ideale dell'Optimist (circa 35-50 kg): una barca più grande ti aspetta.`,
   "career.summary.next": "Prossima stagione",
   "career.next.title": ({ season }: { season: number }) =>
     `Stagione ${season}: come prosegui?`,
@@ -556,6 +561,10 @@ export const italian = {
     "Il partner timona. Tu: trascina la barra della vela per il fiocco (o lo spi) e quella in alto per il peso dentro/fuori fino al trapezio; tocca Cambio lato dopo virate e strambate e Spi per issare/ammainare. Ascolta le sue chiamate.",
   "menu.roleHelp.fullBoat.touch":
     "Timone e randa, e chiami tu le manovre: tocca Spi per issare/ammainare lo spi. Il prodiere esegue (più in fretta se l'intesa è alta).",
+  "menu.roleHelp.crewSkiff.touch":
+    "Il partner timona. Tu: trascina la barra della vela per il fiocco (o il gennaker) e quella in alto per il peso dentro/fuori fino al trapezio; tocca Cambio lato dopo virate e strambate e Spi per issare/ammainare il gennaker. Ascolta le sue chiamate.",
+  "menu.roleHelp.fullBoatSkiff.touch":
+    "Timone e randa, e chiami tu le manovre: tocca Spi per issare/ammainare il gennaker. Il prodiere esegue (più in fretta se l'intesa è alta).",
   "pause.restartHint.touch": "Tocca Ricomincia per rifare la prova",
   "results.hint.touch": "Tocca Altra prova o Menu",
   "hud.hint.touch": "Barra a sinistra, scotta a destra: usa i due pollici",

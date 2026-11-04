@@ -163,7 +163,7 @@ export function makeFleet(opts: FleetOptions = {}): Fleet {
   );
   // A bigger fleet needs a longer line: the usual half-length (24 m, 34 m in two-person classes) per five boats.
   const lineHalf = big
-    ? (two ? 34 : (cls.course?.lineHalf ?? 24)) *
+    ? (cls.course?.lineHalf ?? (two ? 34 : 24)) *
       Math.max(1, boats / LINE_BOATS)
     : undefined;
   return {

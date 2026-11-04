@@ -90,4 +90,17 @@ describe("AI skiffs downwind", () => {
     const poor = mean(times(0.3));
     expect(good).toBeLessThan(poor);
   }, 120_000);
+
+  it("a good Helm stays on the plane down a breezy run (hikes out as soon as more is needed)", () => {
+    const mean = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / xs.length;
+    const fleet = RIVALS.map((r) => ({
+      ...r,
+      technique: 0.95,
+      tactics: 0.7,
+      speed: 0.7,
+    }));
+    const times = [5, 7].flatMap((seed) => sailRun(seed, 16, fleet).runTime);
+    // About 59 s on the plane; 70 s or more when the Helm settles in the slow state.
+    expect(mean(times)).toBeLessThan(65);
+  }, 120_000);
 });

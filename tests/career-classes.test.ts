@@ -5,7 +5,12 @@
 import { describe, expect, it } from "vitest";
 import { nextRaceSetup, startCareer } from "../src/career/Career";
 import type { CareerState } from "../src/career/CareerSave";
-import { classOffers, sailorPath } from "../src/career/Classes";
+import {
+  ageFits,
+  classOffers,
+  sailorPath,
+  samePath,
+} from "../src/career/Classes";
 import { partnerOffers, startNextSeason } from "../src/career/SeasonClose";
 import { pairWeightHint, rigWeightHint } from "../src/career/Weight";
 import { HELM } from "../src/race/PlayerChoice";
@@ -217,5 +222,38 @@ describe("fleets in the new classes", () => {
         if (classId === "ilca") expect(setup.fleet.boatClass.rig).toBe(rig);
       }
     }
+  });
+});
+
+describe("Rivals keep their class from Season to Season", () => {
+  const ids = Array.from({ length: 60 }, (_, i) => `r${i}`);
+  it("never return to the Optimist once they have left it, and follow the player's age windows", () => {
+    for (const id of ids) {
+      let left = false;
+      for (let season = 1; season <= 12; season++) {
+        const p = sailorPath(3, season, id, 10);
+        const age = 10 + season - 1;
+        if (left) expect(p.classId).not.toBe("optimist");
+        if (p.classId !== "optimist") left = true;
+        if (age > 10) expect(ageFits(p.classId, age)).toBe(true);
+      }
+    }
+  });
+  it("change class rarely", () => {
+    let moves = 0;
+    let seasons = 0;
+    for (const id of ids)
+      for (let season = 2; season <= 12; season++) {
+        seasons++;
+        if (
+          !samePath(
+            sailorPath(3, season, id, 10),
+            sailorPath(3, season - 1, id, 10),
+          )
+        )
+          moves++;
+      }
+    // Growing sailors are forced out of a class now and then; a random redraw would move about two Seasons in three.
+    expect(moves / seasons).toBeLessThan(0.4);
   });
 });

@@ -45,7 +45,7 @@ const MOTION: BoatMotion = {
 
 /**
  * Visual of an ILCA: a long open hull with a flat deck, one sail on a sleeve mast (the sail's luff is the mast), a boom and
- * a hiking sailor. The rig sets the size of the sail. The sailor is drawn simply when the camera is far (see `NEAR`).
+ * a hiking sailor. The rig sets the size of the sail. The sailor is drawn simply, and the tiller extension left out, when the camera is far (see `NEAR` in `BoatViewBase`).
  */
 export class BoatIlcaView extends BoatViewBase {
   protected readonly rig: TransformNode;
@@ -326,8 +326,12 @@ export class BoatIlcaView extends BoatViewBase {
       dt,
     );
     this.sailor.update(this.pose, this.sailorsNear);
-    const ext = this.pose.extension!;
-    setLimb(this.extension, ext.base, ext.end, 0.022);
+    // The tiller extension is a small detail: drawn only for a boat the camera is near.
+    this.extension.setEnabled(this.sailorsNear);
+    if (this.sailorsNear) {
+      const ext = this.pose.extension!;
+      setLimb(this.extension, ext.base, ext.end, 0.022);
+    }
     this.sail.clewPoint(this.clew);
     fromTurned(this.clew, this.rig.rotation.y, MAST_STEP, this.clewBody);
     this.sheets.set(

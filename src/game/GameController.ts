@@ -240,10 +240,7 @@ export class GameController {
       isTwoPerson(this.activeClass),
       this.activeChoice.role === "crew",
     );
-    this.cameraRig.placeBehind(
-      session.player!.sim.state,
-      isTwoPerson(this.activeClass),
-    );
+    this.cameraRig.placeBehind(session.player!.sim.state, this.activeClass);
     hud.show(true);
     hud.toast(t("toast.startSequence"), "big");
   }
@@ -257,7 +254,12 @@ export class GameController {
     this.sound.init();
     this.assists.autoTrim = this.screens.autoTrimChosen();
     this.assists.autoHike =
-      this.screens.autoHikeChosen() ?? defaultAutoHike(this.choice);
+      this.screens.autoHikeChosen() ??
+      defaultAutoHike(
+        isTwoPerson(this.boatClass)
+          ? this.choice
+          : { role: "helm", control: "playerCareer" },
+      );
     this.newRace();
     this.setMode("racing");
   }
@@ -489,9 +491,7 @@ export class GameController {
         hud.toast(t("toast.switchSide"));
       if (a === "camera") {
         hud.toast(
-          t(
-            `toast.camera.${this.cameraRig.nextMode(isTwoPerson(this.activeClass))}`,
-          ),
+          t(`toast.camera.${this.cameraRig.nextMode(this.activeClass)}`),
         );
       }
     }
@@ -550,7 +550,7 @@ export class GameController {
       p.leg < 0,
       !!leg && leg.kind === "finish",
     );
-    this.cameraRig.follow(dt, p.sim.state, isTwoPerson(this.activeClass));
+    this.cameraRig.follow(dt, p.sim.state, this.activeClass);
     this.ocean!.update(this.time, camera, session.wind);
     // The panel reads the sail and weight telemetry, which exists only once the physics has stepped: a first race
     // frame shorter than one step would otherwise throw and stop the render loop.

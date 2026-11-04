@@ -77,4 +77,20 @@ describe("29er", () => {
   it("planes by 12 kn on a broad reach", () => {
     expect(sail(I29ER, 12, 130, true).planing).toBe(true);
   });
+
+  it("has a self-tacking jib: it crosses with the boom, without the Crew's side switch", () => {
+    const wind = new WindField({ puffCount: 0, meanSpeedKn: 11 });
+    wind.shift = () => 0;
+    const sim = new BoatSim(I29ER, createBoat(0, 0, -45 * DEG));
+    const c: Controls = { rudder: 0, sheet: 0.5, jibSheet: 0.5, crewOut: 0 };
+    for (let i = 0; i < 60; i++) sim.step(1 / 60, c, wind);
+    const before = sim.state.jibSide;
+    // Bear the boat through the wind onto the other tack.
+    for (let i = 0; i < 60 * 8; i++) {
+      c.rudder = sim.state.heading < 45 * DEG ? 1 : 0;
+      sim.step(1 / 60, c, wind);
+    }
+    expect(sim.state.boomSide).toBe(-before);
+    expect(sim.state.jibSide).toBe(sim.state.boomSide);
+  });
 });

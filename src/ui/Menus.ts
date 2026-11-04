@@ -1,6 +1,7 @@
 import { DEFAULT_CONTROLS } from "../core/ControlSettings";
 import type { Input } from "../core/Input";
 import { defaultAutoHike } from "../game/PlayerControls";
+import { RIG_IDEAL_KG } from "../career/Weight";
 import type {
   CareerResults,
   GameController,
@@ -28,20 +29,28 @@ const buttons = (selector: string) =>
 
 /** The three Role buttons (`data-v`), each a Role and Control mode, with its help text. */
 const ROLE_OPTIONS = {
-  helm: { choice: HELM, help: "menu.roleHelp.helm" },
-  crew: { choice: CREW, help: "menu.roleHelp.crew" },
-  fullBoat: { choice: FULL_BOAT, help: "menu.roleHelp.fullBoat" },
-} as const satisfies Record<string, { choice: PlayerChoice; help: MessageKey }>;
+  helm: {
+    choice: HELM,
+    help: "menu.roleHelp.helm",
+    skiffHelp: "menu.roleHelp.helmSkiff",
+  },
+  crew: {
+    choice: CREW,
+    help: "menu.roleHelp.crew",
+    skiffHelp: "menu.roleHelp.crewSkiff",
+  },
+  fullBoat: {
+    choice: FULL_BOAT,
+    help: "menu.roleHelp.fullBoat",
+    skiffHelp: "menu.roleHelp.fullBoatSkiff",
+  },
+} as const satisfies Record<
+  string,
+  { choice: PlayerChoice; help: MessageKey; skiffHelp: MessageKey }
+>;
 type RoleOption = keyof typeof ROLE_OPTIONS;
 const roleOption = (c: PlayerChoice): RoleOption =>
   c.role === "crew" ? "crew" : c.control === "fullBoat" ? "fullBoat" : "helm";
-
-/** The sailor weights (kg) each ILCA rig suits: its competitive range (ideal weight in `ILCA_RIGS`). */
-const RIG_RANGE_KG: Record<IlcaRig, readonly [number, number]> = {
-  4: [50, 65],
-  6: [60, 78],
-  7: [73, 90],
-};
 
 /**
  * The page's menus: the main menu (boat class, wind, Role, Partner, Auto-trim, and the Career entries), the Commands
@@ -422,8 +431,8 @@ export class Menus implements Screens {
     $("rig-help").textContent = ilca
       ? t("menu.rigHint", {
           kg: boatClass.sailorKg.helm,
-          from: RIG_RANGE_KG[boatClass.rig!][0],
-          to: RIG_RANGE_KG[boatClass.rig!][1],
+          from: RIG_IDEAL_KG[boatClass.rig!].min,
+          to: RIG_IDEAL_KG[boatClass.rig!].max,
         })
       : "";
     $("lede-class").textContent = two
@@ -438,7 +447,10 @@ export class Menus implements Screens {
     $("version-chip").textContent = t("menu.versionChip", {
       boatClass: boatClass.name.toUpperCase(),
     });
-    $("role-help").textContent = t(ROLE_OPTIONS[roleOption(choice)].help);
+    const roleHelp = ROLE_OPTIONS[roleOption(choice)];
+    $("role-help").textContent = t(
+      boatClass.spinnaker?.gennaker ? roleHelp.skiffHelp : roleHelp.help,
+    );
     $("partner-opt").replaceChildren(
       ...RIVALS.map((r) => {
         const c = crewChemistry(r);
