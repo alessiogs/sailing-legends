@@ -60,7 +60,7 @@ the boat right); the tiller springs back to the centre or stays put; tiller and 
 
 ## Playing
 
-- **Quick race:** pick the boat (Optimist, 420 or ILCA; the ILCA with its rig, 4, 6 or 7), the wind and, for the 420, your Role (_Timoniere_ = Helm,
+- **Quick race:** pick the boat (Optimist, 420, ILCA, 29er or 49er; the ILCA with its rig, 4, 6 or 7), the wind and, for the 420, your Role (_Timoniere_ = Helm,
   _Prodiere_ = Crew, _Barca completa_ = Full Boat Control) and your Partner. Auto-hike (_Peso automatico_) sits beside
   Auto-trim: on by default for the Helm and Full Boat Control, off for the Crew.
 - **Career:** choose your starting age (8–12) and your build (light, average or heavy: lighter is quicker in light

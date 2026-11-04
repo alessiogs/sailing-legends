@@ -155,7 +155,7 @@ describe("career save codec", () => {
       field("season", ""),
       field("season", "0"),
       field("classId", ""),
-      field("classId", '"49er"'),
+      field("classId", '"star"'),
       field("classId", "420"),
       field("regattaIndex", ""),
       field("regattaIndex", "-1"),
