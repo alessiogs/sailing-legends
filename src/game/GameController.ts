@@ -552,7 +552,10 @@ export class GameController {
     );
     this.cameraRig.follow(dt, p.sim.state, isTwoPerson(this.activeClass));
     this.ocean!.update(this.time, camera, session.wind);
-    hud.update(dt, session.race, p, session.wind, this.panel(session));
+    // The panel reads the sail and weight telemetry, which exists only once the physics has stepped: a first race
+    // frame shorter than one step would otherwise throw and stop the render loop.
+    if (session.steps > 0)
+      hud.update(dt, session.race, p, session.wind, this.panel(session));
     showTouchAutoHike(this.assists.autoHike);
     const tel = p.sim.telemetry;
     const luff =
