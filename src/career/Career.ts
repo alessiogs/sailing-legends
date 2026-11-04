@@ -50,6 +50,7 @@ export function startCareer({
     startingAge,
     season: 1,
     classId: "optimist",
+    rig: null,
     build,
     regattaIndex: 0,
     results: [[]],
