@@ -8,6 +8,7 @@ import {
 } from "../career/Ages";
 import { seasonCalendar, venueName } from "../career/Calendar";
 import type { CareerState } from "../career/CareerSave";
+import { boatClassOf, pathOf } from "../career/Classes";
 import { FLEET_SIZE } from "../career/Fleets";
 import { isSeasonOver } from "../career/RecordRace";
 import {
@@ -15,7 +16,6 @@ import {
   type RegattaReport,
   type SeasonSummary,
 } from "../career/Standings";
-import { CLASSES } from "../sailing/BoatClass";
 import type { SeasonChoice } from "../career/SeasonClose";
 import { h } from "./dom";
 import { nextSeasonSheet } from "./NextSeasonView";
@@ -271,7 +271,7 @@ export class CareerScreen {
           h(
             "small",
             {},
-            `${r.stage ? t("career.calendar.stage", { stage: r.stage.number, stages: r.stage.of }) : t(`career.level.${r.level}`)} · ${t("career.calendar.detail", { boatClass: CLASSES[r.classId].name, boats: FLEET_SIZE[r.level], races: r.races })}`,
+            `${r.stage ? t("career.calendar.stage", { stage: r.stage.number, stages: r.stage.of }) : t(`career.level.${r.level}`)} · ${t("career.calendar.detail", { boatClass: boatClassOf(pathOf(state)).name, boats: FLEET_SIZE[r.level], races: r.races })}`,
           ),
         ),
         h("span", { class: "s" }, status),

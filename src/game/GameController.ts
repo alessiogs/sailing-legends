@@ -33,6 +33,8 @@ import type { Hud } from "../ui/Hud";
 import { buildPanel } from "../ui/hudPanel";
 import { showTouchAutoHike } from "../ui/TouchButtons";
 import { Boat420View } from "../world/Boat420View";
+import { BoatSkiffView } from "../world/BoatSkiffView";
+import { BoatIlcaView } from "../world/BoatIlcaView";
 import { boatLook } from "../world/boatMaterials";
 import { BoatView } from "../world/BoatView";
 import type { BoatViewBase } from "../world/BoatViewBase";
@@ -224,9 +226,13 @@ export class GameController {
       const crew = crews.get(r.id)!;
       this.boats.set(
         r.id,
-        isTwoPerson(r.sim.cls)
-          ? new Boat420View(scene, r.id, look, crew)
-          : new BoatView(scene, r.id, look, crew),
+        r.sim.cls.spinnaker?.gennaker
+          ? new BoatSkiffView(scene, r.id, look, crew, r.sim.cls)
+          : isTwoPerson(r.sim.cls)
+            ? new Boat420View(scene, r.id, look, crew)
+            : r.sim.cls.id === "ilca"
+              ? new BoatIlcaView(scene, r.id, look, crew, r.sim.cls)
+              : new BoatView(scene, r.id, look, crew),
       );
     }
     input.reset();
@@ -234,10 +240,7 @@ export class GameController {
       isTwoPerson(this.activeClass),
       this.activeChoice.role === "crew",
     );
-    this.cameraRig.placeBehind(
-      session.player!.sim.state,
-      isTwoPerson(this.activeClass),
-    );
+    this.cameraRig.placeBehind(session.player!.sim.state, this.activeClass);
     hud.show(true);
     hud.toast(t("toast.startSequence"), "big");
   }
@@ -251,7 +254,12 @@ export class GameController {
     this.sound.init();
     this.assists.autoTrim = this.screens.autoTrimChosen();
     this.assists.autoHike =
-      this.screens.autoHikeChosen() ?? defaultAutoHike(this.choice);
+      this.screens.autoHikeChosen() ??
+      defaultAutoHike(
+        isTwoPerson(this.boatClass)
+          ? this.choice
+          : { role: "helm", control: "playerCareer" },
+      );
     this.newRace();
     this.setMode("racing");
   }
@@ -483,9 +491,7 @@ export class GameController {
         hud.toast(t("toast.switchSide"));
       if (a === "camera") {
         hud.toast(
-          t(
-            `toast.camera.${this.cameraRig.nextMode(isTwoPerson(this.activeClass))}`,
-          ),
+          t(`toast.camera.${this.cameraRig.nextMode(this.activeClass)}`),
         );
       }
     }
@@ -544,9 +550,12 @@ export class GameController {
       p.leg < 0,
       !!leg && leg.kind === "finish",
     );
-    this.cameraRig.follow(dt, p.sim.state, isTwoPerson(this.activeClass));
+    this.cameraRig.follow(dt, p.sim.state, this.activeClass);
     this.ocean!.update(this.time, camera, session.wind);
-    hud.update(dt, session.race, p, session.wind, this.panel(session));
+    // The panel reads the sail and weight telemetry, which exists only once the physics has stepped: a first race
+    // frame shorter than one step would otherwise throw and stop the render loop.
+    if (session.steps > 0)
+      hud.update(dt, session.race, p, session.wind, this.panel(session));
     showTouchAutoHike(this.assists.autoHike);
     const tel = p.sim.telemetry;
     const luff =

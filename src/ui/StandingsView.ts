@@ -81,18 +81,21 @@ function rivalLines(
   lines: RivalComparison[],
   name: (id: string) => string,
   id: string,
-) {
-  return h(
-    "ul",
-    { class: "rival-lines", id },
-    ...lines.map((c) =>
-      h(
-        "li",
-        { class: c.rivalAhead ? "ahead" : "behind" },
-        rivalLine(c, name(c.rivalId)),
+): HTMLElement[] {
+  if (lines.length === 0) return [];
+  return [
+    h(
+      "ul",
+      { class: "rival-lines", id },
+      ...lines.map((c) =>
+        h(
+          "li",
+          { class: c.rivalAhead ? "ahead" : "behind" },
+          rivalLine(c, name(c.rivalId)),
+        ),
       ),
     ),
-  );
+  ];
 }
 
 /** After a Regatta: its ranking, the Season ranking so far and a line for each Rival. */
@@ -123,10 +126,10 @@ export function standingsSheet(
       rowName,
       "career-regatta-table",
     ),
-    rivalLines(report.regattaRivals, name, "career-regatta-rivals"),
+    ...rivalLines(report.regattaRivals, name, "career-regatta-rivals"),
     h("h3", {}, t("career.standings.season")),
     table(report.season.map(seasonRow), rowName, "career-season-table"),
-    rivalLines(report.seasonRivals, name, "career-season-rivals"),
+    ...rivalLines(report.seasonRivals, name, "career-season-rivals"),
   ];
 }
 
@@ -159,8 +162,12 @@ export function summarySheet(
     ),
     h("h3", {}, t("career.standings.season")),
     table(summary.standings.map(seasonRow), rowName, "career-summary-table"),
-    h("h3", {}, t("career.summary.rivals")),
-    rivalLines(summary.rivals, name, "career-summary-rivals"),
+    ...(summary.rivals.length === 0
+      ? []
+      : [
+          h("h3", {}, t("career.summary.rivals")),
+          ...rivalLines(summary.rivals, name, "career-summary-rivals"),
+        ]),
     ...(state.classId === "optimist" && outgrownOptimist(playerKgNow(state))
       ? [
           h(

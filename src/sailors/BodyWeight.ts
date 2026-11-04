@@ -24,6 +24,8 @@ const AGE_KG: readonly (readonly [number, number])[] = [
   [11, 42],
   [14, 52],
   [16, 60],
+  [18, 66],
+  [20, 72],
 ];
 
 /** Body weight in kg of a sailor of `age` with Build factor `factor` (0.85..1.15; 1 is average). */

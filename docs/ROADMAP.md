@@ -30,6 +30,13 @@
   technique, fore-aft weight, the 420 planes on a breezy reach and the Optimist gains a little downwind; Partner
   weight and Pair hint in the Career, the "Planing" tag, bow lift, bow spray and a louder water rush.
 
+- **0.7 New boats** — spec #158. Three new classes in quick races and the Career: the ILCA with three rigs (4, 6,
+  7, chosen by body weight), the 29er and the 49er with an asymmetric gennaker (skiff physics: early planing, the
+  best run at 140–150°), the 49er's Helm on the trapeze, AI skiffs that sail the run at an angle and gybe, a course
+  per class, class visuals and symbols. The Career can move to any class the age allows each Season (the ILCA rig
+  chosen by weight, Pair Partners and Crew Chemistry carried over, Rivals on their own class paths). Capsizing is
+  not in.
+
 ## How planning works
 
 This file holds the vision and the order. Details and status live on GitHub: one
@@ -39,14 +46,13 @@ versions, and its issues (5–8 per spec). Don't copy issue lists here.
 ## Next (in order)
 
 - **0.4.x maintenance** — small tech-debt issues, worked in the background (no spec).
-- **0.7 Training** — drills, a coach, player attributes, "sim this race".
-- **0.8 Race tactics** — mark-room (rule 18), rule 16, protests, AI covering/splitting.
-- **0.9 Weather and venues** — Garda thermal winds, sea state, current, light; real venues.
-- **0.10 Replay** — tactical review of a race from above.
-- **1.0 More classes** — ILCA first, then 29er/49er (skiff physics, gennaker, planing); forced class change
-  at the Age limit; several championships per Season with qualification
-  (see `docs/research/italian-youth-qualification.md`).
-- **Later, no milestone:** multiplayer (online).
+- **0.8 Training** — drills, a coach, player attributes, "sim this race".
+- **0.9 Race tactics** — mark-room (rule 18), rule 16, protests, AI covering/splitting.
+- **0.10 Weather and venues** — Garda thermal winds, sea state, current, light; real venues.
+- **0.11 Replay** — tactical review of a race from above.
+- **1.0 Age limit and championships** — forced class change at the Age limit; several championships per Season
+  with qualification (see `docs/research/italian-youth-qualification.md`).
+- **Later, no milestone:** multiplayer (online); capsizing; the 470 and the 49erFX.
 
 ## Known issues
 
@@ -54,3 +60,5 @@ versions, and its issues (5–8 per spec). Don't copy issue lists here.
 - Overpowered 420 in 16 kn heels a lot (depower model favours sheeting in).
 - Chemistry has a small effect on spinnaker timing (hoist time dominates).
 - Physics tuned for feel, not validated against real polars.
+- The 7 kn speeds of the skiffs and the 49er's 11 kn VMG run under the class tables (a wave-drag wall caps the hull; see AGENTS.md).
+- ILCA and 29er targets are estimates scaled from the 49er's class data, not measured.

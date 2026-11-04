@@ -21,6 +21,7 @@ describe("start a Career", () => {
       startingAge: 12,
       season: 1,
       classId: "optimist",
+      rig: null,
       build: "average",
       regattaIndex: 0,
       results: [[]],

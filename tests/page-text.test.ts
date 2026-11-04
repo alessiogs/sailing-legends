@@ -13,6 +13,7 @@ const page = readFileSync(new URL("../index.html", import.meta.url), "utf8");
 /** Elements whose text the game sets at runtime, before they are first seen; their placeholder text is not compared. */
 const filledAtRuntime = [
   "version-chip",
+  "rig-help",
   "leg",
   "leeway",
   "key-left-label",
@@ -97,7 +98,7 @@ describe("static page text", () => {
   it("holds no text of its own that the catalog does not supply", () => {
     // Left in the page: the brand, boat class names, key and button names, units and the instruments' start values.
     const allowed =
-      /^(SAILING|LEGENDS|Optimist|420|[A-Z]|[←→↑↓/·+–—]|RT|LT|RT \/ LT|RB \/ LB|Shift|Esc|Start|Back|-0:45|0\.0|kn|0°|11 kn)$/;
+      /^(SAILING|LEGENDS|Optimist|420|ILCA|ILCA [467]|29er|49er|[A-Z]|[←→↑↓/·+–—]|RT|LT|RT \/ LT|RB \/ LB|Shift|Esc|Start|Back|-0:45|0\.0|kn|0°|11 kn)$/;
     const loading = lookup("menu.loading");
     const ownText = textPieces(page).filter(
       (line) => !allowed.test(line) && line !== loading,

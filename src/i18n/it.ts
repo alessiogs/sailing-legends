@@ -10,15 +10,83 @@ const plural = plurals("it");
 export const italian = {
   // Main menu.
   "menu.lede.twoPerson": "Prova 420, in due con fiocco, spinnaker e trapezio",
+  "menu.lede.skiff": "Prova skiff, in due con fiocco, gennaker e trapezio",
+  "hud.slider.hikeTrapeze": "TRAPEZIO",
+  "hud.sail.gennaker": "GENNAKER",
+  "hud.partnerLine.helmGennaker": ({
+    name,
+    spi,
+  }: {
+    name: string;
+    spi: string;
+  }) => `${name} al timone e alla randa · gennaker: ${spi}`,
+  "hud.partnerLine.crewGennaker": ({
+    name,
+    weight,
+    spi,
+  }: {
+    name: string;
+    weight: string;
+    spi: string;
+  }) => `${name}: ${weight} · gennaker ${spi}`,
+  "hud.partnerLine.crewOnCallGennaker": ({
+    name,
+    weight,
+    spi,
+  }: {
+    name: string;
+    weight: string;
+    spi: string;
+  }) => `${name}: ${weight} · gennaker ${spi} · Spazio = issa/ammaina`,
+  "hud.partnerLine.crewOnCallGennaker.touch": ({
+    name,
+    weight,
+    spi,
+  }: {
+    name: string;
+    weight: string;
+    spi: string;
+  }) => `${name}: ${weight} · gennaker ${spi} · tocca Spi per issare/ammainare`,
+  "call.gennakerHoist": ({ name }: { name: string }) =>
+    `${name}: «Issa il gennaker!» → Spazio`,
+  "call.gennakerHoist.touch": ({ name }: { name: string }) =>
+    `${name}: «Issa il gennaker!» → tocca Spi`,
+  "call.gennakerDrop": ({ name }: { name: string }) =>
+    `${name}: «Ammaina il gennaker!» → Spazio`,
+  "call.gennakerDrop.touch": ({ name }: { name: string }) =>
+    `${name}: «Ammaina il gennaker!» → tocca Spi`,
+  "toast.gennaker.hoist": "Issa il gennaker!",
+  "toast.gennaker.drop": "Ammaina il gennaker!",
+  "toast.gennaker.partnerDecides": ({ name }: { name: string }) =>
+    `Il gennaker lo decide ${name} (in "Barca completa" lo chiami tu)`,
+  "toast.gennaker.crewDecides": `Il gennaker lo decide il prodiere (in "Barca completa" lo chiami tu)`,
+  "trim.gennakerCollapsed": "Il gennaker è crollato: troppo all'orza",
   "menu.lede.single": "Prova Optimist",
+  "menu.lede.ilca": "Prova ILCA, in singolo, con l'armo adatto al tuo peso",
+  "menu.label.rig": "ARMO",
+  "menu.rigHint": ({
+    kg,
+    from,
+    to,
+  }: {
+    kg: number;
+    from: number;
+    to: number;
+  }) => `Peso ideale circa ${kg} kg (${from}–${to} kg)`,
   "menu.versionChip": ({ boatClass }: { boatClass: string }) =>
-    `PROTOTIPO 0.6 · ${boatClass}`,
+    `PROTOTIPO 0.7 · ${boatClass}`,
   "menu.roleHelp.helm":
     "Timone e randa. Il tuo prodiere regola fiocco e spi, esce al trapezio e decide quando issare lo spi.",
   "menu.roleHelp.crew":
     "Il partner timona. Tu: W/S fiocco (o spi), A/D peso dentro/fuori fino al trapezio, E cambio lato dopo virate e strambate, Spazio issa/ammaina lo spi. Ascolta le sue chiamate.",
   "menu.roleHelp.fullBoat":
     "Timone e randa, e chiami tu le manovre: Spazio = issa/ammaina lo spi. Il prodiere esegue (più in fretta se l'intesa è alta).",
+  "menu.roleHelp.helmSkiff":
+    "Timone e randa. Il tuo prodiere regola fiocco e gennaker, esce al trapezio e decide quando issare il gennaker.",
+  "menu.roleHelp.crewSkiff":
+    "Il partner timona. Tu: W/S fiocco (o gennaker), A/D peso dentro/fuori fino al trapezio, E cambio lato dopo virate e strambate, Spazio issa/ammaina il gennaker. Ascolta le sue chiamate.",
+  "menu.roleHelp.fullBoatSkiff":
+    "Timone e randa, e chiami tu le manovre: Spazio = issa/ammaina il gennaker. Il prodiere esegue (più in fretta se l'intesa è alta).",
   "menu.partnerStats": ({
     chemistry,
     technique,
@@ -104,7 +172,7 @@ export const italian = {
   "controls.table.action": "Azione",
   "controls.table.keyboard": "Tastiera",
   "controls.table.gamepad": "Gamepad",
-  "controls.table.crew420": "420 da prodiere",
+  "controls.table.crew420": "Da prodiere (420, 29er, 49er)",
   "controls.pad.leftStick": "Stick sinistro",
   // Actions, in the controls table (and the short key list of the main menu).
   "controls.action.fineTiller": "Movimento fine della barra",
@@ -117,9 +185,9 @@ export const italian = {
   "controls.action.pause": "Pausa",
   "controls.action.restart": "Ricomincia",
   "controls.action.crewWeight": "Peso dentro / fuori (fino al trapezio)",
-  "controls.action.crewSheet": "Cazza / lasca fiocco o spi",
+  "controls.action.crewSheet": "Cazza / lasca fiocco, spi o gennaker",
   "controls.action.switchSide": "Cambio lato dopo virata o strambata",
-  "controls.action.spinnaker": `Issa / ammaina lo spi (anche "Barca completa")`,
+  "controls.action.spinnaker": `Issa / ammaina spi o gennaker (anche "Barca completa")`,
   "controls.action.menus": "Audio · Comandi · Menu",
   "controls.reset": "Ripristina predefiniti",
   "controls.done": "Fatto",
@@ -449,14 +517,28 @@ export const italian = {
   "career.summary.places": "Posizioni nelle regate",
   "career.summary.rivals": "Contro i tuoi rivali",
   "career.summary.outgrown": ({ kg }: { kg: number }) =>
-    `Con ${kg} kg stai crescendo oltre il peso ideale dell'Optimist (circa 35-50 kg): il 420 ti aspetta.`,
+    `Con ${kg} kg stai crescendo oltre il peso ideale dell'Optimist (circa 35-50 kg): una barca più grande ti aspetta.`,
   "career.summary.next": "Prossima stagione",
   "career.next.title": ({ season }: { season: number }) =>
     `Stagione ${season}: come prosegui?`,
   "career.next.help":
-    "Resti in Optimist o passi al 420, in due con un compagno che hai incontrato in regata?",
-  "career.next.stay": "Resta in Optimist",
-  "career.next.move": "Passa al 420",
+    "Scegli la classe per la prossima stagione, tra quelle che la tua età consente. In due, scegli un compagno che hai incontrato in regata.",
+  "career.next.classes": "Classe",
+  "career.next.current": "In corso",
+  "career.next.single": "In singolo",
+  "career.next.rig": ({
+    from,
+    to,
+    kg,
+    hint,
+  }: {
+    from: number;
+    to: number;
+    kg: number;
+    hint: string;
+  }) => `Peso ideale ${from}-${to} kg · tu ${kg} kg · ${hint}`,
+  "career.next.pairClass": ({ from, to }: { from: number; to: number }) =>
+    `In due · equipaggio ideale ${from}-${to} kg`,
   "career.next.partner":
     "Scegli il tuo compagno tra i velisti che hai incontrato. L'intesa cresce con le stagioni passate a regatare insieme.",
   "career.next.chemistry": ({
@@ -479,6 +561,10 @@ export const italian = {
     "Il partner timona. Tu: trascina la barra della vela per il fiocco (o lo spi) e quella in alto per il peso dentro/fuori fino al trapezio; tocca Cambio lato dopo virate e strambate e Spi per issare/ammainare. Ascolta le sue chiamate.",
   "menu.roleHelp.fullBoat.touch":
     "Timone e randa, e chiami tu le manovre: tocca Spi per issare/ammainare lo spi. Il prodiere esegue (più in fretta se l'intesa è alta).",
+  "menu.roleHelp.crewSkiff.touch":
+    "Il partner timona. Tu: trascina la barra della vela per il fiocco (o il gennaker) e quella in alto per il peso dentro/fuori fino al trapezio; tocca Cambio lato dopo virate e strambate e Spi per issare/ammainare il gennaker. Ascolta le sue chiamate.",
+  "menu.roleHelp.fullBoatSkiff.touch":
+    "Timone e randa, e chiami tu le manovre: tocca Spi per issare/ammainare il gennaker. Il prodiere esegue (più in fretta se l'intesa è alta).",
   "pause.restartHint.touch": "Tocca Ricomincia per rifare la prova",
   "results.hint.touch": "Tocca Altra prova o Menu",
   "hud.hint.touch": "Barra a sinistra, scotta a destra: usa i due pollici",

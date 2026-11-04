@@ -77,13 +77,19 @@ export class RaceSession {
       meanDirDeg: 0,
       meanSpeedKn: opts.windKn ?? 11,
     });
-    const course = isTwoPerson(cls)
+    const course = cls.course
       ? makeWindwardLeeward(this.wind.meanDir, {
-          beat: 125,
-          lineHalf: fleet.lineHalf ?? 34,
-          run: 50,
+          beat: cls.course.beat,
+          lineHalf: fleet.lineHalf ?? cls.course.lineHalf,
+          run: cls.course.run,
         })
-      : makeWindwardLeeward(this.wind.meanDir, { lineHalf: fleet.lineHalf });
+      : isTwoPerson(cls)
+        ? makeWindwardLeeward(this.wind.meanDir, {
+            beat: 125,
+            lineHalf: fleet.lineHalf ?? 34,
+            run: 50,
+          })
+        : makeWindwardLeeward(this.wind.meanDir, { lineHalf: fleet.lineHalf });
     const boats = fleet.opponents.length + (fleet.player ? 1 : 0);
     this.race = new Race(course, opts.countdown ?? 45);
 
@@ -154,7 +160,11 @@ export class RaceSession {
     return this.acc / FIXED_DT;
   }
 
+  /** Physics steps taken so far: 0 until the first, before which the boats have no sail or weight telemetry. */
+  steps = 0;
+
   step(dt: number) {
+    this.steps++;
     this.wind.update(dt);
     this.ais.forEach((ai, i) => {
       const c = ai.update(dt, this.wind);

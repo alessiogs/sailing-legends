@@ -1,6 +1,7 @@
 import { DEFAULT_CONTROLS } from "../core/ControlSettings";
 import type { Input } from "../core/Input";
 import { defaultAutoHike } from "../game/PlayerControls";
+import { RIG_IDEAL_KG } from "../career/Weight";
 import type {
   CareerResults,
   GameController,
@@ -10,7 +11,13 @@ import type {
 import { LANGUAGES, t, type Language, type MessageKey } from "../i18n";
 import type { Racer } from "../race/Race";
 import { CREW, FULL_BOAT, HELM, type PlayerChoice } from "../race/PlayerChoice";
-import { CLASSES, isClassId, isTwoPerson } from "../sailing/BoatClass";
+import {
+  CLASSES,
+  ILCA_RIGS,
+  isClassId,
+  isTwoPerson,
+  type IlcaRig,
+} from "../sailing/BoatClass";
 import { crewChemistry, RIVALS, rivalById } from "../sailors/Sailors";
 import { CareerScreen, type CareerView } from "./CareerScreen";
 import { h } from "./dom";
@@ -22,10 +29,25 @@ const buttons = (selector: string) =>
 
 /** The three Role buttons (`data-v`), each a Role and Control mode, with its help text. */
 const ROLE_OPTIONS = {
-  helm: { choice: HELM, help: "menu.roleHelp.helm" },
-  crew: { choice: CREW, help: "menu.roleHelp.crew" },
-  fullBoat: { choice: FULL_BOAT, help: "menu.roleHelp.fullBoat" },
-} as const satisfies Record<string, { choice: PlayerChoice; help: MessageKey }>;
+  helm: {
+    choice: HELM,
+    help: "menu.roleHelp.helm",
+    skiffHelp: "menu.roleHelp.helmSkiff",
+  },
+  crew: {
+    choice: CREW,
+    help: "menu.roleHelp.crew",
+    skiffHelp: "menu.roleHelp.crewSkiff",
+  },
+  fullBoat: {
+    choice: FULL_BOAT,
+    help: "menu.roleHelp.fullBoat",
+    skiffHelp: "menu.roleHelp.fullBoatSkiff",
+  },
+} as const satisfies Record<
+  string,
+  { choice: PlayerChoice; help: MessageKey; skiffHelp: MessageKey }
+>;
 type RoleOption = keyof typeof ROLE_OPTIONS;
 const roleOption = (c: PlayerChoice): RoleOption =>
   c.role === "crew" ? "crew" : c.control === "fullBoat" ? "fullBoat" : "helm";
@@ -136,6 +158,8 @@ export class Menus implements Screens {
 
   /** True once the player has set Auto-hike themselves (the box or G); until then a Role click sets its default. */
   private autoHikeSet = false;
+  /** The ILCA rig the rig picker is on (used when the ILCA button is pressed). */
+  private rig: IlcaRig = 6;
 
   autoHikeChosen() {
     return this.autoHikeSet ? this.el.autoHike.checked : null;
@@ -362,7 +386,19 @@ export class Menus implements Screens {
     for (const b of buttons("#class-opt button")) {
       b.addEventListener("click", () => {
         const id = b.dataset.v;
-        game.boatClass = isClassId(id) ? CLASSES[id] : CLASSES.optimist;
+        game.boatClass =
+          id === "ilca"
+            ? ILCA_RIGS[this.rig]
+            : isClassId(id)
+              ? CLASSES[id]
+              : CLASSES.optimist;
+        this.syncBoatMenu();
+      });
+    }
+    for (const b of buttons("#rig-opt button")) {
+      b.addEventListener("click", () => {
+        this.rig = Number(b.dataset.v) as IlcaRig;
+        game.boatClass = ILCA_RIGS[this.rig];
         this.syncBoatMenu();
       });
     }
@@ -388,13 +424,33 @@ export class Menus implements Screens {
     for (const o of buttons("#role-opt button"))
       o.classList.toggle("on", o.dataset.v === roleOption(choice));
     $("pair-block").classList.toggle("hidden", !two);
+    const ilca = boatClass.id === "ilca";
+    for (const o of buttons("#rig-opt button"))
+      o.classList.toggle("on", Number(o.dataset.v) === boatClass.rig);
+    $("rig-block").classList.toggle("hidden", !ilca);
+    $("rig-help").textContent = ilca
+      ? t("menu.rigHint", {
+          kg: boatClass.sailorKg.helm,
+          from: RIG_IDEAL_KG[boatClass.rig!].min,
+          to: RIG_IDEAL_KG[boatClass.rig!].max,
+        })
+      : "";
     $("lede-class").textContent = two
-      ? t("menu.lede.twoPerson")
-      : t("menu.lede.single");
+      ? t(
+          boatClass.spinnaker?.gennaker
+            ? "menu.lede.skiff"
+            : "menu.lede.twoPerson",
+        )
+      : ilca
+        ? t("menu.lede.ilca")
+        : t("menu.lede.single");
     $("version-chip").textContent = t("menu.versionChip", {
       boatClass: boatClass.name.toUpperCase(),
     });
-    $("role-help").textContent = t(ROLE_OPTIONS[roleOption(choice)].help);
+    const roleHelp = ROLE_OPTIONS[roleOption(choice)];
+    $("role-help").textContent = t(
+      boatClass.spinnaker?.gennaker ? roleHelp.skiffHelp : roleHelp.help,
+    );
     $("partner-opt").replaceChildren(
       ...RIVALS.map((r) => {
         const c = crewChemistry(r);

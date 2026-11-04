@@ -1,6 +1,6 @@
 /**
  * Career simulator: a stand-in AI player sails whole Seasons through the real Career rules and prints how it fares.
- * Run with `npm run career-sim` (flags: `--skills=0.45,0.6,0.75 --seasons=6 --seed=1`). Not a test.
+ * Run with `npm run career-sim` (flags: `--skills=0.45,0.6,0.75 --seasons=6 --seed=1 --age=10 --plan=optimist,optimist,optimist,420`; the plan lists each Season's class: optimist, 420, ilca4/6/7, 29er, 49er). Not a test.
  *
  * The stand-in at skill `s` is a Racing AI Helm with all four attributes = `s` steering the player's boat; in the
  * 420 the Partner (Giulia) trims as the Crew. Seasons 1-3 are the Optimist, then the 420 as Helm with Giulia. The fleet,
@@ -19,7 +19,12 @@ import {
   recordRace,
 } from "../src/career/RecordRace";
 import { scoreRegatta } from "../src/career/Scoring";
-import { startNextSeason, type SeasonChoice } from "../src/career/SeasonClose";
+import { boatClassOf, pathOf } from "../src/career/Classes";
+import {
+  partnerCandidates,
+  startNextSeason,
+  type SeasonChoice,
+} from "../src/career/SeasonClose";
 import { seasonSummary } from "../src/career/Standings";
 import { RacingAI } from "../src/ai/RacingAI";
 import { startSlot } from "../src/race/Fleet";
@@ -31,6 +36,8 @@ import { RIVALS, type SailorProfile } from "../src/sailors/Sailors";
 /** A race still running after this many simulated seconds is cut off (the boats left on the water are DNF). */
 const MAX_RACE_S = 900;
 const OPTIMIST_SEASONS = 3;
+const PLAN_USAGE =
+  "--plan=optimist,optimist,optimist,420,29er,29er,49er  (the class of each Season from Season 1 on; the last one repeats)";
 const PARTNER_ID = "giulia";
 const LEVEL_TAG = {
   club: "cl",
@@ -45,7 +52,44 @@ function arg(name: string, fallback: string): string {
 }
 const skills = arg("skills", "0.45,0.6,0.75").split(",").map(Number);
 const seasons = Number(arg("seasons", "6"));
+/** The class of each Season: Optimist for three Seasons, then the 420, unless `--plan` says otherwise. */
+const plan = arg(
+  "plan",
+  Array.from({ length: OPTIMIST_SEASONS }, () => "optimist")
+    .concat("420")
+    .join(","),
+).split(",");
+const PLAN_CLASSES = [
+  "optimist",
+  "420",
+  "ilca4",
+  "ilca6",
+  "ilca7",
+  "29er",
+  "49er",
+];
+if (plan.some((c) => !PLAN_CLASSES.includes(c)))
+  throw new Error(
+    `Usage: career-sim ${PLAN_USAGE}; classes: ${PLAN_CLASSES.join(", ")}`,
+  );
+
+/** The end-of-Season choice for a plan entry: Giulia as Partner if raced against (else the first candidate), Helm. */
+function planChoice(state: CareerState, entry: string): SeasonChoice {
+  if (entry === "optimist") return { classId: "optimist" };
+  if (entry.startsWith("ilca"))
+    return { classId: "ilca", rig: Number(entry.slice(4)) as 4 | 6 | 7 };
+  const candidates = partnerCandidates(state);
+  const partnerId = candidates.includes(PARTNER_ID)
+    ? PARTNER_ID
+    : candidates[0];
+  return {
+    classId: entry as "420" | "29er" | "49er",
+    partnerId,
+    choice: state.partnerId === null ? HELM : state.choice,
+  };
+}
 const seed = Number(arg("seed", "1"));
+const startingAge = Number(arg("age", "10"));
 if (
   skills.some((s) => !(s >= 0 && s <= 1)) ||
   !Number.isInteger(seasons) ||
@@ -103,11 +147,13 @@ const f2 = (v: number) => v.toFixed(2);
 const pad = (s: string, n: number) => s.padEnd(n);
 
 for (const skill of skills) {
-  console.log(`\nStand-in skill ${skill} (seed ${seed}, start age 10)`);
   console.log(
-    `${pad("S", 2)} ${pad("class", 4)} ${pad("regattas (place/fleet by level)", 44)} ${pad("season", 6)} ${pad("rivals luca/giulia/marco", 25)} chem`,
+    `\nStand-in skill ${skill} (seed ${seed}, start age ${startingAge})`,
   );
-  let state = startCareer({ seed });
+  console.log(
+    `${pad("S", 2)} ${pad("class", 8)} ${pad("regattas (place/fleet by level)", 44)} ${pad("season", 6)} ${pad("rivals luca/giulia/marco", 25)} chem`,
+  );
+  let state = startCareer({ seed, startingAge });
   for (let n = 1; n <= seasons; n++) {
     const calendar = seasonCalendar(state.classId);
     const rivalRatings = RIVALS.map((r) =>
@@ -124,15 +170,10 @@ for (const skill of skills) {
     const chem =
       state.chemistry === null ? "-" : String(Math.round(state.chemistry));
     console.log(
-      `${pad(String(n), 2)} ${pad(state.classId === "420" ? "420" : "opt", 4)} ${pad(cells.join(", "), 44)} ${pad(`${summary.player.place}/${summary.standings.length}`, 6)} ${pad(rivalRatings, 25)} ${chem}`,
+      `${pad(String(n), 2)} ${pad(boatClassOf(pathOf(state)).name, 8)} ${pad(cells.join(", "), 44)} ${pad(`${summary.player.place}/${summary.standings.length}`, 6)} ${pad(rivalRatings, 25)} ${chem}`,
     );
     if (n === seasons) break;
-    const next: SeasonChoice =
-      n === OPTIMIST_SEASONS
-        ? { classId: "420", partnerId: PARTNER_ID, choice: HELM }
-        : n > OPTIMIST_SEASONS
-          ? { classId: "420", partnerId: PARTNER_ID, choice: state.choice }
-          : { classId: "optimist" };
+    const next = planChoice(state, plan[n] ?? plan[plan.length - 1]);
     state = startNextSeason(state, next);
   }
 }

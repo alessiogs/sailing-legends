@@ -33,9 +33,50 @@ export function section420(t: number): Section {
   };
 }
 
+/** The ILCA's section at `t` (0 stern to 1 bow): a long open dinghy with a wide flat deck and a pointed bow. */
+export function sectionIlca(t: number): Section {
+  const taper =
+    t > 0.55 ? Math.sqrt(Math.max(0, 1 - Math.pow((t - 0.55) / 0.45, 2))) : 1;
+  const base = 0.66 - 0.06 * Math.pow(1 - t, 3);
+  return {
+    z: -2.115 + t * 4.23,
+    wg: Math.max(0.012, base * taper),
+    yg: 0.3 + 0.1 * t * t,
+    yk: -0.1 + 0.22 * Math.pow(t, 3) + 0.03 * Math.pow(1 - t, 2),
+  };
+}
+
+/**
+ * A skiff's section at `t` (0 stern to 1 bow) for a hull `length` long and `beam` wide: a flat, wide-sterned planing hull
+ * with a long fine bow and a low flat deck.
+ */
+function skiffSection(length: number, beam: number, t: number): Section {
+  const taper =
+    t > 0.45 ? Math.sqrt(Math.max(0, 1 - Math.pow((t - 0.45) / 0.55, 2))) : 1;
+  return {
+    z: -length / 2 + t * length,
+    wg: Math.max(0.012, (beam / 2) * (0.92 + 0.08 * t) * taper),
+    yg: 0.34 + 0.1 * t * t,
+    yk: -0.1 + 0.26 * Math.pow(t, 3) + 0.02 * Math.pow(1 - t, 2),
+  };
+}
+
+/** The 29er's section at `t` (0 stern to 1 bow). */
+export function section29er(t: number): Section {
+  return skiffSection(4.45, 1.77, t);
+}
+
+/** The 49er's section at `t` (0 stern to 1 bow). */
+export function section49er(t: number): Section {
+  return skiffSection(4.9, 1.93, t);
+}
+
 const HULL = {
   optimist: { section: optimistSection, z0: -1.155, length: 2.31 },
   "420": { section: section420, z0: -2.1, length: 4.2 },
+  ilca: { section: sectionIlca, z0: -2.115, length: 4.23 },
+  "29er": { section: section29er, z0: -2.225, length: 4.45 },
+  "49er": { section: section49er, z0: -2.45, length: 4.9 },
 } as const;
 
 /** The hull section at place `z` along the boat (clamped to the hull). */
@@ -54,8 +95,12 @@ export type RigDims = {
   rudderDeg: number;
   /** The tiller extension's length. */
   extension: number;
-  /** The 420's trapeze wire top (the hounds); the Optimist has none. */
+  /** The trapeze wire top (the hounds) of the 420 and the skiffs; the Optimist and the ILCA have none. */
   hounds: V3 | null;
+  /** The skiff's masthead (the burgee) and the bowsprit's length from the bow; the other classes have none. */
+  skiff?: { mastHeight: number; sprit: number };
+  /** Half the width of the 49er's racks (wings), where the sailors on the trapeze put their feet; absent without racks. */
+  wing?: number;
   /** The mast's place along the boat. */
   mastZ: number;
 };
@@ -78,6 +123,36 @@ export const RIG: Record<ClassId, RigDims> = {
     extension: 0.9,
     hounds: { x: 0, y: 5.0, z: 0.45 },
     mastZ: 0.45,
+  },
+  // Tiller box at (0, 0.2, 0.5) in the rudder frame, 1.0 long; the sleeve mast stands well forward.
+  ilca: {
+    rudderPivot: { x: 0, y: 0.25, z: -2.12 },
+    tillerTip: { x: 0, y: 0.2, z: 1.0 },
+    rudderDeg: 28,
+    extension: 0.9,
+    hounds: null,
+    mastZ: 0.95,
+  },
+  // The 29er: a 6.2 m mast well forward, the Crew's feet on the gunwale.
+  "29er": {
+    rudderPivot: { x: 0, y: 0.3, z: -2.25 },
+    tillerTip: { x: 0, y: 0.25, z: 1.2 },
+    rudderDeg: 28,
+    extension: 1.1,
+    hounds: { x: 0, y: 5.2, z: 0.6 },
+    mastZ: 0.6,
+    skiff: { mastHeight: 6.2, sprit: 0.9 },
+  },
+  // The 49er: a 8.6 m mast, racks 1.4 m out each side and a long tiller extension for the Helm out on the trapeze.
+  "49er": {
+    rudderPivot: { x: 0, y: 0.3, z: -2.5 },
+    tillerTip: { x: 0, y: 0.35, z: 1.4 },
+    rudderDeg: 28,
+    extension: 1.7,
+    hounds: { x: 0, y: 7.2, z: 0.75 },
+    mastZ: 0.75,
+    skiff: { mastHeight: 8.6, sprit: 1.3 },
+    wing: 1.4,
   },
 };
 

@@ -1,11 +1,11 @@
-# Sailing Legends — Prototype 0.6 (Optimist and 420)
+# Sailing Legends — Prototype 0.7 (Optimist, 420, ILCA, 29er and 49er)
 
 **Play:** https://alessiogs.github.io/sailing-legends/ (test build: `/dev/`) · Concept: [docs/CONCEPT.md](docs/CONCEPT.md) · Roadmap: [docs/ROADMAP.md](docs/ROADMAP.md) · Developer guide: [AGENTS.md](AGENTS.md)
 
-A browser sailing game in Babylon.js + TypeScript + Vite, growing into a FIFA-style career. Sail an Optimist or a
-420 against AI Rivals with simplified but "real" physics (apparent wind, the no-go zone, lift and drag, inertia,
+A browser sailing game in Babylon.js + TypeScript + Vite, growing into a FIFA-style career. Sail an Optimist, a
+420, an ILCA, a 29er or a 49er against AI Rivals with simplified but "real" physics (apparent wind, the no-go zone, lift and drag, inertia,
 leeway, tacks and gybes), the racing rules and a **Career**: Seasons of Regattas, persistent Rivals who grow up
-with you, and the move from the Optimist to the 420 with a Partner of your choice.
+with you, and moves between classes (the ILCA and the skiffs included) with a Partner of your choice.
 
 Plays on desktop (keyboard or gamepad) and on phones, portrait or landscape (touch controls). The game is in
 Italian or English (picker in the main menu); labels quoted below are the Italian ones, with their meaning.
@@ -23,14 +23,17 @@ Requirements: Node.js 20+, a desktop browser with WebGL 2.
 ## Tests and publishing
 
 - `npm test` (Vitest, no browser):
-  - smoke races: AI-only Optimist and 420 races in light, medium and strong wind; every boat finishes and every
+  - smoke races: AI-only races in every class in light, medium and strong wind; every boat finishes and every
     penalty is served;
-  - golden races: nine fixed-seed races (six AI-only, three 420 races with a player boat as Helm, as Crew and in
-    Full Boat Control) must match the snapshot `tests/golden/races.json` exactly; `npm run golden:update`
-    rewrites it, only when behaviour is meant to change;
+  - golden races: twelve fixed-seed races (six AI-only Optimist and 420 races, three 420 races with a player boat
+    as Helm, as Crew and in Full Boat Control, and one AI-only race each in the ILCA 6, 29er and 49er at 11 kn) must
+    match the snapshot `tests/golden/races.json` exactly; `npm run golden:update` rewrites it, only when behaviour
+    is meant to change;
   - unit tests: rule verdicts and penalty turns, translation catalogs, race event wording, the AI's parts, the
     HUD panel, the player's controls and more (the full list is in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)).
 - `npm run polar`: speed table (polar) per class, after any physics change.
+- `npm run career-sim`: a stand-in player sails whole Career Seasons (choose the class of each Season) and prints
+  places and Rival ratings; a tuning tool, not a test.
 - Every push to `main` or `develop` runs the GitHub Action `.github/workflows/deploy.yml`: it installs, runs the
   tests, type-checks and builds both branches, and publishes them together to GitHub Pages: `main` at
   https://alessiogs.github.io/sailing-legends/, `develop` (the test build) under
@@ -38,21 +41,21 @@ Requirements: Node.js 20+, a desktop browser with WebGL 2.
 
 ## Controls
 
-| Keyboard                    | Gamepad    | Touch                                          | Action                                      |
-| --------------------------- | ---------- | ---------------------------------------------- | ------------------------------------------- |
-| A / D, ← / → (Shift = fine) | Left stick | Drag the tiller bar (bottom)                   | Tiller; as Crew, your weight                |
-| Q / Z (Shift = fine)        | RB / LB    | Drag the hike slider (only with Auto-hike off) | Hike out / in: your weight, as Helm or Crew |
-| W / ↑ · S / ↓               | RT · LT    | Drag the sheet slider (right edge)             | Sheet in · ease                             |
-| T                           | X          | Auto-trim button                               | Auto-trim (an Assist)                       |
-| G                           | —          | —                                              | Auto-hike (an Assist)                       |
-| Space                       | —          | Spi button                                     | Hoist / drop the spinnaker (420)            |
-| E                           | —          | Switch button                                  | Switch sides (420 Crew)                     |
-| C                           | Y          | Camera button                                  | Camera: chase / free / tactical             |
-| P / Esc                     | Start      | Pause button                                   | Pause                                       |
-| R                           | Back       | Pause → Restart                                | New race (Quick race only)                  |
-| M / H                       | —          | —                                              | Menu                                        |
-| K                           | —          | —                                              | Commands menu ("Comandi")                   |
-| V                           | —          | —                                              | Audio on/off                                |
+| Keyboard                    | Gamepad    | Touch                                          | Action                                                                     |
+| --------------------------- | ---------- | ---------------------------------------------- | -------------------------------------------------------------------------- |
+| A / D, ← / → (Shift = fine) | Left stick | Drag the tiller bar (bottom)                   | Tiller; as Crew, your weight                                               |
+| Q / Z (Shift = fine)        | RB / LB    | Drag the hike slider (only with Auto-hike off) | Hike out / in: your weight, as Helm or Crew (49er Helm: up to the trapeze) |
+| W / ↑ · S / ↓               | RT · LT    | Drag the sheet slider (right edge)             | Sheet in · ease                                                            |
+| T                           | X          | Auto-trim button                               | Auto-trim (an Assist)                                                      |
+| G                           | —          | —                                              | Auto-hike (an Assist)                                                      |
+| Space                       | —          | Spi button                                     | Hoist / drop the spinnaker or gennaker                                     |
+| E                           | —          | Switch button                                  | Switch sides (420 and skiff Crew)                                          |
+| C                           | Y          | Camera button                                  | Camera: chase / free / tactical                                            |
+| P / Esc                     | Start      | Pause button                                   | Pause                                                                      |
+| R                           | Back       | Pause → Restart                                | New race (Quick race only)                                                 |
+| M / H                       | —          | —                                              | Menu                                                                       |
+| K                           | —          | —                                              | Commands menu ("Comandi")                                                  |
+| V                           | —          | —                                              | Audio on/off                                                               |
 
 **Commands menu (K, or from the main menu or the pause screen):** _Muovi la barra_ ("move the tiller", default and
 realistic: → moves the tiller right and the boat turns left) or _Direzione della barca_ ("boat direction": → turns
@@ -60,30 +63,62 @@ the boat right); the tiller springs back to the centre or stays put; tiller and 
 
 ## Playing
 
-- **Quick race:** pick the boat (Optimist or 420), the wind and, for the 420, your Role (_Timoniere_ = Helm,
-  _Prodiere_ = Crew, _Barca completa_ = Full Boat Control) and your Partner. Auto-hike (_Peso automatico_) sits beside
+- **Quick race:** pick the boat (Optimist, 420, ILCA, 29er or 49er; the ILCA with its rig, 4, 6 or 7), the wind and,
+  for a Pair, your Role (_Timoniere_ = Helm, _Prodiere_ = Crew, _Barca completa_ = Full Boat Control) and your Partner. Auto-hike (_Peso automatico_) sits beside
   Auto-trim: on by default for the Helm and Full Boat Control, off for the Crew.
+- **The boats:**
+  - **Optimist:** one sailor, the first boat: hike to hold it flat (Auto-hike helps you learn).
+  - **420:** a Pair (Helm and Crew) with mainsail, jib and spinnaker; the Crew's weight goes out on the trapeze.
+  - **ILCA:** one sailor, one sail, three rigs (4, 6, 7). Pick the rig that suits your weight (the Career shows
+    a light, ideal or heavy hint). Hike hard: the Helm's hiking is what keeps the boat flat, and it planes on a
+    breezy reach.
+  - **29er:** a Pair with mainsail, jib and a **gennaker** (asymmetric, flown from a bowsprit): Space or Spi hoists
+    and drops it, Auto-trim trims it. The Crew is on the trapeze and the Helm hikes. The gennaker is weak dead
+    downwind, so sail the run at an angle: the best course is about 140–150° off the wind, gybing through about 140°.
+  - **49er:** the fastest boat: both sailors on the trapeze, a bigger gennaker, and the Helm's weight control runs
+    in / hiking / trapeze like the Crew's. It planes earliest.
 - **Career:** choose your starting age (8–12) and your build (light, average or heavy: lighter is quicker in light
   air, heavier in a breeze). A **Season** is one year: four **Regattas** (club, regional, national,
   international) of three races ("prove") each, scored low-point with a Discard from the third Regatta. Fleets grow
   from 6 to 12 boats with the level. After each Regatta you see the standings and how you did against Luca, Giulia
-  and Marco; after the Season, a summary. Then stay in the Optimist or move to the 420 and pick a Partner from the
-  sailors you raced against; Crew Chemistry ("Intesa") rises and falls with your results. Everyone is a year older
-  each Season and the Rivals improve. The Career is saved in the browser after every race.
+  and Marco; after the Season, a summary. Then choose the **class** for the next Season: stay in the Optimist, or
+  move to the 420, the ILCA (its rig suggested by your weight), the 29er or the 49er. The age decides what is on
+  offer: the ILCA from 11, the 29er from 12 to 19, the 49er from 18, the 420 up to 19 and the Optimist up to its
+  Age limit (15; not enforced yet). A move can be sideways or back, one class per Season, with its own standings.
+  A Pair class takes a Partner from the sailors you raced against, and Crew Chemistry ("Intesa") rises and falls
+  with your results and carries across classes. The Rivals choose their own class paths by age and weight (a heavy
+  one may sail the ILCA 7 or the 49er, a light one the ILCA 4). ILCA Regattas are sailed one rig at a time.
+  Everyone is a year older each Season and the Rivals improve. The Career is saved in the browser after every race.
 - **The race:** windward-leeward course: start (45 s procedure) → **Mark 1** upwind → **Mark 2** downwind →
   **finish** upwind, marks to port. Over the line at the gun you are **OCS** and must return. Darker, rippled
   patches are puffs. Right-of-way rules 10, 11, 12, 13 and 31 are judged on contact, with penalty turns; a penalty
   still owed at the finish means DSQ.
-- **Weight and hiking:** a 420 Pair's weight and the Helm's hike decide whether the boat stays flat. Too much weight
+- **Weight and hiking:** a Pair's weight (420, 29er, 49er) and the Helm's hike decide whether the boat stays flat. Too much weight
   out in light air heels the boat to windward and slows it. Roll tacks and gybes: hiking hard on the new side within
-  about a second of the boom crossing loses less speed (a small burst in very light air). The 420 **planes** on a
-  breezy reach or run (a _Planing_ tag); the Optimist gains a little speed downwind with the bow up. Fore-aft weight
+  about a second of the boom crossing loses less speed (a small burst in very light air). The 420, the ILCA and the
+  skiffs **plane** on a breezy reach or run (a _Planing_ tag); the Optimist gains a little speed downwind with the
+  bow up. The gennaker is hoisted, trimmed and gybed like the spinnaker. Fore-aft weight
   is placed automatically. Every sailor's body weight comes from age and build.
 
 ## Changelog
 
 <details>
-<summary><b>0.6</b> — new HUD, body weight and planing (in progress)</summary>
+<summary><b>0.7</b> — new boats</summary>
+
+- **ILCA** (one hull, rigs 4, 6 and 7 chosen by weight), **29er** and **49er** (skiffs with a gennaker; the 49er with
+  both sailors on the trapeze). The Helm's weight, Auto-hike and the planing model work in every class.
+- **Gennaker:** hoisted, trimmed and gybed like the spinnaker (Space / Spi). It works from a broad reach and is weak
+  dead downwind, so skiffs sail the run at an angle and gybe. Skiffs plane early.
+- **AI skiffs** hoist, trim, gybe and drop the gennaker by technique and sail the run at the best VMG angle; AI ILCA
+  sailors hike by technique.
+- **Career class moves:** the choice at the end of a Season by age, with the ILCA rig and the Pair's weight hint;
+  one class per Season with its own standings; Rivals on their own class paths; ILCA Regattas one rig at a time.
+  Saves from before 0.7 still load.
+- Each class has its own course size, sail numbers and class symbol; the new text is in Italian and English.
+</details>
+
+<details>
+<summary><b>0.6</b> — new HUD, body weight and planing</summary>
 
 - **0.6c** — Helm hike control (Q/Z, RB/LB, touch slider) with the Auto-hike Assist (G); body weight from age and
   Build, chosen when starting a Career; roll tacks and gybes; 420 planing and Optimist bow-up downwind; a hike gauge,
@@ -182,11 +217,12 @@ src/
 ├── sailing/     BoatClass.ts (class data), BoatPhysics.ts, Wind.ts, BoatStates.ts
 ├── race/        Course.ts, Race.ts, Rules.ts, RaceSession.ts (fixed-step simulation, no graphics),
 │                Fleet.ts, Collisions.ts, PlayerChoice.ts (Role + Control mode)
-├── ai/          RacingAI.ts (the Helm) with StartPlanning, BeatTactics, TackStateMachine, Avoidance;
+├── ai/          RacingAI.ts (the Helm) with StartPlanning, BeatTactics, RunTactics, TackStateMachine, Avoidance;
 │                CrewAI.ts (the Crew)
 ├── sailors/     Sailors.ts (Rivals, sailor profiles, Crew Chemistry)
 ├── career/      the Career: calendar, scoring, save, sailor pool, growth, Chemistry (pure, no graphics)
-├── world/       Ocean.ts, Waves.ts, the boat views (BoatViewBase, BoatView, Boat420View), sails, CourseView.ts
+├── world/       Ocean.ts, Waves.ts, the boat views (BoatViewBase, BoatView, Boat420View, BoatIlcaView, BoatSkiffView),
+│                sails and the gennaker, CourseView.ts
 ├── i18n/        translation catalogs (it.ts: Italian, en.ts: English) and the typed lookup
 ├── ui/          Hud.ts, hudPanel.ts, Menus.ts, CareerScreen.ts, standings, touch controls, wording, boat colours
 ├── game/        GameController.ts (game state and modes), PlayerControls, RaceFeedback, CameraRig, Preferences
@@ -195,7 +231,8 @@ src/
 
 The simulation and the Career (`sailing/`, `race/`, `ai/`, `sailors/`, `career/`) doesn't depend on Babylon: it runs at a fixed 60 Hz and can
 be tested in Node without a browser. It emits data, never text: every in-game text lives in the catalogs in
-`src/i18n/`. A new class (ILCA…) starts from a new entry in `BoatClass.ts`. The full module map and the
+`src/i18n/`. A new class starts from a new entry in `BoatClass.ts` (its `ClassId`), then its boat view in `world/`,
+its catalog names and its Career and golden-race entries. The full module map and the
 conventions are in the developer guide, [AGENTS.md](AGENTS.md).
 
 ## Known limitations
@@ -205,6 +242,6 @@ conventions are in the developer guide, [AGENTS.md](AGENTS.md).
 - Simplified rules: no mark-room (rule 18), no rule 16; breaches only count if there is contact.
 - AI starts are still sometimes late; no covering tactics.
 - In light wind the AI sometimes struggles to keep clear of right-of-way boats and takes penalties.
-- Sailors are simple figures with no animation yet (0.6b). Fore-aft weight is automatic (no player control), and
-  surfing on waves waits for 0.9.
+- Fore-aft weight is automatic (no player control), surfing on waves is not modelled, and no boat capsizes.
+- The ILCA and 29er targets are estimates scaled from the 49er's class data; the skiffs' 7 kn speeds run under them.
 - `window.__game` exposes debug hooks (autopilot, fast-forward) used by the automated tests.

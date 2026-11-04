@@ -21,6 +21,9 @@ export const DECAL: Record<
 > = {
   optimist: { vSpan: 0.8, width: 1.9, height: 1.65 },
   "420": { vSpan: 0.5, width: 1.9, height: 2.6 },
+  ilca: { vSpan: 0.55, width: 2.2, height: 2.7 },
+  "29er": { vSpan: 0.5, width: 2.2, height: 2.6 },
+  "49er": { vSpan: 0.4, width: 2.6, height: 3.0 },
 };
 
 const textures = new SceneCache<Scene, StandardMaterial>();
@@ -74,6 +77,58 @@ function symbol420(
   ctx.fillRect(cx - r * 1.1, cy + r * 0.83, r * 2.2, r * 0.12);
 }
 
+/** A skiff's mark: its number in bold between two bars, with a small gennaker (a swept triangle) beside it. */
+function symbolSkiff(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  r: number,
+  ink: string,
+  label: string,
+) {
+  ctx.fillStyle = ink;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.font = `italic 900 ${Math.round(r * 1.5)}px sans-serif`;
+  ctx.fillText(label, cx - r * 0.25, cy);
+  ctx.beginPath();
+  ctx.moveTo(cx + r * 0.75, cy - r * 0.8);
+  ctx.lineTo(cx + r * 1.15, cy + r * 0.6);
+  ctx.lineTo(cx + r * 0.55, cy + r * 0.6);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillRect(cx - r * 1.1, cy - r * 0.95, r * 2.2, r * 0.12);
+  ctx.fillRect(cx - r * 1.1, cy + r * 0.83, r * 2.2, r * 0.12);
+}
+
+/** The ILCA's mark: a ring around a little sail on a mast, with the rig's number (4, 6 or 7) beneath. */
+function symbolIlca(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  r: number,
+  ink: string,
+  rig: string,
+) {
+  ctx.strokeStyle = ink;
+  ctx.fillStyle = ink;
+  ctx.lineWidth = r * 0.18;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.fillRect(cx - r * 0.04, cy - r * 0.7, r * 0.08, r * 1.0);
+  ctx.beginPath();
+  ctx.moveTo(cx + r * 0.1, cy - r * 0.7);
+  ctx.lineTo(cx + r * 0.1, cy + r * 0.3);
+  ctx.lineTo(cx + r * 0.6, cy + r * 0.3);
+  ctx.closePath();
+  ctx.fill();
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.font = `900 ${Math.round(r * 0.5)}px sans-serif`;
+  ctx.fillText(rig, cx - r * 0.3, cy + r * 0.55);
+}
+
 /**
  * The sail material of one boat: the sail's colour with the symbol and `number` ("ITA 4821") on it, culled from
  * behind (a sail's two faces are two meshes). Made once per scene for each class, number and colour.
@@ -83,10 +138,12 @@ export function sailNumberMaterial(
   classId: ClassId,
   number: string,
   sail: Color3,
+  /** The ILCA's rig ("4", "6" or "7"), shown in its mark. */
+  rig = "",
 ): StandardMaterial {
   return textures.get(
     scene,
-    `${classId} ${number} ${sail.toHexString()}`,
+    `${classId} ${rig} ${number} ${sail.toHexString()}`,
     () => {
       const tex = new DynamicTexture(
         `sailNumber-${number}`,
@@ -109,13 +166,12 @@ export function sailNumberMaterial(
       const digit = classId === "optimist" ? 0.27 : 0.36; // digit height (m)
       const symbolR = (classId === "optimist" ? 0.2 : 0.22) * px;
       const symbolAt = classId === "optimist" ? 1.2 : 1.65;
-      (classId === "optimist" ? optimistSymbol : symbol420)(
-        ctx,
-        SIZE / 2,
-        y(symbolAt),
-        symbolR,
-        ink,
-      );
+      const at = [SIZE / 2, y(symbolAt), symbolR] as const;
+      if (classId === "optimist") optimistSymbol(ctx, ...at, ink);
+      else if (classId === "ilca") symbolIlca(ctx, ...at, ink, rig);
+      else if (classId === "29er" || classId === "49er")
+        symbolSkiff(ctx, ...at, ink, classId.slice(0, 2));
+      else symbol420(ctx, ...at, ink);
       // "ITA" small above the figures.
       const [nation, figures] = number.split(" ");
       ctx.fillStyle = ink;
@@ -133,7 +189,10 @@ export function sailNumberMaterial(
       ctx.restore();
       tex.update(true);
 
-      const m = new StandardMaterial(`sailNumber-${classId}-${number}`, scene);
+      const m = new StandardMaterial(
+        `sailNumber-${classId}${rig}-${number}`,
+        scene,
+      );
       m.diffuseTexture = tex;
       m.diffuseColor = Color3.White();
       m.specularColor = new Color3(0.05, 0.05, 0.05);

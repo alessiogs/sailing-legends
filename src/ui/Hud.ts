@@ -1,7 +1,6 @@
 import { angleDiff, bearingTo, DEG, KNOTS } from "../core/math";
 import { distanceTo, legTarget, type Course } from "../race/Course";
 import type { Race, Racer } from "../race/Race";
-import { isTwoPerson } from "../sailing/BoatClass";
 import type { Telemetry } from "../sailing/BoatPhysics";
 import { WindField } from "../sailing/Wind";
 import { t } from "../i18n";
@@ -590,11 +589,7 @@ export class Hud {
         this.el.tags.appendChild(el);
         this.tagEls.set(r.id, el);
       }
-      const p = project(
-        r.sim.state.x,
-        isTwoPerson(r.sim.cls) ? 7.2 : 3.6,
-        r.sim.state.z,
-      );
+      const p = project(r.sim.state.x, r.sim.cls.view.tag, r.sim.state.z);
       if (!p) {
         el.style.display = "none";
         continue;
