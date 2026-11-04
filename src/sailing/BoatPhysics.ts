@@ -234,9 +234,14 @@ export function sailForce(
   };
 }
 
-/** The spinnaker only flies with the wind well aft; closer to the wind it collapses and just drags. */
-function spiEffect(awa: number) {
+/**
+ * The spinnaker only flies with the wind well aft; closer to the wind it collapses and just drags. A gennaker flies earlier (from
+ * a broad reach of the apparent wind) and keeps only a quarter of its power with the wind dead astern.
+ */
+function spiEffect(awa: number, gennaker = false) {
   const a = Math.abs(awa) / DEG;
+  if (gennaker)
+    return clamp((a - 45) / 25, 0, 1) * (1 - 0.75 * clamp((a - 95) / 85, 0, 1));
   return clamp((a - 55) / 30, 0, 1);
 }
 
@@ -286,8 +291,9 @@ export function optimalSheetFor(
   aws: number,
   cap: number,
   isSpi = false,
+  gennaker = false,
 ): number {
-  const effect = isSpi ? spiEffect(awa) : 1;
+  const effect = isSpi ? spiEffect(awa, gennaker) : 1;
   if (effect === 0) return 0;
   const side = awa >= 0 ? -1 : 1;
   const absAwa = Math.abs(awa);
@@ -596,9 +602,12 @@ export class BoatSim {
         s.spiSide,
         s.spiHoist,
       );
-      const e = spiEffect(awa) * (s.spiSide === leeward ? 1 : 0.2);
+      const gen = cls.spinnaker.gennaker === true;
+      const e = spiEffect(awa, gen) * (s.spiSide === leeward ? 1 : 0.2);
       const q = 0.5 * AIR * aws * aws * cls.spinnaker.area * s.spiHoist;
-      drive += spi.drive * e - (1 - e) * 0.25 * q;
+      // A gennaker running off the wind doesn't collapse: it only loses power, with no drag penalty.
+      const collapse = gen && Math.abs(awa) > 90 * DEG ? 0 : 1 - e;
+      drive += spi.drive * e - collapse * 0.25 * q;
       side += spi.side * (0.5 + 0.5 * e);
     }
     // Hull, rig and sailor windage always push downwind.
@@ -801,8 +810,12 @@ export class BoatSim {
       };
     }
     if (cls.spinnaker) {
-      const opt = optimalSheetFor(cls.spinnaker, awa, aws, 1e9, true);
-      const collapsed = s.spiHoist > 0.5 && spiEffect(awa) < 0.5;
+      const gen = cls.spinnaker.gennaker === true;
+      const opt = optimalSheetFor(cls.spinnaker, awa, aws, 1e9, true, gen);
+      const collapsed =
+        s.spiHoist > 0.5 &&
+        spiEffect(awa, gen) < 0.5 &&
+        (!gen || Math.abs(awa) < 90 * DEG);
       t.spi = {
         hoist: s.spiHoist,
         angle: spi ? spi.angle : 0,
