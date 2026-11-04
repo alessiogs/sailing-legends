@@ -684,7 +684,7 @@ export class BoatSim {
     const au = Math.abs(u);
     // Fore-aft weight: forward upwind and in light air, aft on a reach or run in a breeze (planing). Once the weight is aft and the
     // boat is flat, the bow lifts (and a planing class gets onto the plane) and wave drag falls.
-    const breezy = clamp(tKn - 12, 0, 1); // 0 at 12 kn, 1 at 13 kn: nothing at 11 kn
+    const breezy = clamp(tKn - (cls.planing.onsetKn ?? 12), 0, 1); // 0 at 12 kn, 1 at 13 kn: nothing at 11 kn (unless the class starts earlier)
     const downwind =
       clamp((absTwa - 75 * DEG) / (15 * DEG), 0, 1) *
       (cls.planing.planes ? clamp((172 * DEG - absTwa) / (10 * DEG), 0, 1) : 1);

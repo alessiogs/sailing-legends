@@ -58,7 +58,7 @@ export type BoatClass = {
    * Weight aft in a breeze (12-13 kn and up) with the boat flat cuts wave drag by `waveCut` (0..1) on a reach to a run: a `planes`
    * class (the 420) gets up on the plane, one that doesn't (the Optimist) only lifts its bow.
    */
-  planing: { waveCut: number; planes: boolean };
+  planing: { waveCut: number; planes: boolean; onsetKn?: number };
   /** Lateral resistance from the centreboard, per m/s of forward speed (1/m). */
   boardGrip: number;
   /** Max rudder deflection (deg) and effective turning length (m). */
@@ -177,11 +177,13 @@ function ilca(rig: IlcaRig, area: number, kg: number): BoatClass {
       cd0: 0.06,
     },
     windage: 0.3,
-    hullDrag: 3,
-    hullSpeed: 2.5,
-    waveDrag: 220,
-    planing: { waveCut: 0.7, planes: true },
-    boardGrip: 6,
+    hullDrag: 2.5,
+    // A steep wave-drag wall just above 2 m/s pins the speed upwind (the boat can't go faster close-hauled however hard it is
+    // hiked); on a reach it only lets go by planing, which starts early (10 kn) in this light hull.
+    hullSpeed: 2.05,
+    waveDrag: 600,
+    planing: { waveCut: 0.9, planes: true, onsetKn: 9.5 },
+    boardGrip: 1.5,
     rudderMaxDeg: 32,
     turnLength: 2,
     hikeForce: Math.round(kg * 3.5),

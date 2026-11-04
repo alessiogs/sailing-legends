@@ -95,9 +95,13 @@ use neither Babylon nor browser APIs. They also run in Node.
 - **Physics** (`BoatPhysics.ts`): target speeds at 11 kn:
   - Optimist: about 2.3 kn upwind, 3.9 reaching, 3.5 running.
   - 420: about 4 kn upwind, 6.5 reaching, 6–7 with the spinnaker.
-  - ILCA 4 / 6 / 7 (speed at 45° / 90° / 150° in 11 kn, ideal sailor weight 53 / 68 / 82 kg): 4.1 / 5.9 / 5.0, 4.3 / 6.2 / 5.3
-    and 4.4 / 6.5 / 5.5 kn (about 7 and 16 kn: see `docs/research/new-boats.md` and the spec's table). A sailor lighter than the
-    rig's ideal loses drive in a breeze, so light sailors are quickest in the 4, heavy ones in the 7.
+  - ILCA 4 / 6 / 7 (ideal sailor weight 53 / 68 / 82 kg; `npm run polar` prints the table and the best downwind VMG). At 11 kn:
+    about 4.3 kn close-hauled (45°) in all three, 5.9 / 6.1 / 6.4 reaching and 4.6 / 4.8 / 5.0 downwind VMG; at 16 kn about
+    4.5 / 4.6 / 4.7 upwind, 7.2 / 7.6 / 8.0 on a planing broad reach (120°) and 5.7 / 6.0 / 6.2 VMG; at 7 kn about 3.0 / 3.2 / 3.5
+    upwind, 4.3 / 4.4 / 4.4 reaching and 3.2 / 3.3 / 3.6 VMG. The spec's table is 0.1-0.4 kn higher at 11 kn and the 7 kn
+    downwind VMG is about 0.8-0.9 kn under it. A steep wave-drag wall at about 2 m/s pins the upwind speed; the ILCA planes
+    from 9.5 kn (`planing.onsetKn`). A sailor lighter than the rig's ideal loses drive in a breeze, so light sailors are
+    quickest in the 4 and heavy ones in the 7.
   - At 16 kn the 420 planes (weight aft, flat, reach to broad reach, from 12–13 kn): about 8–9 kn reaching, 9–10 with the
     spinnaker. The Optimist gains 3–5% downwind from 12 kn with its bow up. Upwind and 11 kn do not change.
 
