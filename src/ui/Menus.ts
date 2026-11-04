@@ -29,10 +29,25 @@ const buttons = (selector: string) =>
 
 /** The three Role buttons (`data-v`), each a Role and Control mode, with its help text. */
 const ROLE_OPTIONS = {
-  helm: { choice: HELM, help: "menu.roleHelp.helm" },
-  crew: { choice: CREW, help: "menu.roleHelp.crew" },
-  fullBoat: { choice: FULL_BOAT, help: "menu.roleHelp.fullBoat" },
-} as const satisfies Record<string, { choice: PlayerChoice; help: MessageKey }>;
+  helm: {
+    choice: HELM,
+    help: "menu.roleHelp.helm",
+    skiffHelp: "menu.roleHelp.helmSkiff",
+  },
+  crew: {
+    choice: CREW,
+    help: "menu.roleHelp.crew",
+    skiffHelp: "menu.roleHelp.crewSkiff",
+  },
+  fullBoat: {
+    choice: FULL_BOAT,
+    help: "menu.roleHelp.fullBoat",
+    skiffHelp: "menu.roleHelp.fullBoatSkiff",
+  },
+} as const satisfies Record<
+  string,
+  { choice: PlayerChoice; help: MessageKey; skiffHelp: MessageKey }
+>;
 type RoleOption = keyof typeof ROLE_OPTIONS;
 const roleOption = (c: PlayerChoice): RoleOption =>
   c.role === "crew" ? "crew" : c.control === "fullBoat" ? "fullBoat" : "helm";
@@ -432,7 +447,10 @@ export class Menus implements Screens {
     $("version-chip").textContent = t("menu.versionChip", {
       boatClass: boatClass.name.toUpperCase(),
     });
-    $("role-help").textContent = t(ROLE_OPTIONS[roleOption(choice)].help);
+    const roleHelp = ROLE_OPTIONS[roleOption(choice)];
+    $("role-help").textContent = t(
+      boatClass.spinnaker?.gennaker ? roleHelp.skiffHelp : roleHelp.help,
+    );
     $("partner-opt").replaceChildren(
       ...RIVALS.map((r) => {
         const c = crewChemistry(r);

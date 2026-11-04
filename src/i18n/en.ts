@@ -48,13 +48,19 @@ export const english: Catalog = {
   "menu.label.rig": "RIG",
   "menu.rigHint": ({ kg, from, to }) =>
     `Ideal weight about ${kg} kg (${from}–${to} kg)`,
-  "menu.versionChip": ({ boatClass }) => `PROTOTYPE 0.6 · ${boatClass}`,
+  "menu.versionChip": ({ boatClass }) => `PROTOTYPE 0.7 · ${boatClass}`,
   "menu.roleHelp.helm":
     "Helm and mainsail. Your Partner, as Crew, trims the jib and spinnaker, goes out on the trapeze and decides when to hoist the spinnaker.",
   "menu.roleHelp.crew":
     "Your Partner steers. You: W/S jib (or spinnaker) sheet, A/D weight in/out up to the trapeze, E switch sides after tacks and gybes, Space hoist/drop the spinnaker. Listen for their calls.",
   "menu.roleHelp.fullBoat":
     "Helm and mainsail, and you call the manoeuvres: Space = hoist/drop the spinnaker. The Crew carries them out (faster when Crew Chemistry is high).",
+  "menu.roleHelp.helmSkiff":
+    "Helm and mainsail. Your Partner, as Crew, trims the jib and gennaker, goes out on the trapeze and decides when to hoist the gennaker.",
+  "menu.roleHelp.crewSkiff":
+    "Your Partner steers. You: W/S jib (or gennaker) sheet, A/D weight in/out up to the trapeze, E switch sides after tacks and gybes, Space hoist/drop the gennaker. Listen for their calls.",
+  "menu.roleHelp.fullBoatSkiff":
+    "Helm and mainsail, and you call the manoeuvres: Space = hoist/drop the gennaker. The Crew carries them out (faster when Crew Chemistry is high).",
   "menu.partnerStats": ({ chemistry, technique, discipline }) =>
     `Chemistry ${chemistry}/100 · technique ${technique} · reliability ${discipline}`,
 
@@ -132,7 +138,7 @@ export const english: Catalog = {
   "controls.table.action": "Action",
   "controls.table.keyboard": "Keyboard",
   "controls.table.gamepad": "Gamepad",
-  "controls.table.crew420": "420 as Crew",
+  "controls.table.crew420": "As Crew (420, 29er, 49er)",
   "controls.pad.leftStick": "Left stick",
   // Actions, in the controls table (and the short key list of the main menu).
   "controls.action.fineTiller": "Fine tiller movement",
@@ -379,7 +385,7 @@ export const english: Catalog = {
   "career.summary.places": "Regatta places",
   "career.summary.rivals": "Against your Rivals",
   "career.summary.outgrown": ({ kg }) =>
-    `At ${kg} kg you are growing out of the Optimist's sweet spot (about 35-50 kg): the 420 awaits.`,
+    `At ${kg} kg you are growing out of the Optimist's sweet spot (about 35-50 kg): a bigger boat awaits.`,
   "career.summary.next": "Next Season",
   "career.next.title": ({ season }) => `Season ${season}: what next?`,
   "career.next.help":
@@ -407,6 +413,10 @@ export const english: Catalog = {
     "Your Partner steers. You: drag the sail trim bar for the jib (or spinnaker) sheet and the top bar for your weight, in/out up to the trapeze; tap Switch sides after tacks and gybes and Spi to hoist/drop the spinnaker. Listen for their calls.",
   "menu.roleHelp.fullBoat.touch":
     "Helm and mainsail, and you call the manoeuvres: tap Spi to hoist/drop the spinnaker. The Crew carries them out (faster when Crew Chemistry is high).",
+  "menu.roleHelp.crewSkiff.touch":
+    "Your Partner steers. You: drag the sail trim bar for the jib (or gennaker) sheet and the top bar for your weight, in/out up to the trapeze; tap Switch sides after tacks and gybes and Spi to hoist/drop the gennaker. Listen for their calls.",
+  "menu.roleHelp.fullBoatSkiff.touch":
+    "Helm and mainsail, and you call the manoeuvres: tap Spi to hoist/drop the gennaker. The Crew carries them out (faster when Crew Chemistry is high).",
   "pause.restartHint.touch": "Tap Restart to sail the race again",
   "results.hint.touch": "Tap Another race or Menu",
   "hud.hint.touch": "Tiller on the left, sheet on the right: use both thumbs",

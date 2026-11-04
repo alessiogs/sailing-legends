@@ -23,7 +23,7 @@ describe("English catalog", () => {
       "Giulia: “Switch sides!” → press E",
     );
     expect(t("menu.versionChip", { boatClass: "420" })).toBe(
-      "PROTOTYPE 0.6 · 420",
+      "PROTOTYPE 0.7 · 420",
     );
     for (const [key, message] of Object.entries(english)) {
       if (typeof message === "string")
