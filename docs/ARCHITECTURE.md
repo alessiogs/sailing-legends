@@ -49,8 +49,10 @@ src/
              Calendar.ts (`Regatta` and the 0.5 Season calendar constants per class: 4 Regattas x 3 Races, Discard from
              the third, entry rule `open`)
              SeasonClose.ts (`closeSeason`: next Season, index and results reset, the pool grown, the Seasons raced
-             together counted; `startNextSeason`: the end-of-Season choice, stay or the 420 with a Partner, Role and
-             Control mode; `partnerOffers`), Chemistry.ts (starting Chemistry, the change per 420 Regatta with its caps,
+             together counted; `startNextSeason`: the end-of-Season choice, any class the age allows (the ILCA with its rig, a Pair class with a
+             Partner, Role and Control mode); `partnerOffers`)
+             Classes.ts (`ClassPath` = class + ILCA rig, `classOffers` by age with the rig's weight hint, `sailorPath`: the
+             class path a Rival sails each Season by age and body weight, `misfit`; Weight.ts has the rig and Pair hints), Chemistry.ts (starting Chemistry, the change per 420 Regatta with its caps,
              `partnerProfile`), PlayerId.ts, Growth.ts (`growSailor`: seeded age curve shaped by personality)
              Standings.ts (`regattaReport`: Regatta and Season rankings after a Regatta, `seasonSummary`, and
              `compareWithRivals`: ids, places and point gaps for the Rival lines; the Discard comes from the calendar)
@@ -101,7 +103,7 @@ src/
              screens, and the Career entries and next-Race buttons. Implements the controller's `Screens`; `attach(game)`
              wires the buttons), CareerScreen.ts (the Career overlay: starting age, unreadable-save prompt, Season
              calendar, Regatta standings, Season summary; built with `h()`, so `index.html` holds no text for it),
-             NextSeasonView.ts (the stay/move choice and Partner pick), StandingsView.ts (the standings and summary sheets; rankings with Rivals highlighted), rivalText.ts
+             NextSeasonView.ts (the class list with weight hints, and the Partner pick in a Pair class), StandingsView.ts (the standings and summary sheets; rankings with Rivals highlighted), rivalText.ts
              (words a Rival comparison: "Luca beat you by 2 points")
   game/      GameController.ts (owns the game state: race session, class, Role and Control mode, Partner, wind,
              Assists; the menu / racing / paused / results / controls / career modes; the Career in progress: new, continue, start a Race,
@@ -133,6 +135,7 @@ tests/       Vitest tests (npm test): smoke.test.ts (every AI-only race finishes
              race-names.test.ts (leg and boat names of every session setup read as before)
              career-scoring.test.ts (low point, OCS/DSQ, Discard, tie-breaks incl. after the Discard, Season ranking)
              career-save.test.ts (save round trip, migrations, unreadable saves never throw, the storage adapter)
+             career-classes.test.ts (class offer by age, rig and Pair hints, Chemistry across classes, Rival class paths, fleets filled),
              career-calendar.test.ts (the 0.5 calendars), career-ages.test.ts (ages, `canRace` at 14/15/16), sailor-pose.test.ts (crossing, height by age, looks and sail number)
              career-season-close.test.ts (closing a Season: ages, reset, Rival growth by personality, pinned over 3 Seasons)
              career-standings.test.ts (Regatta/Season standings, the Discard, Rival comparison, Season summary),
@@ -172,7 +175,7 @@ tests/       Vitest tests (npm test): smoke.test.ts (every AI-only race finishes
              sail-shape.test.ts (the shared sail grid draws the Optimist and 420 sails exactly as before)
              optimal-sheet.test.ts (the fast optimal-sheet search gives exactly the sheet that sampling every step gives)
 scripts/     polar.ts (npm run polar), career-sim.ts (npm run career-sim: a stand-in AI player sails whole Career Seasons and
-             prints places, Rival ratings and Chemistry; flags --skills= --seasons= --seed=; about 9 min for the defaults), golden-update.ts (npm run golden:update), hud-overlap.cjs (the HUD no-overlap check in
+             prints places, Rival ratings and Chemistry; flags --skills= --seasons= --seed= --age= --plan= (the class of each Season); about 9 min for the defaults), golden-update.ts (npm run golden:update), hud-overlap.cjs (the HUD no-overlap check in
              headless Chromium, run by hand: docs/agents/sandbox-build.md)
 ```
 
